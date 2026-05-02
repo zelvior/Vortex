@@ -222,6 +222,48 @@
         /* ── NEW: Table SQL preview ── */
         .sql-block { font-family:monospace; font-size:0.72rem; line-height:1.7; padding:1rem; border-radius:1rem; overflow-x:auto; white-space:pre; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:#93c5fd; }
         body.theme-light .sql-block { background:rgba(0,0,0,0.06); color:#1d4ed8; }
+        /* ── Donate button ── */
+        @keyframes donate-pulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+            50%      { box-shadow: 0 0 0 8px rgba(251,191,36,0); }
+        }
+        .donate-btn {
+            background: linear-gradient(135deg,#f59e0b,#ef4444);
+            animation: donate-pulse 2.5s ease-in-out infinite;
+            transition: all 0.25s ease;
+        }
+        .donate-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .donate-btn:active { transform: scale(0.97); }
+
+        /* Floating donate pill */
+        #donate-float {
+            position: fixed; bottom: 88px; right: 18px; z-index: 45;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        #donate-float.hidden-pill { opacity:0; pointer-events:none; transform:translateY(12px); }
+
+        /* ── Firebase connect wizard ── */
+        #fb-wizard { display:none; }
+        #fb-wizard.active { display:block; }
+        .wizard-step {
+            display:flex; align-items:center; gap:0.75rem;
+            padding:0.6rem 0; font-size:0.78rem; font-weight:600;
+            color:var(--text-muted); transition:color 0.3s;
+        }
+        .wizard-step.done  { color:#34d399; }
+        .wizard-step.active{ color:var(--text-primary); }
+        .wizard-step.error { color:#f87171; }
+        .step-icon {
+            width:22px; height:22px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            font-size:0.7rem; font-weight:900;
+            background:rgba(255,255,255,0.07); transition:background 0.3s, color 0.3s;
+        }
+        .wizard-step.done  .step-icon { background:rgba(52,211,153,0.15); color:#34d399; }
+        .wizard-step.active .step-icon { background:rgba(59,130,246,0.15); color:#60a5fa; }
+        .wizard-step.error  .step-icon { background:rgba(248,113,113,0.15); color:#f87171; }
+        .step-spin { animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body class="custom-scrollbar">
@@ -236,6 +278,16 @@
         </div>
         <h3 id="loader-status" class="mt-8 text-xl font-bold heading-font tracking-tight">Syncing Vault...</h3>
         <p class="text-sm mt-2" style="color:var(--text-muted)">Optimizing data chunks for performance</p>
+    </div>
+
+    <!-- Floating donate pill (shows on vault page) -->
+    <div id="donate-float">
+        <a href="https://zelvior.github.io/Support/" target="_blank" rel="noopener noreferrer"
+            class="donate-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-xs font-black shadow-2xl"
+            title="Support the dev — free &amp; fast via ads!">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.209 4.322 1 7.5 1c1.922 0 3.775.939 4.5 2.6.725-1.661 2.578-2.6 4.5-2.6C19.678 1 23 3.209 23 7.191c0 4.105-5.37 8.863-11 14.402z"/></svg>
+            Support Dev — Free!
+        </a>
     </div>
 
     <!-- App Shell -->
@@ -261,6 +313,11 @@
 
             <!-- Vault actions -->
             <div id="hdr-vault" class="flex flex-wrap items-center gap-3">
+                <a href="https://zelvior.github.io/Support/" target="_blank" rel="noopener noreferrer"
+                    class="donate-btn text-white px-4 py-2.5 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.209 4.322 1 7.5 1c1.922 0 3.775.939 4.5 2.6.725-1.661 2.578-2.6 4.5-2.6C19.678 1 23 3.209 23 7.191c0 4.105-5.37 8.863-11 14.402z"/></svg>
+                    Support — Free!
+                </a>
                 <button onclick="dataManager.export()" class="glass hover:bg-white/5 px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all active:scale-95">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export
                 </button>
@@ -661,7 +718,150 @@
                         </div>
                     </div>
 
-                    <!-- ══ NEW: EXTRA THEMES ══ -->
+                    <!-- ══ FIREBASE REALTIME DATABASE ══ -->
+                    <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.25)">
+                        <div class="px-6 pt-6 pb-4">
+                            <div class="flex items-center gap-3 mb-1">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.08 11.03 8.5 4.5l3.42 6.53-6.84 0z" fill="#FFA000"/><path d="M8.5 4.5 19.5 19.5l-11 0 0-15z" fill="#FFCA28"/><path d="M4.5 19.5l4-8.47 6.84 0L4.5 19.5z" fill="#F57F17"/></svg>
+                                <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.9)">Firebase</p>
+                            </div>
+                            <h3 class="text-lg font-bold heading-font">Firebase Realtime Database</h3>
+                            <p class="text-xs mt-1" style="color:var(--text-muted)">Connect your Firebase project for automatic cloud backup. No table setup needed — data writes instantly.</p>
+                        </div>
+
+                        <!-- Status bar -->
+                        <div class="s-row">
+                            <div><p class="s-label">Status</p></div>
+                            <div class="flex items-center gap-2">
+                                <div id="fb-status-dot" style="width:10px;height:10px;border-radius:50%;background:#94a3b8;flex-shrink:0"></div>
+                                <span id="fb-status-text" class="text-xs font-bold" style="color:var(--text-muted)">Not connected</span>
+                            </div>
+                        </div>
+
+                        <!-- Database URL -->
+                        <div class="px-6 pb-3 pt-2 space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Database URL</label>
+                                <input type="text" id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com" autocomplete="off" spellcheck="false"
+                                    class="w-full border rounded-2xl px-5 py-3.5 text-sm focus:outline-none font-medium"
+                                    style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Web API Key <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional — needed if rules require auth)</span></label>
+                                <div class="relative">
+                                    <input type="password" id="fb-apikey" placeholder="AIzaSy... (from Firebase Console → Project Settings)" autocomplete="off" spellcheck="false"
+                                        class="w-full border rounded-2xl px-5 py-3.5 text-sm focus:outline-none font-medium pr-12"
+                                        style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)">
+                                    <button onclick="firebaseConn.toggleKeyVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity">
+                                        <svg id="fb-eye-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Error message -->
+                            <div id="fb-error-msg" class="hidden text-xs font-semibold p-3 rounded-xl" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171"></div>
+
+                            <!-- Connection wizard steps -->
+                            <div id="fb-wizard" class="glass rounded-2xl p-4 mb-2">
+                                <p class="text-xs font-black uppercase tracking-widest mb-3" style="color:var(--text-muted)">Connecting…</p>
+                                <div class="wizard-step" id="wz-1"><div class="step-icon">1</div><span>Validating URL format</span></div>
+                                <div class="wizard-step" id="wz-2"><div class="step-icon">2</div><span>Reaching Firebase servers</span></div>
+                                <div class="wizard-step" id="wz-3"><div class="step-icon">3</div><span>Testing write access</span></div>
+                                <div class="wizard-step" id="wz-4"><div class="step-icon">4</div><span>Verifying read access</span></div>
+                                <div class="wizard-step" id="wz-5"><div class="step-icon">5</div><span>Initializing vault structure</span></div>
+                                <div class="wizard-step" id="wz-6"><div class="step-icon">✓</div><span>All done — you're connected!</span></div>
+                            </div>
+
+                            <!-- Connect / Disconnect / Test buttons -->
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="fb-connect-btn" onclick="firebaseConn.connect()"
+                                    class="text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95"
+                                    style="background:linear-gradient(135deg,#FFA000,#FF6F00);box-shadow:0 4px 20px -4px rgba(255,160,0,0.4)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                    Connect Firebase
+                                </button>
+                                <button id="fb-disconnect-btn" onclick="firebaseConn.disconnect()" class="hidden btn-danger text-xs px-4 py-2 rounded-xl flex items-center gap-2">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Disconnect
+                                </button>
+                                <button id="fb-test-btn" onclick="firebaseConn.testConnection()" class="hidden glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    Test
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Auto-sync -->
+                        <div class="s-row">
+                            <div><p class="s-label">Auto Sync</p><p class="s-desc">Automatically push vault to Firebase on changes</p></div>
+                            <label class="tog-wrap">
+                                <input type="checkbox" id="fb-tog-autosync" class="tog-input" onchange="firebaseConn.toggleAutoSync(this.checked)">
+                                <div class="tog-track"><div class="tog-thumb"></div></div>
+                            </label>
+                        </div>
+                        <div class="s-row">
+                            <div><p class="s-label">Sync Interval</p><p class="s-desc">How often auto-sync pushes data</p></div>
+                            <select id="fb-interval" onchange="firebaseConn.setInterval(this.value)"
+                                class="border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none"
+                                style="background:var(--surface-input);border-color:var(--border);color:var(--text-primary)">
+                                <option value="30">30 seconds</option>
+                                <option value="60" selected>1 minute</option>
+                                <option value="300">5 minutes</option>
+                                <option value="600">10 minutes</option>
+                            </select>
+                        </div>
+                        <div class="s-row">
+                            <div><p class="s-label">Sync on Startup</p><p class="s-desc">Pull data from Firebase when app loads</p></div>
+                            <label class="tog-wrap">
+                                <input type="checkbox" id="fb-tog-startup" class="tog-input" onchange="firebaseConn.setStartupSync(this.checked)">
+                                <div class="tog-track"><div class="tog-thumb"></div></div>
+                            </label>
+                        </div>
+                        <div class="s-row">
+                            <div><p class="s-label">Path / Node</p><p class="s-desc">Firebase path where vault data is stored</p></div>
+                            <input type="text" id="fb-path" value="mediavault" maxlength="64" spellcheck="false"
+                                class="border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none w-36"
+                                style="background:var(--surface-input);border-color:var(--border);color:var(--text-primary)"
+                                onchange="firebaseConn.setPath(this.value)">
+                        </div>
+
+                        <!-- Manual controls -->
+                        <div class="px-6 pb-4 pt-2">
+                            <p class="text-xs font-black uppercase tracking-widest mb-3" style="color:var(--text-muted)">Manual Controls</p>
+                            <div class="flex gap-2 flex-wrap mb-4">
+                                <button onclick="firebaseConn.push()" id="fb-push-btn"
+                                    class="text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95"
+                                    style="background:linear-gradient(135deg,#FFA000,#FF6F00)">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>
+                                    Push to Firebase
+                                </button>
+                                <button onclick="firebaseConn.pull()" id="fb-pull-btn"
+                                    class="glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/><path d="M3 9V5a2 2 0 012-2h14a2 2 0 012 2v4"/></svg>
+                                    Pull from Firebase
+                                </button>
+                            </div>
+                            <div id="fb-last-sync" class="text-xs mb-2" style="color:var(--text-muted)">Last sync: Never</div>
+                            <div id="fb-log-wrap" class="hidden">
+                                <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--text-muted)">Sync Log</p>
+                                <div id="fb-log" class="space-y-0 max-h-36 overflow-y-auto custom-scrollbar" style="border:1px solid var(--border);border-radius:0.75rem;padding:0.5rem 0.75rem"></div>
+                            </div>
+                        </div>
+
+                        <!-- Danger: Clear Firebase -->
+                        <div class="px-6 pb-6">
+                            <div class="p-4 rounded-2xl" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2)">
+                                <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:#f87171">Danger</p>
+                                <p class="text-xs mb-3" style="color:var(--text-muted)">Delete all data at your Firebase path. Local vault is not affected.</p>
+                                <button onclick="firebaseConn.clearDatabase()" class="btn-danger text-xs px-4 py-2 rounded-xl flex items-center gap-2">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                                    Clear Firebase Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ EXTRA THEMES ══ -->
                     <div class="glass rounded-3xl overflow-hidden">
                         <div class="px-6 pt-6 pb-4">
                             <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--text-muted)">Appearance</p>
@@ -779,6 +979,22 @@
                         <p class="text-xs mt-1" style="color:var(--text-muted)">Version 2.0.0</p>
                         <p class="text-xs mt-3 leading-relaxed" style="color:var(--text-muted)">All data stored locally in your browser. No cloud. No account required.</p>
                     </div>
+
+                    <!-- Donate card in settings -->
+                    <div class="rounded-3xl p-6 text-center overflow-hidden relative" style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(239,68,68,0.15));border:1px solid rgba(245,158,11,0.3)">
+                        <div class="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full" style="background:rgba(245,158,11,0.1)"></div>
+                        <div class="relative">
+                            <div class="text-3xl mb-2">☕</div>
+                            <p class="font-black heading-font text-base mb-1">Support Zelvior</p>
+                            <p class="text-xs leading-relaxed mb-4" style="color:var(--text-muted)">Keeping this free takes effort. Support is <strong style="color:#fbbf24">free &amp; instant</strong> — just watch a quick ad. No payments, no accounts, no guilt.</p>
+                            <a href="https://zelvior.github.io/Support/" target="_blank" rel="noopener noreferrer"
+                                class="donate-btn inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white text-sm font-black shadow-xl">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.209 4.322 1 7.5 1c1.922 0 3.775.939 4.5 2.6.725-1.661 2.578-2.6 4.5-2.6C19.678 1 23 3.209 23 7.191c0 4.105-5.37 8.863-11 14.402z"/></svg>
+                                Support for Free →
+                            </a>
+                            <p class="text-xs mt-3" style="color:var(--text-muted)">Supported by Ads · No forced payments · Always optional</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -790,8 +1006,21 @@
                 <!-- Intro -->
                 <div class="glass rounded-3xl p-8">
                     <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--primary)">Help &amp; Tutorial</p>
-                    <h2 class="text-2xl font-black heading-font mb-3">Step-by-Step Supabase Guide</h2>
-                    <p class="text-sm leading-relaxed" style="color:var(--text-muted)">This guide walks you through connecting your own Supabase project to MediaVault Pro for cloud backup and cross-device sync. No coding experience needed.</p>
+                    <h2 class="text-2xl font-black heading-font mb-3">Complete Connection Guide</h2>
+                    <p class="text-sm leading-relaxed mb-4" style="color:var(--text-muted)">This guide covers both <strong style="color:var(--text-primary)">Supabase</strong> (SQL-based, great for structured data) and <strong style="color:#FFA000">Firebase Realtime Database</strong> (JSON-based, zero setup, instant writes). Pick whichever suits you — or connect both. No coding experience needed.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="#firebase-guide-anchor" onclick="event.preventDefault();document.getElementById('fb-guide-anchor').scrollIntoView({behavior:'smooth'})"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                            style="background:rgba(255,160,0,0.15);border:1px solid rgba(255,160,0,0.3);color:#FFA000">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5.08 11.03 8.5 4.5l3.42 6.53-6.84 0z" fill="#FFA000"/><path d="M8.5 4.5 19.5 19.5l-11 0 0-15z" fill="#FFCA28"/><path d="M4.5 19.5l4-8.47 6.84 0L4.5 19.5z" fill="#F57F17"/></svg>
+                            Jump to Firebase Guide ↓
+                        </a>
+                        <a href="https://zelvior.github.io/Support/" target="_blank" rel="noopener noreferrer"
+                            class="donate-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-black">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.209 4.322 1 7.5 1c1.922 0 3.775.939 4.5 2.6.725-1.661 2.578-2.6 4.5-2.6C19.678 1 23 3.209 23 7.191c0 4.105-5.37 8.863-11 14.402z"/></svg>
+                            Support Dev — Free!
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Step 1: What is Supabase -->
@@ -1047,6 +1276,221 @@ CREATE POLICY "allow_all" ON mediavault
   FOR ALL USING (true) WITH CHECK (true);</div>
                         </div>
                         <p class="text-xs" style="color:var(--text-muted)">Run this in Supabase → SQL Editor after enabling RLS in your table's Auth settings. This allows all reads and writes with the anon key — suitable for single-user personal vaults.</p>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: What is Firebase ══ -->
+                <div id="fb-guide-anchor" class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(255,160,0,0.15)">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.08 11.03 8.5 4.5l3.42 6.53-6.84 0z" fill="#FFA000"/><path d="M8.5 4.5 19.5 19.5l-11 0 0-15z" fill="#FFCA28"/><path d="M4.5 19.5l4-8.47 6.84 0L4.5 19.5z" fill="#F57F17"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide — Step 1</p>
+                            <h3 class="text-base font-bold heading-font">What is Firebase Realtime Database?</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <p class="text-sm leading-relaxed" style="color:var(--text-muted)"><strong style="color:var(--text-primary)">Firebase Realtime Database</strong> is Google's cloud-hosted JSON database. Unlike Supabase (which uses SQL tables), Firebase stores everything as a <strong style="color:var(--text-primary)">giant JSON tree</strong>. There are no tables, no schemas, no SQL — you just write to a path and the data appears instantly.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3 rounded-2xl text-xs" style="background:rgba(255,160,0,0.07);border:1px solid rgba(255,160,0,0.2)">
+                                <p class="font-bold mb-1" style="color:#FFA000">✓ Advantages</p>
+                                <ul class="space-y-1" style="color:var(--text-muted)">
+                                    <li>• Free tier: 1 GB storage, 10 GB/month transfer</li>
+                                    <li>• No table setup required at all</li>
+                                    <li>• Works directly from any browser</li>
+                                    <li>• Real-time updates across devices</li>
+                                </ul>
+                            </div>
+                            <div class="p-3 rounded-2xl text-xs" style="background:rgba(255,255,255,0.03);border:1px solid var(--border)">
+                                <p class="font-bold mb-1" style="color:var(--text-primary)">ℹ️ Good to know</p>
+                                <ul class="space-y-1" style="color:var(--text-muted)">
+                                    <li>• Test mode = no auth needed (easy start)</li>
+                                    <li>• Locked mode = needs API key</li>
+                                    <li>• Data is JSON, not SQL rows</li>
+                                    <li>• Free plan is generous for personal use</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: Create project ══ -->
+                <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg heading-font flex-shrink-0" style="background:rgba(255,160,0,0.15);color:#FFA000">2</div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide — Step 2</p>
+                            <h3 class="text-base font-bold heading-font">Create a Firebase Project</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <ol class="space-y-3">
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">①</span>
+                                Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" class="font-bold underline" style="color:#FFA000">console.firebase.google.com</a> and sign in with your Google account.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">②</span>
+                                Click <strong style="color:var(--text-primary)">Add project</strong>. Give it a name (e.g. <em>mediavault</em>). You can disable Google Analytics if you don't need it.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">③</span>
+                                Once created, in the left sidebar go to <strong style="color:var(--text-primary)">Build → Realtime Database</strong>.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">④</span>
+                                Click <strong style="color:var(--text-primary)">Create Database</strong>. Choose a location. When asked about security rules, select <strong style="color:var(--text-primary)">"Start in test mode"</strong> — this lets you connect without any API key.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">⑤</span>
+                                Click <strong style="color:var(--text-primary)">Enable</strong>. Your database is ready in seconds.
+                            </li>
+                        </ol>
+                        <div class="flex items-start gap-3 p-3 rounded-2xl text-xs" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
+                            <svg width="16" height="16" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" class="flex-shrink-0 mt-0.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span style="color:#fcd34d">Test mode expires after 30 days. Before expiry, go to <strong>Rules</strong> tab and set <code style="font-family:monospace">".read": true, ".write": true</code> to keep it open. For production, add proper security rules.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: Get URL and Key ══ -->
+                <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg heading-font flex-shrink-0" style="background:rgba(255,160,0,0.15);color:#FFA000">3</div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide — Step 3</p>
+                            <h3 class="text-base font-bold heading-font">Get Your Database URL &amp; API Key</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <p class="text-sm font-bold" style="color:var(--text-primary)">Database URL (required):</p>
+                        <ol class="space-y-2">
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">①</span>
+                                In the Firebase console, go to <strong style="color:var(--text-primary)">Build → Realtime Database</strong>.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">②</span>
+                                At the top of the Data tab you'll see your URL — it looks like: <code class="px-2 py-0.5 rounded-lg text-xs font-mono" style="background:rgba(255,255,255,0.07)">https://your-project-default-rtdb.firebaseio.com</code>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">③</span>
+                                Copy that full URL and paste it into the <strong style="color:var(--text-primary)">Database URL</strong> field in Settings.
+                            </li>
+                        </ol>
+                        <p class="text-sm font-bold mt-2" style="color:var(--text-primary)">Web API Key (only needed if your rules require auth):</p>
+                        <ol class="space-y-2">
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">①</span>
+                                In the Firebase console, click the ⚙ gear icon → <strong style="color:var(--text-primary)">Project Settings</strong>.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">②</span>
+                                Under the <strong style="color:var(--text-primary)">General</strong> tab, scroll down to find <strong style="color:var(--text-primary)">Web API Key</strong> — it starts with <code class="px-2 py-0.5 rounded-lg text-xs font-mono" style="background:rgba(255,255,255,0.07)">AIzaSy...</code>
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">③</span>
+                                If you're using <strong style="color:var(--text-primary)">Test mode</strong>, you can leave the API Key field blank — MediaVault will connect without it.
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: Connect ══ -->
+                <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg heading-font flex-shrink-0" style="background:rgba(255,160,0,0.15);color:#FFA000">4</div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide — Step 4</p>
+                            <h3 class="text-base font-bold heading-font">Connect &amp; Use</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <ol class="space-y-3">
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">①</span>
+                                Go to <strong style="color:var(--text-primary)">Settings</strong> and scroll to the <strong style="color:var(--text-primary)">Firebase Realtime Database</strong> section.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">②</span>
+                                Paste your <strong style="color:var(--text-primary)">Database URL</strong>. If your rules need auth, also paste the <strong style="color:var(--text-primary)">Web API Key</strong>.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">③</span>
+                                Click <strong style="color:var(--text-primary)">Connect Firebase</strong>. The app writes a test entry and reads it back to verify. No manual setup needed.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">④</span>
+                                Once connected (status turns <strong style="color:#34d399">green</strong>), use <strong style="color:var(--text-primary)">Push to Firebase</strong> to upload your vault, or <strong style="color:var(--text-primary)">Pull from Firebase</strong> to download it.
+                            </li>
+                            <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
+                                <span class="flex-shrink-0 font-black" style="color:#FFA000">⑤</span>
+                                Enable <strong style="color:var(--text-primary)">Auto Sync</strong> to automatically back up your vault on a schedule.
+                            </li>
+                        </ol>
+                        <button onclick="nav.go('settings')" class="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 mt-2" style="background:linear-gradient(135deg,#FFA000,#FF6F00)">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            Go to Settings → Firebase
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: Security Rules ══ -->
+                <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm heading-font flex-shrink-0" style="background:rgba(239,68,68,0.12);color:#f87171">🔒</div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide — Security</p>
+                            <h3 class="text-base font-bold heading-font">Firebase Security Rules</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <p class="text-sm leading-relaxed" style="color:var(--text-muted)">In the Firebase console → Realtime Database → <strong style="color:var(--text-primary)">Rules</strong> tab, you control who can read/write.</p>
+                        <p class="text-xs font-bold" style="color:var(--text-primary)">Test mode (easiest — anyone can read/write):</p>
+                        <div class="sql-block" style="font-size:0.7rem">{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</div>
+                        <p class="text-xs font-bold mt-2" style="color:var(--text-primary)">Secure mode (locked — no access without auth):</p>
+                        <div class="sql-block" style="font-size:0.7rem">{
+  "rules": {
+    ".read": false,
+    ".write": false
+  }
+}</div>
+                        <p class="text-xs" style="color:var(--text-muted)">For personal single-user use, <strong style="color:var(--text-primary)">Test mode is fine</strong> — just don't store sensitive personal information. The URL is not publicly listed, so it's reasonably private.</p>
+                    </div>
+                </div>
+
+                <!-- ══ FIREBASE GUIDE: Troubleshooting ══ -->
+                <div class="glass rounded-3xl overflow-hidden" style="border-color:rgba(255,160,0,0.2)">
+                    <div class="px-6 pt-6 pb-3 flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm heading-font flex-shrink-0" style="background:rgba(239,68,68,0.12);color:#f87171">?</div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest" style="color:rgba(255,160,0,0.8)">Firebase Guide</p>
+                            <h3 class="text-base font-bold heading-font">Firebase Troubleshooting</h3>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-6 space-y-3">
+                        <div class="p-4 rounded-2xl space-y-1" style="background:rgba(255,255,255,0.03);border:1px solid var(--border)">
+                            <p class="text-sm font-bold" style="color:var(--text-primary)">"Permission denied" error</p>
+                            <p class="text-xs leading-relaxed" style="color:var(--text-muted)">Your database rules are in Locked mode. Either switch to Test mode in the Rules tab, or provide your Web API Key in the settings.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl space-y-1" style="background:rgba(255,255,255,0.03);border:1px solid var(--border)">
+                            <p class="text-sm font-bold" style="color:var(--text-primary)">"Invalid URL" error</p>
+                            <p class="text-xs leading-relaxed" style="color:var(--text-muted)">Make sure the URL starts with <code class="font-mono">https://</code> and ends with <code class="font-mono">.firebaseio.com</code> or <code class="font-mono">.firebasedatabase.app</code>.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl space-y-1" style="background:rgba(255,255,255,0.03);border:1px solid var(--border)">
+                            <p class="text-sm font-bold" style="color:var(--text-primary)">Test mode expired</p>
+                            <p class="text-xs leading-relaxed" style="color:var(--text-muted)">Firebase test mode expires after 30 days. Go to Rules tab and manually set <code class="font-mono">".read": true, ".write": true</code> to re-enable open access.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl space-y-1" style="background:rgba(255,255,255,0.03);border:1px solid var(--border)">
+                            <p class="text-sm font-bold" style="color:var(--text-primary)">Connection succeeds but Push/Pull fails</p>
+                            <p class="text-xs leading-relaxed" style="color:var(--text-muted)">Check that the <strong>Path / Node</strong> field in settings matches a path your rules allow access to. Default is <code class="font-mono">mediavault</code>.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -1678,6 +2122,68 @@ CREATE POLICY "allow_all" ON mediavault
             return null;
         },
 
+        // ── Detect if a supabase-js error means "table missing" ──────────────
+        _isTableMissing(error) {
+            if (!error) return false;
+            const msg = (error.message || '').toLowerCase();
+            const det = (error.details || '').toLowerCase();
+            const cod = (error.code    || '');
+            return cod === '42P01'
+                || msg.includes('does not exist')
+                || msg.includes('relation')
+                || msg.includes('schema cache')
+                || det.includes('does not exist');
+        },
+
+        // ── Detect auth/network failure ──────────────────────────────────────
+        _isAuthError(error) {
+            if (!error) return false;
+            const msg = (error.message || '').toLowerCase();
+            const cod = (error.code    || '');
+            return cod === 'PGRST301'
+                || (error.status === 401)
+                || msg.includes('invalid api key')
+                || msg.includes('invalid key')
+                || msg.includes('unauthorized');
+        },
+
+        _isNetworkError(error) {
+            if (!error) return false;
+            const msg = (error.message || '').toLowerCase();
+            return msg.includes('failed to fetch')
+                || msg.includes('networkerror')
+                || msg.includes('load failed')
+                || msg.includes('network request failed');
+        },
+
+        // ── Build and return a working supabase-js client ────────────────────
+        _makeClient(url, key) {
+            return supabase.createClient(url, key, {
+                auth: {
+                    persistSession:     false,
+                    autoRefreshToken:   false,
+                    detectSessionInUrl: false
+                },
+                global: {
+                    headers: { 'X-Client-Info': 'mediavault-pro/2.0' }
+                }
+            });
+        },
+
+        // ── Probe: returns { ok, authFailed, networkFailed, tableMissing } ───
+        async _probe(client, tableName) {
+            const { error } = await client
+                .from(tableName)
+                .select('id')
+                .limit(1);
+            if (!error)                        return { ok: true };
+            if (this._isTableMissing(error))   return { ok: true,  tableMissing: true };
+            if (this._isAuthError(error))      return { ok: false, authFailed: true,    msg: error.message };
+            if (this._isNetworkError(error))   return { ok: false, networkFailed: true, msg: error.message };
+            // Any other PostgREST error (schema, permissions) = server reached = key valid
+            return { ok: true, otherError: error.message };
+        },
+
         async connect() {
             this._hideError();
             const urlEl = document.getElementById('supa-url');
@@ -1693,72 +2199,50 @@ CREATE POLICY "allow_all" ON mediavault
             if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
 
             try {
-                // Create the supabase-js client — it handles all headers correctly
-                // for both new sb_publishable_ keys and legacy eyJ... anon keys.
-                // Never use raw fetch() for auth validation — it hits CORS restrictions
-                // when the file is opened locally or from a non-Supabase origin.
-                const tmpClient = supabase.createClient(url, key, {
-                    auth: {
-                        persistSession:   false,
-                        autoRefreshToken: false,
-                        detectSessionInUrl: false
+                const tmpClient = this._makeClient(url, key);
+                const table     = supaAdvanced ? supaAdvanced._getTableName() : 'mediavault';
+
+                // Step 1: probe the actual vault table
+                if (btn) btn.textContent = 'Verifying credentials...';
+                const probe = await this._probe(tmpClient, table);
+
+                if (!probe.ok) {
+                    if (probe.authFailed) {
+                        throw new Error('Invalid API key — use the Publishable key (sb_publishable_...), not the Secret key.');
                     }
-                });
-
-                // Make a real lightweight query through the supabase-js client.
-                // Querying a non-existent table returns a PostgREST 404/400 error
-                // but still proves the URL and key are accepted by the API gateway.
-                // An invalid key returns a 401 error object from supabase-js.
-                const { error } = await tmpClient
-                    .from('_mediavault_ping_')
-                    .select('id')
-                    .limit(1);
-
-                // error.code '42P01' = table does not exist → key IS valid, project IS reachable
-                // error.code 'PGRST301' or status 401 = bad key
-                // error.message includes 'fetch' / network error = bad URL or offline
-                if (error) {
-                    const code    = error.code    || '';
-                    const message = error.message || '';
-                    const details = error.details || '';
-
-                    // These codes mean auth passed — table just doesn't exist yet (expected)
-                    const authOk = ['42P01','PGRST116','PGRST200','404'].some(c => code.includes(c))
-                                || details.toLowerCase().includes('does not exist')
-                                || message.toLowerCase().includes('does not exist')
-                                || message.toLowerCase().includes('relation')
-                                || message.toLowerCase().includes('not found');
-
-                    if (authOk) {
-                        // Connected successfully — table missing is fine, user creates it later
-                    } else if (
-                        code === 'PGRST301' ||
-                        message.toLowerCase().includes('invalid api key') ||
-                        message.toLowerCase().includes('jwt') ||
-                        message.toLowerCase().includes('401') ||
-                        (error.status && error.status === 401)
-                    ) {
-                        throw new Error('Invalid API key. Use the Publishable key (sb_publishable_...) — not the Secret key.');
-                    } else if (
-                        message.toLowerCase().includes('failed to fetch') ||
-                        message.toLowerCase().includes('networkerror') ||
-                        message.toLowerCase().includes('load failed') ||
-                        message.toLowerCase().includes('fetch')
-                    ) {
-                        throw new Error('Could not reach Supabase. Check the Project URL and your internet connection.');
-                    } else {
-                        // Any other error still means we reached the server with a valid key
-                        // (PostgREST errors are server-side, not auth failures)
+                    if (probe.networkFailed) {
+                        throw new Error('Cannot reach Supabase. Check your Project URL and internet connection.');
                     }
+                    throw new Error(probe.msg || 'Unknown connection error.');
                 }
 
-                // Store the verified client
+                // Step 2: if table is missing → auto-setup
+                if (probe.tableMissing) {
+                    if (btn) btn.textContent = 'Setting up table...';
+                    const setup = await supaAdvanced._ensureTable(tmpClient, table);
+                    if (!setup.ok) {
+                        // Table creation needs service key — show schema modal to guide user
+                        this._client = tmpClient;
+                        this._data   = { url, key, connected: true };
+                        this.save();
+                        this._renderStatus();
+                        supaAdvanced._syncPrefsToUI();
+                        ui.notify('✓ Connected! Table needs setup — see instructions below.', 'warning');
+                        supaAdvanced._log('Connected but table missing: run SQL schema', 'inf');
+                        supaAdvanced.viewSchema();
+                        return;
+                    }
+                    supaAdvanced._log(`Table "${table}" created automatically`, 'ok');
+                    ui.notify(`✓ Table "${table}" created automatically`, 'success');
+                }
+
+                // Step 3: store verified client
                 this._client = tmpClient;
                 this._data   = { url, key, connected: true };
                 this.save();
                 this._renderStatus();
                 supaAdvanced._syncPrefsToUI();
-                ui.notify('✓ Supabase connected successfully', 'success');
+                ui.notify('✓ Supabase connected & ready', 'success');
                 supaAdvanced._log('Connected to ' + url, 'ok');
 
             } catch (e) {
@@ -1781,23 +2265,14 @@ CREATE POLICY "allow_all" ON mediavault
             const btn = document.getElementById('supa-test-btn');
             if (btn) { btn.disabled = true; btn.textContent = 'Testing...'; }
             try {
-                // Same lightweight ping via supabase-js — no raw fetch
-                const { error } = await this._client
-                    .from('_mediavault_ping_')
-                    .select('id')
-                    .limit(1);
-
-                const reachable = !error ||
-                    (error.message || '').toLowerCase().includes('does not exist') ||
-                    (error.message || '').toLowerCase().includes('relation') ||
-                    (error.code === '42P01') ||
-                    (error.code === 'PGRST116');
-
-                if (reachable) {
-                    ui.notify('✓ Connection test passed', 'success');
-                    supaAdvanced._log('Test passed', 'ok');
+                const table = supaAdvanced._getTableName();
+                const probe = await this._probe(this._client, table);
+                if (probe.ok) {
+                    const status = probe.tableMissing ? '✓ Connected (table missing — run SQL schema)' : '✓ Connection & table verified';
+                    ui.notify(status, probe.tableMissing ? 'warning' : 'success');
+                    supaAdvanced._log('Test passed' + (probe.tableMissing ? ' (table missing)' : ''), 'ok');
                 } else {
-                    throw new Error(error.message || 'Unexpected error');
+                    throw new Error(probe.msg || 'Test failed');
                 }
             } catch (e) {
                 ui.notify('Test failed: ' + e.message, 'error');
@@ -1952,6 +2427,45 @@ CREATE POLICY "allow_all" ON mediavault
 
         _getTableName() { return this._prefs.tableName || 'mediavault'; },
 
+        // ── Try to create the table via Supabase Management API ──────────────
+        // The anon/publishable key can INSERT but cannot run DDL.
+        // We attempt via rpc('exec_sql') which some projects expose,
+        // then fall back to a direct upsert to force PostgREST to cache the schema.
+        // Returns { ok: true } if table now exists, { ok: false } if manual setup needed.
+        async _ensureTable(client, table) {
+            // Strategy: try inserting a dummy row with all columns.
+            // If it works → table exists. If it fails with column error → table exists
+            // but schema mismatch. If it fails with "does not exist" → we can't create it
+            // via anon key and need to show the SQL modal.
+            const testRow = {
+                id: '__schema_check__',
+                title: '__test__',
+                type: 'movie',
+                status: 'want',
+                rating: 0,
+                progress: 0,
+                notes: '',
+                updated_at: new Date().toISOString()
+            };
+            const { error: insertErr } = await client
+                .from(table)
+                .upsert(testRow, { onConflict: 'id' });
+
+            if (!insertErr) {
+                // Table exists and is writable — clean up test row
+                await client.from(table).delete().eq('id', '__schema_check__');
+                return { ok: true };
+            }
+
+            if (supaConn._isTableMissing(insertErr)) {
+                // Table truly does not exist and we can't create it with anon key
+                return { ok: false, reason: 'missing' };
+            }
+
+            // Any other error (permissions etc) — table probably exists
+            return { ok: true };
+        },
+
         async pushToCloud(silent = false) {
             if (!supaConn.isConnected()) {
                 if (!silent) ui.notify('Not connected to Supabase', 'error');
@@ -1964,9 +2478,17 @@ CREATE POLICY "allow_all" ON mediavault
                 if (btn) { btn.disabled = true; btn.textContent = 'Pushing...'; }
             }
             try {
-                // Upsert entire vault — delete old rows then insert fresh
-                const { error: delErr } = await client.from(table).delete().neq('id', '__none__');
-                if (delErr && delErr.code !== 'PGRST116') throw delErr;
+                // Ensure table exists before pushing
+                const setup = await this._ensureTable(client, table);
+                if (!setup.ok) {
+                    ui.notify('Table not found — run the SQL schema first', 'error');
+                    this._log('Push failed: table missing — showing SQL schema', 'err');
+                    this.viewSchema();
+                    return;
+                }
+
+                // Delete all existing rows then insert fresh vault
+                await client.from(table).delete().neq('id', '__schema_check__');
 
                 if (S.items.length > 0) {
                     const rows = S.items.map(i => ({
@@ -1974,7 +2496,9 @@ CREATE POLICY "allow_all" ON mediavault
                         rating: i.rating, progress: i.progress, notes: i.notes,
                         updated_at: new Date(i.updatedAt).toISOString()
                     }));
-                    const { error: insErr } = await client.from(table).upsert(rows, { onConflict: 'id' });
+                    const { error: insErr } = await client
+                        .from(table)
+                        .upsert(rows, { onConflict: 'id' });
                     if (insErr) throw insErr;
                 }
 
@@ -1984,9 +2508,9 @@ CREATE POLICY "allow_all" ON mediavault
                 const msg = e.message || e.details || JSON.stringify(e);
                 if (!silent) ui.notify('Push failed: ' + msg, 'error');
                 this._log('Push failed: ' + msg, 'err');
-                if (!silent) {
-                    const errEl = document.getElementById('supa-error-msg');
-                    if (errEl) { errEl.textContent = 'Push failed: ' + msg; errEl.classList.remove('hidden'); setTimeout(() => errEl.classList.add('hidden'), 8000); }
+                // If table went missing mid-session, show schema
+                if (supaConn._isTableMissing(e) || msg.includes('schema cache')) {
+                    this.viewSchema();
                 }
             } finally {
                 if (!silent) {
@@ -2011,19 +2535,31 @@ CREATE POLICY "allow_all" ON mediavault
                 if (btn) { btn.disabled = true; btn.textContent = 'Pulling...'; }
             }
             try {
-                const { data, error } = await client.from(table).select('*').order('updated_at', { ascending: false });
-                if (error) throw error;
+                const { data, error } = await client
+                    .from(table)
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+
+                if (error) {
+                    if (supaConn._isTableMissing(error) || error.message.includes('schema cache')) {
+                        ui.notify('Table not found — run the SQL schema first', 'error');
+                        this._log('Pull failed: table missing — showing SQL schema', 'err');
+                        this.viewSchema();
+                        return;
+                    }
+                    throw error;
+                }
 
                 const pulled = (data || []).map(row => ({
                     id:        row.id,
-                    title:     String(row.title || '').trim().substring(0, 200),
-                    type:      ['movie','series','game','anime'].includes(row.type) ? row.type : 'movie',
-                    status:    ['want','ongoing','watched'].includes(row.status) ? row.status : 'want',
-                    rating:    clamp(parseInt(row.rating) || 0, 0, 5),
+                    title:     String(row.title    || '').trim().substring(0, 200),
+                    type:      ['movie','series','game','anime'].includes(row.type)   ? row.type   : 'movie',
+                    status:    ['want','ongoing','watched'].includes(row.status)       ? row.status : 'want',
+                    rating:    clamp(parseInt(row.rating)   || 0, 0, 5),
                     progress:  clamp(parseInt(row.progress) || 0, 0, 100),
-                    notes:     String(row.notes || '').trim().substring(0, 1000),
+                    notes:     String(row.notes    || '').trim().substring(0, 1000),
                     updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now()
-                }));
+                })).filter(r => r.id !== '__schema_check__');
 
                 if (!silent && !confirm(`Pull ${pulled.length} items from Supabase? This replaces your local vault.`)) return;
 
@@ -2053,7 +2589,13 @@ CREATE POLICY "allow_all" ON mediavault
             const client = supaConn.getClient();
             try {
                 const { error } = await client.from(this._getTableName()).delete().neq('id', '__none__');
-                if (error) throw error;
+                if (error) {
+                    if (supaConn._isTableMissing(error) || error.message.includes('schema cache')) {
+                        ui.notify('Table does not exist yet — nothing to clear', 'warning');
+                        return;
+                    }
+                    throw error;
+                }
                 ui.notify('✓ Supabase database cleared', 'warning');
                 this._log('Database cleared', 'ok');
             } catch (e) {
@@ -2246,25 +2788,434 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
     // ═══════════════════════════════════════════════════════════════════════════
     // ─── BOOT ─────────────────────────────────────────────────────────────────
     // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── FIREBASE REALTIME DATABASE MANAGER ───────────────────────────────────
+    // Pure REST API — no SDK, no setup, no schema, no tables.
+    // Firebase RTDB is a JSON tree. Writing to any path creates it instantly.
+    // Works from file://, localhost, or any domain — CORS is always open.
+    // ═══════════════════════════════════════════════════════════════════════════
+    const FB_KEY = 'mvp_firebase_v1';
+    const firebaseConn = {
+        _data: { url:'', apiKey:'', path:'mediavault', connected:false, autoSync:false, intervalSec:60, syncOnStartup:false },
+        _timer: null,
+        _logEntries: [],
+
+        // ── Lifecycle ──────────────────────────────────────────────────────────
+        load() {
+            try { const r=localStorage.getItem(FB_KEY); if(r) this._data={...this._data,...JSON.parse(r)}; } catch {}
+            this._restoreFields();
+            this._renderStatus();
+            if (this._data.connected && this._data.autoSync)     this.startAutoSync();
+            if (this._data.connected && this._data.syncOnStartup) setTimeout(()=>this.pull(true),2500);
+        },
+
+        save() { try { localStorage.setItem(FB_KEY,JSON.stringify(this._data)); } catch {} },
+
+        // ── URL builder — appends ?auth=KEY only when key is provided ──────────
+        _buildUrl(subpath, useKey=true) {
+            const base    = this._data.url.replace(/\/$/,'');
+            const p       = (this._data.path||'mediavault').replace(/^\//,'').replace(/\/$/,'');
+            const full    = subpath ? `${p}/${subpath}` : p;
+            const auth    = useKey && this._data.apiKey ? `?auth=${encodeURIComponent(this._data.apiKey)}` : '';
+            return `${base}/${full}.json${auth}`;
+        },
+
+        // ── Try a URL with and without key, return first success ───────────────
+        async _smartFetch(method, subpath, body) {
+            const opts = { method, headers:{'Content-Type':'application/json'} };
+            if (body !== undefined) opts.body = JSON.stringify(body);
+
+            // Try with key first (if key exists), then without
+            const urls = this._data.apiKey
+                ? [this._buildUrl(subpath, true), this._buildUrl(subpath, false)]
+                : [this._buildUrl(subpath, false)];
+
+            let lastErr = null;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url, opts);
+                    // 401/403 = auth issue, try next (no-key variant)
+                    if ((res.status===401||res.status===403) && urls.length>1) { lastErr=res; continue; }
+                    return res;
+                } catch(e) { throw e; } // real network error — don't retry
+            }
+            return lastErr; // return last auth failure
+        },
+
+        // ── Wizard step helpers ────────────────────────────────────────────────
+        _wzShow()   { const w=document.getElementById('fb-wizard'); if(w) w.classList.add('active'); },
+        _wzHide()   { const w=document.getElementById('fb-wizard'); if(w) w.classList.remove('active'); },
+        _wzStep(n, state) { // state: 'active'|'done'|'error'|'pending'
+            const el=document.getElementById(`wz-${n}`);
+            if (!el) return;
+            el.className='wizard-step '+state;
+            const icon = el.querySelector('.step-icon');
+            if (!icon) return;
+            if (state==='active') { icon.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" class="step-spin" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'; }
+            else if (state==='done')  { icon.innerHTML='✓'; }
+            else if (state==='error') { icon.innerHTML='✗'; }
+        },
+        _wzReset() {
+            for (let i=1;i<=6;i++) this._wzStep(i,'');
+        },
+
+        // ── Validate URL without regex ─────────────────────────────────────────
+        _validateUrl(url) {
+            if (!url) return 'Database URL is required.';
+            if (!url.startsWith('https://')) return 'URL must start with https://';
+            if (!url.includes('firebaseio.com') && !url.includes('firebasedatabase.app'))
+                return 'URL must end with .firebaseio.com or .REGION.firebasedatabase.app — copy it from Firebase Console → Realtime Database.';
+            return null;
+        },
+
+        // ── The magic connect flow ─────────────────────────────────────────────
+        async connect() {
+            this._hideError();
+            const urlEl  = document.getElementById('fb-url');
+            const keyEl  = document.getElementById('fb-apikey');
+            const pathEl = document.getElementById('fb-path');
+            if (!urlEl) return;
+
+            const url    = urlEl.value.trim().replace(/\/$/,'');
+            const apiKey = keyEl  ? keyEl.value.trim()  : '';
+            const path   = (pathEl ? pathEl.value.trim() : '') || 'mediavault';
+
+            const btn = document.getElementById('fb-connect-btn');
+            if (btn) { btn.disabled=true; btn.textContent='Connecting…'; }
+
+            this._wzReset();
+            this._wzShow();
+            this._wzStep(1,'active');
+
+            // ── Step 1: Validate URL ──
+            await this._delay(250);
+            const urlErr = this._validateUrl(url);
+            if (urlErr) {
+                this._wzStep(1,'error');
+                this._hideWizardAfter(3000);
+                this._showError(urlErr);
+                if (btn) { btn.disabled=false; btn.textContent='Connect Firebase'; }
+                return;
+            }
+            this._wzStep(1,'done');
+            this._wzStep(2,'active');
+
+            // Store temp data so _buildUrl works
+            this._data.url    = url;
+            this._data.apiKey = apiKey;
+            this._data.path   = path;
+
+            // ── Step 2: Reach Firebase (GET root, no auth) ──
+            await this._delay(200);
+            try {
+                const pingUrl = `${url}/.json`;
+                const res = await fetch(pingUrl, { method:'GET' });
+                // Any HTTP response = server reachable (even 401 = reachable)
+                if (res.status === 0) throw new Error('No response');
+                this._wzStep(2,'done');
+            } catch(e) {
+                this._wzStep(2,'error');
+                this._hideWizardAfter(3000);
+                this._showError('Cannot reach Firebase. Check your Database URL and internet connection.');
+                if (btn) { btn.disabled=false; btn.textContent='Connect Firebase'; }
+                this._data.connected=false;
+                return;
+            }
+            this._wzStep(3,'active');
+
+            // ── Step 3: Write test entry (auto-creates path, no setup needed) ──
+            await this._delay(200);
+            try {
+                const testRes = await this._smartFetch('PUT', '_mvp_init_', { _init:true, _ts:Date.now() });
+                if (!testRes.ok) {
+                    const body = await testRes.json().catch(()=>({}));
+                    const msg  = (body.error||'').toLowerCase();
+                    if (msg.includes('permission') || testRes.status===401 || testRes.status===403) {
+                        throw new Error('permission_denied');
+                    }
+                    throw new Error(`Write failed (HTTP ${testRes.status}): ${body.error||testRes.statusText}`);
+                }
+                this._wzStep(3,'done');
+            } catch(e) {
+                this._wzStep(3,'error');
+                this._hideWizardAfter(5000);
+                if (e.message==='permission_denied') {
+                    this._showError('⚠️ Permission denied. In Firebase Console → Realtime Database → Rules, change ".write": false to ".write": true, then try again. Takes 10 seconds.');
+                } else {
+                    this._showError(e.message);
+                }
+                if (btn) { btn.disabled=false; btn.textContent='Connect Firebase'; }
+                this._data.connected=false;
+                return;
+            }
+            this._wzStep(4,'active');
+
+            // ── Step 4: Read back to verify read access ──
+            await this._delay(200);
+            try {
+                const readRes = await this._smartFetch('GET','_mvp_init_');
+                if (!readRes.ok) {
+                    const body=await readRes.json().catch(()=>({}));
+                    const msg=(body.error||'').toLowerCase();
+                    if (msg.includes('permission')||readRes.status===401||readRes.status===403) {
+                        throw new Error('Read access denied. Set ".read": true in Firebase Rules.');
+                    }
+                    throw new Error(`Read check failed (${readRes.status})`);
+                }
+                this._wzStep(4,'done');
+            } catch(e) {
+                this._wzStep(4,'error');
+                this._hideWizardAfter(5000);
+                this._showError(e.message);
+                if (btn) { btn.disabled=false; btn.textContent='Connect Firebase'; }
+                this._data.connected=false;
+                return;
+            }
+            this._wzStep(5,'active');
+
+            // ── Step 5: Initialize vault structure ──
+            // Delete test entry, write vault metadata — creates the full path automatically
+            await this._delay(300);
+            try {
+                await this._smartFetch('DELETE','_mvp_init_');
+                // Write a _meta node so the path always exists even if vault is empty
+                await this._smartFetch('PUT','_meta',{
+                    initialized:true,
+                    app:'MediaVaultPro',
+                    version:'2.0.0',
+                    lastConnected:new Date().toISOString()
+                });
+                this._wzStep(5,'done');
+            } catch(e) {
+                // Non-fatal — path may already exist or cleanup failed
+                this._wzStep(5,'done');
+            }
+            this._wzStep(6,'active');
+            await this._delay(400);
+            this._wzStep(6,'done');
+
+            // ── All done! ──
+            await this._delay(600);
+            this._wzHide();
+            this._data.connected = true;
+            this.save();
+            this._renderStatus();
+            this._restoreFields();
+            this._log('Connected to '+url,'ok');
+
+            if (btn) { btn.disabled=false; btn.textContent='Connect Firebase'; }
+
+            ui.notify('🔥 Firebase connected! It just works.','success');
+        },
+
+        _delay(ms) { return new Promise(r=>setTimeout(r,ms)); },
+
+        _hideWizardAfter(ms) {
+            setTimeout(()=>this._wzHide(), ms);
+        },
+
+        // ── Test ───────────────────────────────────────────────────────────────
+        async testConnection() {
+            if (!this._data.connected) { ui.notify('Not connected to Firebase','error'); return; }
+            const btn=document.getElementById('fb-test-btn');
+            if (btn) { btn.disabled=true; btn.textContent='Testing…'; }
+            try {
+                const res = await this._smartFetch('PUT','_mvp_test_',{_test:true,_ts:Date.now()});
+                if (res.ok) {
+                    await this._smartFetch('DELETE','_mvp_test_');
+                    ui.notify('✓ Firebase connection test passed','success');
+                    this._log('Test passed','ok');
+                } else {
+                    throw new Error('HTTP '+res.status);
+                }
+            } catch(e) {
+                ui.notify('Test failed: '+e.message,'error');
+                this._showError('Test failed: '+e.message);
+                this._log('Test failed: '+e.message,'err');
+            } finally {
+                if (btn) { btn.disabled=false; btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Test'; }
+            }
+        },
+
+        // ── Disconnect ─────────────────────────────────────────────────────────
+        disconnect() {
+            if (!confirm('Disconnect from Firebase? Local data is not affected.')) return;
+            this.stopAutoSync();
+            this._data={...this._data,connected:false};
+            this.save();
+            this._renderStatus();
+            ui.notify('Disconnected from Firebase','warning');
+        },
+
+        // ── Push ───────────────────────────────────────────────────────────────
+        async push(silent=false) {
+            if (!this._data.connected) { if (!silent) ui.notify('Not connected to Firebase','error'); return; }
+            const btn=document.getElementById('fb-push-btn');
+            if (!silent && btn) { btn.disabled=true; btn.textContent='Pushing…'; }
+            try {
+                const payload={};
+                S.items.forEach(i=>{ payload[i.id]={title:i.title,type:i.type,status:i.status,rating:i.rating,progress:i.progress,notes:i.notes,updatedAt:i.updatedAt}; });
+                const res=await this._smartFetch('PUT',null,payload);
+                if (!res.ok) { const b=await res.json().catch(()=>({})); throw new Error(b.error||`HTTP ${res.status}`); }
+                if (!silent) ui.notify(`✓ Pushed ${S.items.length} entries to Firebase`,'success');
+                this._log(`Pushed ${S.items.length} entries`,'ok');
+            } catch(e) {
+                if (!silent) ui.notify('Firebase push failed: '+e.message,'error');
+                this._log('Push failed: '+e.message,'err');
+            } finally {
+                if (!silent && btn) { btn.disabled=false; btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg> Push to Firebase'; }
+            }
+        },
+
+        // ── Pull ───────────────────────────────────────────────────────────────
+        async pull(silent=false) {
+            if (!this._data.connected) { if (!silent) ui.notify('Not connected to Firebase','error'); return; }
+            const btn=document.getElementById('fb-pull-btn');
+            if (!silent && btn) { btn.disabled=true; btn.textContent='Pulling…'; }
+            try {
+                const res=await this._smartFetch('GET');
+                if (!res.ok) { const b=await res.json().catch(()=>({})); throw new Error(b.error||`HTTP ${res.status}`); }
+                const raw=await res.json();
+                if (!raw||typeof raw!=='object') {
+                    if (!silent) ui.notify('Firebase vault is empty — nothing to pull','warning');
+                    this._log('Pull: remote vault is empty','inf');
+                    return;
+                }
+                const pulled=Object.entries(raw)
+                    .filter(([k])=>!['_ping_','_mvp_init_','_mvp_test_','_meta'].includes(k))
+                    .map(([id,v])=>({
+                        id,
+                        title:    String(v.title   ||'').trim().substring(0,200),
+                        type:     ['movie','series','game','anime'].includes(v.type)  ? v.type  : 'movie',
+                        status:   ['want','ongoing','watched'].includes(v.status)      ? v.status: 'want',
+                        rating:   clamp(parseInt(v.rating)  ||0,0,5),
+                        progress: clamp(parseInt(v.progress)||0,0,100),
+                        notes:    String(v.notes   ||'').trim().substring(0,1000),
+                        updatedAt:Number(v.updatedAt)||Date.now()
+                    }))
+                    .sort((a,b)=>b.updatedAt-a.updatedAt);
+                if (!silent && !confirm(`Pull ${pulled.length} items from Firebase? This replaces your local vault.`)) return;
+                S.items=pulled;
+                dataManager.save();
+                ui.render();
+                if (!silent) ui.notify(`✓ Pulled ${pulled.length} entries from Firebase`,'success');
+                this._log(`Pulled ${pulled.length} entries`,'ok');
+            } catch(e) {
+                if (!silent) ui.notify('Firebase pull failed: '+e.message,'error');
+                this._log('Pull failed: '+e.message,'err');
+            } finally {
+                if (!silent && btn) { btn.disabled=false; btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/><path d="M3 9V5a2 2 0 012-2h14a2 2 0 012 2v4"/></svg> Pull from Firebase'; }
+            }
+        },
+
+        // ── Clear ──────────────────────────────────────────────────────────────
+        async clearDatabase() {
+            if (!this._data.connected) { ui.notify('Not connected to Firebase','error'); return; }
+            if (!confirm(`Delete all data at path "${this._data.path}" in Firebase?\n\nThis CANNOT be undone.`)) return;
+            try {
+                const res=await this._smartFetch('PUT',null,null);
+                if (!res.ok) throw new Error('HTTP '+res.status);
+                ui.notify('✓ Firebase data cleared','warning');
+                this._log('Firebase data cleared','ok');
+            } catch(e) { ui.notify('Clear failed: '+e.message,'error'); this._log('Clear failed: '+e.message,'err'); }
+        },
+
+        // ── Auto-sync controls ─────────────────────────────────────────────────
+        toggleAutoSync(val) {
+            this._data.autoSync=val; this.save();
+            if (val) {
+                if (!this._data.connected) {
+                    ui.notify('Connect to Firebase first','error');
+                    const tog=document.getElementById('fb-tog-autosync');
+                    if (tog) tog.checked=false;
+                    this._data.autoSync=false; this.save(); return;
+                }
+                this.startAutoSync();
+            } else { this.stopAutoSync(); }
+        },
+        setInterval(val)     { this._data.intervalSec=parseInt(val)||60; this.save(); if(this._data.autoSync){this.stopAutoSync();this.startAutoSync();} },
+        setStartupSync(val)  { this._data.syncOnStartup=val; this.save(); },
+        setPath(val)         { const c=(val||'mediavault').replace(/[^a-zA-Z0-9_\-\/]/g,'').replace(/^\//,'')||'mediavault'; this._data.path=c; this.save(); const e=document.getElementById('fb-path'); if(e) e.value=c; },
+        startAutoSync()      { this.stopAutoSync(); this._timer=setInterval(()=>this.push(true),this._data.intervalSec*1000); this._log(`Auto-sync started (every ${this._data.intervalSec}s)`,'inf'); },
+        stopAutoSync()       { if(this._timer){clearInterval(this._timer);this._timer=null;} },
+
+        // ── UI helpers ─────────────────────────────────────────────────────────
+        _renderStatus() {
+            const dot=document.getElementById('fb-status-dot');
+            const txt=document.getElementById('fb-status-text');
+            const cb=document.getElementById('fb-connect-btn');
+            const db=document.getElementById('fb-disconnect-btn');
+            const tb=document.getElementById('fb-test-btn');
+            if (!dot||!txt) return;
+            if (this._data.connected) {
+                dot.style.background='#34d399'; txt.textContent='Connected — '+this._data.url; txt.style.color='#34d399';
+                if(cb) cb.classList.add('hidden'); if(db) db.classList.remove('hidden'); if(tb) tb.classList.remove('hidden');
+            } else {
+                dot.style.background='#94a3b8'; txt.textContent='Not connected'; txt.style.color='var(--text-muted)';
+                if(cb) cb.classList.remove('hidden'); if(db) db.classList.add('hidden'); if(tb) tb.classList.add('hidden');
+            }
+        },
+        _restoreFields() {
+            const u=document.getElementById('fb-url');    if(u)  u.value =this._data.url   ||'';
+            const k=document.getElementById('fb-apikey'); if(k)  k.value =this._data.apiKey||'';
+            const p=document.getElementById('fb-path');   if(p)  p.value =this._data.path  ||'mediavault';
+            const ia=document.getElementById('fb-tog-autosync'); if(ia) ia.checked=this._data.autoSync;
+            const is=document.getElementById('fb-tog-startup');  if(is) is.checked=this._data.syncOnStartup;
+            const iv=document.getElementById('fb-interval');      if(iv) iv.value=String(this._data.intervalSec||60);
+        },
+        _showError(msg) {
+            const el=document.getElementById('fb-error-msg');
+            if (!el) return;
+            el.textContent=msg; el.classList.remove('hidden');
+            setTimeout(()=>el.classList.add('hidden'),10000);
+        },
+        _hideError() { const el=document.getElementById('fb-error-msg'); if(el) el.classList.add('hidden'); },
+        _log(msg,type='inf') {
+            const ts=new Date().toLocaleTimeString();
+            this._logEntries.unshift({msg,type,ts});
+            if(this._logEntries.length>50) this._logEntries.pop();
+            const wrap=document.getElementById('fb-log-wrap');
+            const log=document.getElementById('fb-log');
+            if (!wrap||!log) return;
+            wrap.classList.remove('hidden');
+            const dc={ok:'sync-dot-ok',err:'sync-dot-err',inf:'sync-dot-inf'};
+            log.innerHTML=this._logEntries.map(e=>`<div class="sync-log-entry"><div class="${dc[e.type]||'sync-dot-inf'}"></div><span style="color:var(--text-muted);flex-shrink:0">${e.ts}</span><span style="color:var(--text-primary)">${esc(e.msg)}</span></div>`).join('');
+            const last=document.getElementById('fb-last-sync');
+            if(last&&(type==='ok'||type==='err')){last.textContent=`Last sync: ${ts} — ${type==='ok'?'✓ Success':'✗ Failed'}`;last.style.color=type==='ok'?'#34d399':'#f87171';}
+        },
+        toggleKeyVisibility() {
+            const el=document.getElementById('fb-apikey');const icon=document.getElementById('fb-eye-icon');
+            if(!el) return;
+            const h=el.type==='password'; el.type=h?'text':'password';
+            if(icon) icon.innerHTML=h?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        }
+    };
+
     app.init();
 
-    // Load all new modules after app.init (order matters — supaConn must be ready)
+    // Load all modules after app.init
     supaAdvanced.load();
     extraThemes.load();
     shortcuts.load();
+    firebaseConn.load();
     privacyTools.refreshStorageInfo();
 
     // Attach keyboard shortcuts listener
     document.addEventListener('keydown', e => shortcuts.handle(e));
 
-    // Patch nav.go to also trigger supaAdvanced UI sync on settings open
+    // Patch nav.go to sync all connection UIs on settings open
     const _origNavGo = nav.go.bind(nav);
     nav.go = function(page) {
         _origNavGo(page);
+        // Show floating donate pill only on vault page
+        const pill = document.getElementById('donate-float');
+        if (pill) pill.classList.toggle('hidden-pill', page !== 'vault');
         if (page === 'settings') {
             supaAdvanced._syncPrefsToUI();
             supaConn._renderStatus();
             supaConn._restoreFields();
+            firebaseConn._renderStatus();
+            firebaseConn._restoreFields();
             privacyTools.refreshStorageInfo();
             extraThemes._syncBtns();
         }

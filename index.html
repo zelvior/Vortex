@@ -264,6 +264,76 @@
         .wizard-step.error  .step-icon { background:rgba(248,113,113,0.15); color:#f87171; }
         .step-spin { animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ═══ v3.0 NEW FEATURE STYLES ══════════════════════════════════════════ */
+
+        /* Smart Tags */
+        .tag-chip {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:2px 10px; border-radius:999px; font-size:0.68rem; font-weight:700;
+            background:rgba(var(--primary-rgb,59,130,246),0.12);
+            border:1px solid rgba(var(--primary-rgb,59,130,246),0.25);
+            color:var(--primary); cursor:default; white-space:nowrap;
+            transition:all 0.15s;
+        }
+        .tag-chip.removable:hover { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; }
+        .tag-chip.filter-active { background:var(--primary); color:#fff; border-color:var(--primary); }
+        #tag-input-wrap { display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+            padding:0.6rem 1rem; border-radius:1rem; border:1px solid var(--border);
+            background:rgba(255,255,255,0.04); min-height:48px; cursor:text; }
+        #tag-input-wrap input { background:transparent; border:none; outline:none; font-size:0.8rem;
+            color:var(--text-primary); min-width:80px; flex:1; font-family:inherit; }
+
+        /* Cover image */
+        .cover-img { width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:1rem 1rem 0 0; display:block; }
+        .cover-placeholder { width:100%; aspect-ratio:2/3; display:flex; align-items:center; justify-content:center;
+            border-radius:1rem 1rem 0 0; background:rgba(255,255,255,0.03); font-size:2.5rem; }
+        .card-has-cover { padding-top:0; overflow:hidden; }
+        .card-has-cover .cover-wrap { margin:-1.5rem -1.5rem 1rem -1.5rem; position:relative; }
+        .cover-fetch-btn { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6);
+            border-radius:0.5rem; padding:4px 8px; font-size:0.65rem; font-weight:700;
+            color:#fff; border:none; cursor:pointer; backdrop-filter:blur(4px); }
+
+        /* Urgency bar */
+        .urgency-bar { height:4px; border-radius:2px; overflow:hidden; background:rgba(255,255,255,0.06); }
+        .urgency-fill { height:100%; border-radius:2px; transition:width 0.6s cubic-bezier(0.16,1,0.3,1); }
+        .urgency-fill.red    { background:linear-gradient(90deg,#ef4444,#f97316); }
+        .urgency-fill.orange { background:linear-gradient(90deg,#f97316,#fbbf24); }
+        .urgency-fill.green  { background:linear-gradient(90deg,#10b981,#34d399); }
+
+        /* Profiles */
+        .profile-chip {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:0.4rem 1rem; border-radius:999px; font-size:0.75rem; font-weight:700;
+            border:1px solid var(--border); cursor:pointer; transition:all 0.2s;
+            background:transparent; color:var(--text-muted);
+        }
+        .profile-chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .profile-chip:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+
+        /* Drag & Drop */
+        .card-entry[draggable=true] { cursor:grab; }
+        .card-entry[draggable=true]:active { cursor:grabbing; }
+        .card-entry.drag-over { outline:2px dashed var(--primary); outline-offset:4px; transform:scale(1.02); }
+        .card-entry.dragging { opacity:0.4; transform:scale(0.97); }
+        #drag-handle { cursor:grab; opacity:0.3; transition:opacity 0.2s; }
+        .card-entry:hover #drag-handle { opacity:0.7; }
+
+        /* Stats dashboard extras */
+        .stat-ring { position:relative; width:64px; height:64px; flex-shrink:0; }
+        .stat-ring svg { transform:rotate(-90deg); }
+        .stat-ring-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+        /* Cover fetch spinner overlay */
+        .cover-loading { position:absolute; inset:0; background:rgba(0,0,0,0.5);
+            display:flex; align-items:center; justify-content:center; border-radius:1rem 1rem 0 0; }
+
+        /* Offline backup badge */
+        #backup-badge { position:fixed; top:16px; right:16px; z-index:60;
+            padding:4px 12px; border-radius:999px; font-size:0.65rem; font-weight:700;
+            background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);
+            color:#34d399; transition:all 0.3s; pointer-events:none; }
+        #backup-badge.stale { background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; }
     </style>
 </head>
 <body class="custom-scrollbar">
@@ -279,6 +349,9 @@
         <h3 id="loader-status" class="mt-8 text-xl font-bold heading-font tracking-tight">Syncing Vault...</h3>
         <p class="text-sm mt-2" style="color:var(--text-muted)">Optimizing data chunks for performance</p>
     </div>
+
+    <!-- Offline Backup Badge -->
+    <div id="backup-badge">Auto-saved</div>
 
     <!-- Floating donate pill (shows on vault page) -->
     <div id="donate-float">
@@ -337,6 +410,23 @@
 
         <!-- ══ VAULT PAGE ══ -->
         <div id="page-vault" class="page active">
+            <!-- Profile Switcher -->
+            <div class="flex items-center gap-3 mb-6 overflow-x-auto no-scrollbar pb-1">
+                <span class="text-xs font-black uppercase tracking-widest flex-shrink-0" style="color:var(--text-muted)">Vault:</span>
+                <div id="profile-list" class="flex gap-2 flex-shrink-0"></div>
+                <button onclick="profiles.addPrompt()" class="profile-chip flex-shrink-0" title="New vault">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Vault
+                </button>
+            </div>
+
+            <!-- Tag Filter Bar -->
+            <div id="tag-filter-bar" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-4 hidden">
+                <span class="text-xs font-black uppercase tracking-widest flex-shrink-0" style="color:var(--text-muted)">Tags:</span>
+                <div id="tag-filter-chips" class="flex gap-2"></div>
+                <button onclick="tagSystem.clearFilter()" id="tag-filter-clear" class="hidden text-xs font-bold px-3 py-1 rounded-full transition-all flex-shrink-0" style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)">Clear</button>
+            </div>
+
             <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                 <div class="glass p-6 rounded-3xl relative overflow-hidden group">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-colors"></div>
@@ -976,7 +1066,7 @@
                             <svg class="text-white" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                         </div>
                         <p class="font-black heading-font text-base">MediaVault<span style="color:var(--primary)">Pro</span></p>
-                        <p class="text-xs mt-1" style="color:var(--text-muted)">Version 2.0.0</p>
+                        <p class="text-xs mt-1" style="color:var(--text-muted)">Version 3.0.0</p>
                         <p class="text-xs mt-3 leading-relaxed" style="color:var(--text-muted)">All data stored locally in your browser. No cloud. No account required.</p>
                     </div>
 
@@ -995,6 +1085,49 @@
                             <p class="text-xs mt-3" style="color:var(--text-muted)">Supported by Ads · No forced payments · Always optional</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ STATS PAGE ══ -->
+        <div id="page-stats" class="page">
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="glass rounded-3xl p-6">
+                    <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--primary)">Analytics</p>
+                    <h2 class="text-2xl font-black heading-font">Your Vault Stats</h2>
+                </div>
+
+                <!-- Top row: big numbers -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-big-numbers"></div>
+
+                <!-- Genre / Type breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass rounded-3xl p-6">
+                        <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">By Media Type</p>
+                        <div id="stats-type-chart" class="space-y-3"></div>
+                    </div>
+                    <div class="glass rounded-3xl p-6">
+                        <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">By Status</p>
+                        <div id="stats-status-chart" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Rating distribution -->
+                <div class="glass rounded-3xl p-6">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Rating Distribution</p>
+                    <div id="stats-rating-dist" class="flex items-end gap-2 h-24"></div>
+                </div>
+
+                <!-- Top tags -->
+                <div class="glass rounded-3xl p-6">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Top Tags</p>
+                    <div id="stats-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Binge estimate + timeline -->
+                <div class="glass rounded-3xl p-6">
+                    <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--text-muted)">Binge Time Estimate</p>
+                    <div id="stats-binge" class="mt-2"></div>
                 </div>
             </div>
         </div>
@@ -1507,6 +1640,11 @@ CREATE POLICY "allow_all" ON mediavault
                 <span class="text-[10px] font-bold uppercase tracking-wider">Vault</span>
                 <div class="nav-dot"></div>
             </button>
+            <button onclick="nav.go('stats')" data-nav="stats" class="nav-tab flex flex-col items-center gap-1 pt-1" style="color:var(--text-muted)">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span class="text-[10px] font-bold uppercase tracking-wider">Stats</span>
+                <div class="nav-dot"></div>
+            </button>
             <button onclick="nav.go('settings')" data-nav="settings" class="nav-tab flex flex-col items-center gap-1 pt-1" style="color:var(--text-muted)">
                 <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 <span class="text-[10px] font-bold uppercase tracking-wider">Settings</span>
@@ -1589,6 +1727,61 @@ CREATE POLICY "allow_all" ON mediavault
                             style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"
                             placeholder="Quick review or current status..."></textarea>
                     </div>
+
+                    <!-- NEW: Tags -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">(press Enter or comma to add)</span></label>
+                        <div id="tag-input-wrap" onclick="document.getElementById('f-tag-input').focus()">
+                            <div id="f-tags-preview" class="flex flex-wrap gap-1"></div>
+                            <input id="f-tag-input" type="text" maxlength="30" placeholder="late night, masterpiece…"
+                                onkeydown="tagSystem.handleKey(event)" oninput="tagSystem.handleInput(event)">
+                        </div>
+                        <div id="tag-suggestions" class="flex flex-wrap gap-1 mt-1"></div>
+                        <input type="hidden" id="f-tags">
+                    </div>
+
+                    <!-- NEW: Episodes tracker (shown for series/anime) -->
+                    <div id="f-episodes-wrap" class="space-y-2 hidden">
+                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Episodes</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold" style="color:var(--text-muted)">Watched</label>
+                                <input type="number" id="f-ep-watched" min="0" placeholder="0"
+                                    class="w-full border rounded-xl px-4 py-3 focus:outline-none font-semibold text-sm mt-1"
+                                    style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"
+                                    onchange="episodeTracker.autoCalcProgress()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold" style="color:var(--text-muted)">Total</label>
+                                <input type="number" id="f-ep-total" min="0" placeholder="12"
+                                    class="w-full border rounded-xl px-4 py-3 focus:outline-none font-semibold text-sm mt-1"
+                                    style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"
+                                    onchange="episodeTracker.autoCalcProgress()">
+                            </div>
+                        </div>
+                        <div id="f-ep-hint" class="text-xs font-bold" style="color:var(--text-muted)"></div>
+                    </div>
+
+                    <!-- NEW: Cover Image -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Cover Image</label>
+                        <div class="flex gap-3 items-start">
+                            <div id="f-cover-preview" class="w-16 h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center text-2xl" style="background:rgba(255,255,255,0.04);border:1px solid var(--border)">🎬</div>
+                            <div class="flex-1 space-y-2">
+                                <input type="text" id="f-cover-url" placeholder="Paste image URL or auto-fetch below…"
+                                    class="w-full border rounded-xl px-4 py-3 focus:outline-none text-xs font-medium"
+                                    style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"
+                                    oninput="coverSystem.previewUrl(this.value)">
+                                <button type="button" onclick="coverSystem.fetchPoster()"
+                                    class="btn-primary text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    Auto-fetch Poster (TMDB)
+                                </button>
+                                <div id="f-cover-status" class="text-xs" style="color:var(--text-muted)"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="f-cover">
+                    </div>
                     <button type="submit" id="form-submit-btn"
                         class="btn-primary w-full text-white py-5 rounded-2xl font-black heading-font text-lg transition-all active:scale-[0.98]">
                         Add to Vault
@@ -1632,7 +1825,10 @@ CREATE POLICY "allow_all" ON mediavault
     // ─── State ────────────────────────────────────────────────────────────────
     const S = {
         items: [], filter: 'all', search: '', isDeleting: false,
-        prefs: { ...DEFAULTS }
+        prefs: { ...DEFAULTS },
+        activeProfile: 'default',
+        activeTagFilter: null,
+        dragSrcId: null
     };
 
     // ─── Utils ────────────────────────────────────────────────────────────────
@@ -1648,7 +1844,14 @@ CREATE POLICY "allow_all" ON mediavault
         rating:    clamp(parseInt(i.rating)   ||0, 0, 5),
         progress:  clamp(parseInt(i.progress) ||0, 0, 100),
         notes:     String(i.notes||'').trim().substring(0,1000),
-        updatedAt: Number(i.updatedAt) || Date.now()
+        updatedAt: Number(i.updatedAt) || Date.now(),
+        // v3.0 fields
+        tags:      Array.isArray(i.tags) ? i.tags.map(t=>String(t).trim().substring(0,30)).filter(Boolean).slice(0,10) : [],
+        cover:     String(i.cover||'').substring(0,500),
+        epWatched: parseInt(i.epWatched)||0,
+        epTotal:   parseInt(i.epTotal)||0,
+        sortOrder: Number(i.sortOrder)||0,
+        profileId: String(i.profileId||'default')
     });
 
     // ─── Config / Settings ────────────────────────────────────────────────────
@@ -2982,7 +3185,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                 await this._smartFetch('PUT','_meta',{
                     initialized:true,
                     app:'MediaVaultPro',
-                    version:'2.0.0',
+                    version:'3.0.0',
                     lastConnected:new Date().toISOString()
                 });
                 this._wzStep(5,'done');
@@ -3191,16 +3394,731 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         }
     };
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: MULTI-PROFILE SYSTEM ──────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const PROFILES_KEY = 'mvp_profiles_v1';
+    const profiles = {
+        _list: [{ id:'default', name:'My Vault', emoji:'🎬' }],
+
+        load() {
+            try {
+                const r = localStorage.getItem(PROFILES_KEY);
+                if (r) this._list = JSON.parse(r);
+                if (!this._list.find(p=>p.id==='default')) {
+                    this._list.unshift({ id:'default', name:'My Vault', emoji:'🎬' });
+                }
+            } catch {}
+            this._render();
+        },
+
+        save() {
+            try { localStorage.setItem(PROFILES_KEY, JSON.stringify(this._list)); } catch {}
+        },
+
+        _render() {
+            const el = document.getElementById('profile-list');
+            if (!el) return;
+            el.innerHTML = this._list.map(p => `
+                <button onclick="profiles.switchTo('${esc(p.id)}')"
+                    class="profile-chip ${p.id === S.activeProfile ? 'active' : ''}"
+                    title="${esc(p.name)}">
+                    ${esc(p.emoji)} ${esc(p.name)}
+                    ${this._list.length > 1 && p.id !== 'default'
+                        ? `<span onclick="event.stopPropagation();profiles.remove('${esc(p.id)}')" style="margin-left:4px;opacity:0.5;font-size:1rem;line-height:1" title="Delete vault">&times;</span>`
+                        : ''}
+                </button>`).join('');
+        },
+
+        switchTo(id) {
+            S.activeProfile = id;
+            S.activeTagFilter = null;
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
+            S.items = all.filter(i => (i.profileId||'default') === id).map(sanitize);
+            dataManager.save();
+            ui.render();
+            this._render();
+            tagSystem.renderFilterBar();
+        },
+
+        addPrompt() {
+            const name = prompt('New vault name (e.g. "Anime Only", "Gaming"):');
+            if (!name || !name.trim()) return;
+            const emoji = prompt('Pick an emoji for this vault:', '📂') || '📂';
+            const id = 'p_' + uid();
+            this._list.push({ id, name: name.trim().substring(0,30), emoji: emoji.trim().substring(0,2)||'📂' });
+            this.save();
+            this.switchTo(id);
+        },
+
+        remove(id) {
+            if (id === 'default') return;
+            if (!confirm('Delete this vault and all its entries? Cannot be undone.')) return;
+            this._list = this._list.filter(p => p.id !== id);
+            this.save();
+            // Remove items from master store
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
+            localStorage.setItem(STORAGE_KEY + '_all', JSON.stringify(all.filter(i => (i.profileId||'default') !== id)));
+            if (S.activeProfile === id) this.switchTo('default');
+            else this._render();
+        },
+
+        // Save current profile items back into the master all-profiles store
+        flushCurrent() {
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
+            const others = all.filter(i => (i.profileId||'default') !== S.activeProfile);
+            const mine   = S.items.map(i => ({...i, profileId: S.activeProfile}));
+            localStorage.setItem(STORAGE_KEY + '_all', JSON.stringify([...others, ...mine]));
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: SMART TAGS SYSTEM ─────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const tagSystem = {
+        _formTags: [],
+
+        // Return all unique tags across the current profile
+        allTags() {
+            const set = new Set();
+            S.items.forEach(i => (i.tags||[]).forEach(t => set.add(t)));
+            return [...set].sort();
+        },
+
+        // Called from form — handle Enter/comma to add a tag
+        handleKey(e) {
+            if (e.key === 'Enter') { e.preventDefault(); this._addFromInput(); }
+            if (e.key === ',')     { e.preventDefault(); this._addFromInput(); }
+            if (e.key === 'Backspace') {
+                const inp = document.getElementById('f-tag-input');
+                if (inp && !inp.value && this._formTags.length) {
+                    this._formTags.pop();
+                    this._renderFormTags();
+                }
+            }
+        },
+
+        handleInput(e) {
+            const val = e.target.value;
+            if (val.endsWith(',')) { this._addFromInput(); return; }
+            // Show suggestions
+            const sugEl = document.getElementById('tag-suggestions');
+            if (!sugEl) return;
+            const existing = this.allTags().filter(t =>
+                t.toLowerCase().includes(val.toLowerCase()) && !this._formTags.includes(t) && val.length > 0
+            ).slice(0,6);
+            sugEl.innerHTML = existing.map(t =>
+                `<button type="button" onclick="tagSystem.addTag('${esc(t)}')" class="tag-chip" style="cursor:pointer">${esc(t)}</button>`
+            ).join('');
+        },
+
+        _addFromInput() {
+            const inp = document.getElementById('f-tag-input');
+            if (!inp) return;
+            const val = inp.value.trim().replace(/,$/, '').trim();
+            if (val) this.addTag(val);
+            inp.value = '';
+            const sugEl = document.getElementById('tag-suggestions');
+            if (sugEl) sugEl.innerHTML = '';
+        },
+
+        addTag(tag) {
+            tag = tag.trim().substring(0,30);
+            if (!tag || this._formTags.includes(tag)) return;
+            if (this._formTags.length >= 10) { ui.notify('Max 10 tags per entry','warning'); return; }
+            this._formTags.push(tag);
+            this._renderFormTags();
+        },
+
+        removeFormTag(tag) {
+            this._formTags = this._formTags.filter(t => t !== tag);
+            this._renderFormTags();
+        },
+
+        _renderFormTags() {
+            const el = document.getElementById('f-tags-preview');
+            const hid = document.getElementById('f-tags');
+            if (el) el.innerHTML = this._formTags.map(t =>
+                `<span class="tag-chip removable" onclick="tagSystem.removeFormTag('${esc(t)}')">${esc(t)} &times;</span>`
+            ).join('');
+            if (hid) hid.value = JSON.stringify(this._formTags);
+        },
+
+        loadFormTags(tags) {
+            this._formTags = [...(tags||[])];
+            this._renderFormTags();
+        },
+
+        getFormTags() { return [...this._formTags]; },
+
+        // Filter bar
+        renderFilterBar() {
+            const bar  = document.getElementById('tag-filter-bar');
+            const chips = document.getElementById('tag-filter-chips');
+            const clear = document.getElementById('tag-filter-clear');
+            const all  = this.allTags();
+            if (!bar || !chips) return;
+            if (!all.length) { bar.classList.add('hidden'); return; }
+            bar.classList.remove('hidden');
+            chips.innerHTML = all.map(t => `
+                <button onclick="tagSystem.setFilter('${esc(t)}')"
+                    class="tag-chip ${S.activeTagFilter===t?'filter-active':''}"
+                    style="cursor:pointer">${esc(t)}</button>`
+            ).join('');
+            if (clear) clear.classList.toggle('hidden', !S.activeTagFilter);
+        },
+
+        setFilter(tag) {
+            S.activeTagFilter = (S.activeTagFilter === tag) ? null : tag;
+            this.renderFilterBar();
+            ui.render();
+        },
+
+        clearFilter() {
+            S.activeTagFilter = null;
+            this.renderFilterBar();
+            ui.render();
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: EPISODE TRACKER ───────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const episodeTracker = {
+        autoCalcProgress() {
+            const w = parseInt(document.getElementById('f-ep-watched')?.value)||0;
+            const t = parseInt(document.getElementById('f-ep-total')?.value)||0;
+            const hint = document.getElementById('f-ep-hint');
+            const prog = document.getElementById('f-progress');
+            if (t > 0) {
+                const pct = Math.round((w / t) * 100);
+                if (prog) { prog.value = pct; }
+                const left = t - w;
+                if (hint) {
+                    if (left <= 0)       hint.textContent = '✅ All caught up!';
+                    else if (left <= 2)  hint.textContent = `🔥 Only ${left} episode${left>1?'s':''} left!`;
+                    else if (left <= 5)  hint.textContent = `⚡ ${left} episodes left — almost there`;
+                    else                 hint.textContent = `${left} episodes remaining`;
+                    hint.style.color = left <= 2 ? '#ef4444' : left <= 5 ? '#f97316' : 'var(--text-muted)';
+                }
+            } else {
+                if (hint) hint.textContent = '';
+            }
+        },
+
+        syncFormVisibility() {
+            const type = document.getElementById('f-type')?.value;
+            const wrap = document.getElementById('f-episodes-wrap');
+            if (!wrap) return;
+            wrap.classList.toggle('hidden', !['series','anime'].includes(type));
+        },
+
+        urgencyLabel(item) {
+            if (item.status !== 'ongoing' || !item.epTotal) return null;
+            const left = item.epTotal - item.epWatched;
+            if (left <= 0)  return { text:'Done!', pct:100, cls:'green' };
+            if (left <= 2)  return { text:`🔥 ${left} ep${left>1?'s':''} left!`, pct:Math.round((item.epWatched/item.epTotal)*100), cls:'red' };
+            if (left <= 5)  return { text:`⚡ ${left} eps left`, pct:Math.round((item.epWatched/item.epTotal)*100), cls:'orange' };
+            return { text:`${item.epWatched}/${item.epTotal} eps`, pct:Math.round((item.epWatched/item.epTotal)*100), cls:'green' };
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: COVER IMAGE + TMDB FETCH ─────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const TMDB_KEY = '4acab3f5af43086f6c70ac0cd4ac7547'; // public read-only key
+    const coverSystem = {
+        previewUrl(url) {
+            const prev = document.getElementById('f-cover-preview');
+            const hid  = document.getElementById('f-cover');
+            if (!prev) return;
+            if (url && url.startsWith('http')) {
+                prev.innerHTML = `<img src="${esc(url)}" class="cover-img" onerror="this.parentElement.innerHTML='❌'">`;
+                if (hid) hid.value = url;
+            } else {
+                prev.innerHTML = '🎬';
+                if (hid) hid.value = '';
+            }
+        },
+
+        async fetchPoster() {
+            const title  = document.getElementById('f-title')?.value.trim();
+            const type   = document.getElementById('f-type')?.value;
+            const status = document.getElementById('f-cover-status');
+            if (!title) { ui.notify('Enter a title first','warning'); return; }
+            if (status) { status.textContent = '⏳ Fetching…'; status.style.color='var(--text-muted)'; }
+            try {
+                // TMDB free API — no key required for basic search but key increases limits
+                const mediaType = (type === 'movie') ? 'movie' : (type === 'game') ? 'multi' : 'tv';
+                const searchUrl = `https://api.themoviedb.org/3/search/${mediaType === 'multi' ? 'multi' : mediaType}?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}&page=1`;
+                const res  = await fetch(searchUrl);
+                const data = await res.json();
+                const results = data.results || [];
+                const hit = results.find(r => r.poster_path) || results[0];
+                if (hit?.poster_path) {
+                    const url = `https://image.tmdb.org/t/p/w500${hit.poster_path}`;
+                    document.getElementById('f-cover-url').value = url;
+                    this.previewUrl(url);
+                    if (status) { status.textContent = `✅ Found: ${hit.title||hit.name}`; status.style.color='#34d399'; }
+                } else {
+                    if (status) { status.textContent = '❌ No poster found — try a different title'; status.style.color='#f87171'; }
+                }
+            } catch(e) {
+                if (status) { status.textContent = '❌ Fetch failed: ' + e.message; status.style.color='#f87171'; }
+            }
+        },
+
+        loadFormCover(url) {
+            const inp = document.getElementById('f-cover-url');
+            if (inp) inp.value = url || '';
+            this.previewUrl(url || '');
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: OFFLINE AUTO-BACKUP ───────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const BACKUP_KEY = 'mvp_auto_backup_v1';
+    const autoBackup = {
+        _timer: null,
+        _intervalMs: 5 * 60 * 1000, // 5 minutes
+
+        start() {
+            this.save(); // save immediately on start
+            this._timer = setInterval(() => this.save(), this._intervalMs);
+        },
+
+        save() {
+            try {
+                const payload = { items: S.items, ts: Date.now(), profile: S.activeProfile };
+                localStorage.setItem(BACKUP_KEY, JSON.stringify(payload));
+                const badge = document.getElementById('backup-badge');
+                if (badge) {
+                    badge.textContent = `Saved ${new Date().toLocaleTimeString()}`;
+                    badge.classList.remove('stale');
+                }
+            } catch {}
+        },
+
+        restore() {
+            try {
+                const r = localStorage.getItem(BACKUP_KEY);
+                if (!r) return false;
+                const { items, ts } = JSON.parse(r);
+                const age = Date.now() - ts;
+                if (age > 7 * 24 * 60 * 60 * 1000) return false; // older than 7 days
+                if (!Array.isArray(items) || !items.length) return false;
+                if (!confirm(`Restore ${items.length} items from auto-backup (${new Date(ts).toLocaleString()})?`)) return false;
+                S.items = items.map(sanitize);
+                dataManager.save();
+                profiles.flushCurrent();
+                ui.render();
+                ui.notify(`Restored ${items.length} items from backup`, 'success');
+                return true;
+            } catch { return false; }
+        },
+
+        markStale() {
+            const badge = document.getElementById('backup-badge');
+            if (badge) badge.classList.add('stale');
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: DRAG & DROP REORDERING ────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const dragDrop = {
+        _srcId: null,
+
+        onDragStart(e, id) {
+            this._srcId = id;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => document.getElementById(`item-${id}`)?.classList.add('dragging'), 0);
+        },
+
+        onDragOver(e, id) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            document.querySelectorAll('.card-entry').forEach(c => c.classList.remove('drag-over'));
+            if (id !== this._srcId) document.getElementById(`item-${id}`)?.classList.add('drag-over');
+        },
+
+        onDrop(e, targetId) {
+            e.preventDefault();
+            document.querySelectorAll('.card-entry').forEach(c => {
+                c.classList.remove('drag-over'); c.classList.remove('dragging');
+            });
+            if (!this._srcId || this._srcId === targetId) return;
+            const srcIdx = S.items.findIndex(i => i.id === this._srcId);
+            const tgtIdx = S.items.findIndex(i => i.id === targetId);
+            if (srcIdx === -1 || tgtIdx === -1) return;
+            // Re-order
+            const [moved] = S.items.splice(srcIdx, 1);
+            S.items.splice(tgtIdx, 0, moved);
+            // Update sortOrder
+            S.items.forEach((item, idx) => { item.sortOrder = idx; });
+            dataManager.save();
+            profiles.flushCurrent();
+            ui.render();
+            this._srcId = null;
+        },
+
+        onDragEnd() {
+            document.querySelectorAll('.card-entry').forEach(c => {
+                c.classList.remove('drag-over'); c.classList.remove('dragging');
+            });
+            this._srcId = null;
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.0: STATS DASHBOARD ───────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const statsPage = {
+        BINGE_MINS: { movie:120, series:40, game:300, anime:24 },
+
+        render() {
+            const items  = S.items;
+            const total  = items.length;
+            const rated  = items.filter(i=>i.rating>0);
+            const avgRating = rated.length ? (rated.reduce((s,i)=>s+i.rating,0)/rated.length).toFixed(1) : '—';
+
+            // Binge hours estimate
+            const bingeHours = Math.round(
+                items.reduce((s,i) => s + (this.BINGE_MINS[i.type]||60) * (i.progress/100), 0) / 60
+            );
+
+            // Big numbers
+            const bigEl = document.getElementById('stats-big-numbers');
+            if (bigEl) bigEl.innerHTML = [
+                { label:'Total Titles', val:total,             color:'var(--primary)' },
+                { label:'Avg Rating',   val:avgRating + '★',   color:'#fbbf24' },
+                { label:'Completed',    val:items.filter(i=>i.status==='watched').length, color:'#34d399' },
+                { label:'Binge Hours',  val:bingeHours + 'h',  color:'#a78bfa' }
+            ].map(s=>`
+                <div class="glass p-5 rounded-3xl text-center">
+                    <div class="text-3xl font-black heading-font mb-1" style="color:${s.color}">${esc(String(s.val))}</div>
+                    <div class="text-xs font-bold uppercase tracking-widest" style="color:var(--text-muted)">${s.label}</div>
+                </div>`).join('');
+
+            // Type chart
+            const typeEl = document.getElementById('stats-type-chart');
+            const typeMap = { movie:'🎬 Movie', series:'📺 Series', game:'🎮 Game', anime:'🍱 Anime' };
+            const typeColors = { movie:'#60a5fa', series:'#a78bfa', game:'#f472b6', anime:'#fb923c' };
+            if (typeEl && total) typeEl.innerHTML = Object.entries(typeMap).map(([k,label])=>{
+                const cnt = items.filter(i=>i.type===k).length;
+                const pct = Math.round((cnt/total)*100);
+                return `<div class="mb-2">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-xs font-bold" style="color:var(--text-muted)">${label}</span>
+                        <span class="text-xs font-black" style="color:${typeColors[k]}">${cnt}</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${typeColors[k]}"></div></div>
+                </div>`;
+            }).join('');
+
+            // Status chart
+            const statusEl = document.getElementById('stats-status-chart');
+            const statusMap = { want:'📋 Watchlist', ongoing:'▶ In Progress', watched:'✅ Completed' };
+            const statusColors = { want:'#94a3b8', ongoing:'#60a5fa', watched:'#34d399' };
+            if (statusEl && total) statusEl.innerHTML = Object.entries(statusMap).map(([k,label])=>{
+                const cnt = items.filter(i=>i.status===k).length;
+                const pct = Math.round((cnt/total)*100);
+                return `<div class="mb-2">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-xs font-bold" style="color:var(--text-muted)">${label}</span>
+                        <span class="text-xs font-black" style="color:${statusColors[k]}">${cnt}</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${statusColors[k]}"></div></div>
+                </div>`;
+            }).join('');
+
+            // Rating distribution bar chart
+            const ratingEl = document.getElementById('stats-rating-dist');
+            if (ratingEl) {
+                const counts = [1,2,3,4,5].map(r => items.filter(i=>i.rating===r).length);
+                const maxC = Math.max(...counts, 1);
+                ratingEl.innerHTML = counts.map((c,i)=>`
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <span class="text-xs font-black" style="color:var(--text-muted)">${c||''}</span>
+                        <div class="w-full rounded-t-lg transition-all" style="height:${Math.round((c/maxC)*80)+4}px;background:${c?'#fbbf24':'rgba(255,255,255,0.05)'}"></div>
+                        <span class="text-xs" style="color:var(--text-muted)">${'⭐'.repeat(i+1)}</span>
+                    </div>`).join('');
+            }
+
+            // Top tags
+            const tagsEl = document.getElementById('stats-tags');
+            if (tagsEl) {
+                const tagCount = {};
+                items.forEach(i=>(i.tags||[]).forEach(t=>{ tagCount[t]=(tagCount[t]||0)+1; }));
+                const sorted = Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,20);
+                tagsEl.innerHTML = sorted.length
+                    ? sorted.map(([t,c])=>`<span class="tag-chip" style="cursor:pointer" onclick="tagSystem.setFilter('${esc(t)}');nav.go('vault')">${esc(t)} <strong>${c}</strong></span>`).join('')
+                    : `<span style="color:var(--text-muted);font-size:0.8rem">No tags yet — add tags to entries to see them here</span>`;
+            }
+
+            // Binge estimate
+            const bingeEl = document.getElementById('stats-binge');
+            if (bingeEl) {
+                const days = (bingeHours / 24).toFixed(1);
+                bingeEl.innerHTML = `
+                    <div class="flex items-baseline gap-3 mb-2">
+                        <span class="text-4xl font-black heading-font" style="color:#a78bfa">${bingeHours}h</span>
+                        <span style="color:var(--text-muted);font-size:0.9rem">≈ ${days} days of content consumed</span>
+                    </div>
+                    <p class="text-xs" style="color:var(--text-muted)">Estimated from your progress × average runtime per type (Movie 2h, Series 40min/ep, Anime 24min/ep, Game 5h/session).</p>`;
+            }
+        }
+    };
+
     app.init();
 
-    // Load all modules after app.init
+    // ── v3.0 Boot patches ──────────────────────────────────────────────────────
+
+    // 1. Load profiles and tag filter bar
+    profiles.load();
+    tagSystem.renderFilterBar();
+
+    // 2. Start auto-backup
+    autoBackup.start();
+
+    // 3. Patch dataManager.save to also flush profiles store and backup
+    const _origDmSave = dataManager.save.bind(dataManager);
+    dataManager.save = function() {
+        _origDmSave();
+        profiles.flushCurrent();
+        autoBackup.save();
+    };
+
+    // 4. Patch app.save to include tags, cover, episodes
+    const _origAppSave = app.save.bind(app);
+    app.save = function(e) {
+        e.preventDefault();
+        const tel = document.getElementById('f-title');
+        const title = tel.value.trim();
+        if (!title) { ui.notify('Title is required.','error'); tel.focus(); return; }
+        const id     = document.getElementById('f-id').value;
+        const status = document.getElementById('f-status').value;
+        const rawP   = parseInt(document.getElementById('f-progress').value)||0;
+        const newItem = {
+            id:        id || uid(),
+            title,
+            status,
+            type:      document.getElementById('f-type').value,
+            rating:    clamp(parseInt(document.getElementById('f-rating').value)||0, 0, 5),
+            progress:  status==='watched' ? 100 : status==='want' ? 0 : clamp(rawP,0,100),
+            notes:     document.getElementById('f-notes').value.trim().substring(0,1000),
+            updatedAt: Date.now(),
+            tags:      tagSystem.getFormTags(),
+            cover:     document.getElementById('f-cover')?.value || '',
+            epWatched: parseInt(document.getElementById('f-ep-watched')?.value)||0,
+            epTotal:   parseInt(document.getElementById('f-ep-total')?.value)||0,
+            profileId: S.activeProfile,
+            sortOrder: id ? (S.items.find(i=>i.id===id)?.sortOrder ?? S.items.length) : 0
+        };
+        if (id) {
+            const idx = S.items.findIndex(i=>i.id===id);
+            if (idx!==-1) S.items[idx]=newItem; else S.items.unshift(newItem);
+            ui.notify('Entry updated','success');
+        } else {
+            S.items.unshift(newItem);
+            ui.notify('Entry added to vault','success');
+        }
+        dataManager.save();
+        ui.toggleModal(false);
+        ui.render();
+        tagSystem.renderFilterBar();
+    };
+
+    // 5. Patch ui.toggleModal to load v3 fields when editing
+    const _origToggleModal = ui.toggleModal.bind(ui);
+    ui.toggleModal = function(show, id=null) {
+        _origToggleModal(show, id);
+        if (show) {
+            if (id) {
+                const item = S.items.find(i=>i.id===id);
+                if (item) {
+                    tagSystem.loadFormTags(item.tags||[]);
+                    coverSystem.loadFormCover(item.cover||'');
+                    const ew = document.getElementById('f-ep-watched');
+                    const et = document.getElementById('f-ep-total');
+                    if (ew) ew.value = item.epWatched||0;
+                    if (et) et.value = item.epTotal||0;
+                    episodeTracker.autoCalcProgress();
+                }
+            } else {
+                tagSystem.loadFormTags([]);
+                coverSystem.loadFormCover('');
+                const ew = document.getElementById('f-ep-watched');
+                const et = document.getElementById('f-ep-total');
+                if (ew) ew.value = '';
+                if (et) et.value = '';
+                const hint = document.getElementById('f-ep-hint');
+                if (hint) hint.textContent = '';
+                const cs = document.getElementById('f-cover-status');
+                if (cs) cs.textContent = '';
+            }
+            episodeTracker.syncFormVisibility();
+        }
+    };
+
+    // 6. Patch f-type change to show/hide episode fields
+    document.getElementById('f-type')?.addEventListener('change', () => {
+        episodeTracker.syncFormVisibility();
+    });
+
+    // 7. Patch ui.render to include tags, cover, drag-drop, and tag filter
+    const _origRender = ui.render.bind(ui);
+    ui.render = function() {
+        const grid = document.getElementById('media-grid');
+        const sort = document.getElementById('global-sort').value;
+        grid.className = DENSITY[S.prefs.density] || DENSITY.normal;
+
+        let data = [...S.items].filter(item => {
+            const mf  = S.filter==='all' || item.status===S.filter;
+            const ms  = !S.search || item.title.toLowerCase().includes(S.search) || (item.notes||'').toLowerCase().includes(S.search) || (item.tags||[]).some(t=>t.toLowerCase().includes(S.search));
+            const mtf = !S.activeTagFilter || (item.tags||[]).includes(S.activeTagFilter);
+            return mf && ms && mtf;
+        }).sort((a,b)=>{
+            if (sort==='rating')    return b.rating-a.rating || b.updatedAt-a.updatedAt;
+            if (sort==='alpha')     return a.title.localeCompare(b.title);
+            if (sort==='order')     return (a.sortOrder||0)-(b.sortOrder||0);
+            return b.updatedAt-a.updatedAt;
+        });
+
+        if (!data.length) {
+            const empty = !S.items.length;
+            grid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center py-24" style="color:var(--text-muted)">
+                    <div class="p-6 rounded-full mb-4" style="background:var(--surface-card);border:1px solid var(--border)">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    </div>
+                    <p class="font-bold text-lg">${empty?'Your vault is empty.':'No entries match your criteria.'}</p>
+                    <p class="text-sm mt-1">${empty?'Click "Add Media" to get started.':'Try adjusting your search or filters.'}</p>
+                </div>`;
+        } else {
+            const tl = { movie:'🎬 Movie', series:'📺 Series', game:'🎮 Game', anime:'🍱 Anime' };
+            const ss = { want:'background:rgba(148,163,184,0.1);color:#94a3b8', ongoing:'background:rgba(59,130,246,0.1);color:#60a5fa', watched:'background:rgba(16,185,129,0.1);color:#34d399' };
+            const sl = { want:'Watchlist', ongoing:'Active', watched:'Archived' };
+            grid.innerHTML = data.map(item => {
+                const t   = esc(item.title), id2 = esc(item.id);
+                const hasCover = item.cover && item.cover.startsWith('http');
+                const coverHtml = hasCover ? `
+                    <div class="cover-wrap">
+                        <img src="${esc(item.cover)}" class="cover-img" loading="lazy" onerror="this.parentElement.style.display='none'">
+                    </div>` : '';
+
+                // Episode urgency
+                const urgency = episodeTracker.urgencyLabel(item);
+                const urgencyHtml = urgency ? `
+                    <div class="mb-3">
+                        <div class="flex justify-between text-[10px] font-black mb-1" style="color:${urgency.cls==='red'?'#ef4444':urgency.cls==='orange'?'#f97316':'var(--text-muted)'}">
+                            <span>${esc(urgency.text)}</span><span>${urgency.pct}%</span>
+                        </div>
+                        <div class="urgency-bar"><div class="urgency-fill ${urgency.cls}" style="width:${urgency.pct}%"></div></div>
+                    </div>` : item.status==='ongoing' ? `
+                    <div class="mb-3">
+                        <div class="flex justify-between text-[10px] font-black uppercase mb-1" style="color:var(--text-muted)">
+                            <span>Progress</span><span>${item.progress}%</span>
+                        </div>
+                        <div class="urgency-bar"><div class="urgency-fill green" style="width:${item.progress}%"></div></div>
+                    </div>` : '';
+
+                // Tags
+                const tagsHtml = (item.tags||[]).length ? `
+                    <div class="flex flex-wrap gap-1 mb-3">
+                        ${item.tags.slice(0,4).map(tag=>`<span class="tag-chip" onclick="event.stopPropagation();tagSystem.setFilter('${esc(tag)}')" style="cursor:pointer;font-size:0.62rem;padding:1px 8px">${esc(tag)}</span>`).join('')}
+                        ${item.tags.length>4?`<span class="tag-chip" style="font-size:0.62rem;padding:1px 8px">+${item.tags.length-4}</span>`:''}
+                    </div>` : '';
+
+                const stars = Array.from({length:5},(_,i2)=>
+                    `<svg width="12" height="12" fill="${i2<item.rating?'#fbbf24':'none'}" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
+                ).join('');
+
+                return `
+                <article id="item-${id2}"
+                    class="glass rounded-[2rem] card-entry relative overflow-hidden ${hasCover?'card-has-cover p-0':'p-6'}"
+                    aria-label="${t}"
+                    draggable="true"
+                    ondragstart="dragDrop.onDragStart(event,'${id2}')"
+                    ondragover="dragDrop.onDragOver(event,'${id2}')"
+                    ondrop="dragDrop.onDrop(event,'${id2}')"
+                    ondragend="dragDrop.onDragEnd()">
+                    ${coverHtml}
+                    <div class="${hasCover?'p-4':''}">
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" style="${ss[item.status]||ss.want}">${sl[item.status]||'Unknown'}</span>
+                            <div class="flex gap-1 items-center">
+                                <div id="drag-handle" title="Drag to reorder">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="17" r="1" fill="currentColor"/><circle cx="15" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="17" r="1" fill="currentColor"/></svg>
+                                </div>
+                                <button onclick="ui.toggleModal(true,'${id2}')" class="h-8 w-8 flex items-center justify-center rounded-xl transition-all hover:text-blue-400" style="background:rgba(255,255,255,0.05)">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button onclick="app.remove('${id2}')" class="h-8 w-8 flex items-center justify-center rounded-xl transition-all hover:text-red-400" style="background:rgba(255,255,255,0.05)">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold heading-font mb-0.5 truncate" style="color:var(--text-primary)" title="${t}">${t}</h3>
+                        <p class="text-xs font-semibold mb-3" style="color:var(--text-muted)">${esc(tl[item.type]||'Media')}</p>
+                        ${tagsHtml}
+                        ${urgencyHtml}
+                        <div class="flex items-center justify-between pt-3" style="border-top:1px solid var(--border)">
+                            <div class="flex gap-0.5">${stars}</div>
+                            <span class="text-[10px] font-bold" style="color:var(--text-muted)">${esc(new Date(item.updatedAt).toLocaleDateString())}</span>
+                        </div>
+                    </div>
+                </article>`;
+            }).join('');
+        }
+
+        document.getElementById('stat-total').textContent     = S.items.length;
+        document.getElementById('stat-ongoing').textContent   = S.items.filter(i=>i.status==='ongoing').length;
+        document.getElementById('stat-completed').textContent = S.items.filter(i=>i.status==='watched').length;
+        document.getElementById('stat-plan').textContent      = S.items.filter(i=>i.status==='want').length;
+        cfg.renderStats();
+        tagSystem.renderFilterBar();
+    };
+
+    // 8. Patch nav.go to render stats page and handle new pages
+    const _origNavGo2 = nav.go.bind(nav);
+    nav.go = function(page) {
+        _origNavGo2(page);
+        const pill = document.getElementById('donate-float');
+        if (pill) pill.classList.toggle('hidden-pill', page !== 'vault');
+        if (page === 'settings') {
+            supaAdvanced._syncPrefsToUI();
+            supaConn._renderStatus();
+            supaConn._restoreFields();
+            firebaseConn._renderStatus();
+            firebaseConn._restoreFields();
+            privacyTools.refreshStorageInfo();
+            extraThemes._syncBtns();
+        }
+        if (page === 'stats') statsPage.render();
+    };
+
+    // 9. Add "Manual Order" to sort dropdown
+    const sortEl = document.getElementById('global-sort');
+    if (sortEl && !sortEl.querySelector('option[value="order"]')) {
+        const opt = document.createElement('option');
+        opt.value = 'order'; opt.textContent = 'Manual Order';
+        sortEl.appendChild(opt);
+    }
+
+    // 10. Load remaining modules
     supaAdvanced.load();
     extraThemes.load();
     shortcuts.load();
     firebaseConn.load();
     privacyTools.refreshStorageInfo();
 
-    // Attach keyboard shortcuts listener
+    // 11. Re-render so new card format applies on load
+    ui.render();
+    tagSystem.renderFilterBar();
+
+    // 12. Keyboard shortcuts listener
     document.addEventListener('keydown', e => shortcuts.handle(e));
 
     // Patch nav.go to sync all connection UIs on settings open

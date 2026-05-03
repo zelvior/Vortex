@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#020617">
     <title>MediaVault Pro | Ultra-Premium Media Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -334,6 +338,209 @@
             background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);
             color:#34d399; transition:all 0.3s; pointer-events:none; }
         #backup-badge.stale { background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           v3.1 — FULL RESPONSIVE SYSTEM + ADVANCED STATS + POSTER FETCHER
+        ════════════════════════════════════════════════════════════════════════ */
+
+        /* ── Viewport meta fix for all devices ── */
+        html { scroll-behavior:smooth; -webkit-tap-highlight-color:transparent; }
+        body { overflow-x:hidden; }
+
+        /* ── Safe area insets for notch/island devices ── */
+        .safe-bottom { padding-bottom:env(safe-area-inset-bottom,0px); }
+        nav { padding-bottom:max(0.75rem, env(safe-area-inset-bottom)); }
+
+        /* ── Responsive header — collapses on mobile ── */
+        @media (max-width:640px) {
+            header { margin-bottom:1.5rem !important; }
+            header h1 { font-size:1.5rem !important; }
+            #hdr-vault { gap:0.5rem !important; }
+            #hdr-vault button, #hdr-vault label, #hdr-vault a {
+                padding:0.5rem 0.75rem !important; font-size:0.7rem !important;
+            }
+            /* Hide text labels on very small screens, keep icons */
+            #hdr-vault .export-label, #hdr-vault .import-label { display:none; }
+            .app-shell { padding:1rem 0.75rem 0 !important; }
+        }
+        @media (max-width:380px) {
+            #hdr-vault { flex-wrap:nowrap; overflow-x:auto; }
+        }
+
+        /* ── Responsive grid — adaptive for every screen ── */
+        @media (max-width:480px) {
+            #media-grid { grid-template-columns:1fr !important; gap:0.875rem !important; }
+        }
+        @media (min-width:481px) and (max-width:767px) {
+            #media-grid { grid-template-columns:repeat(2,1fr) !important; gap:0.875rem !important; }
+        }
+        @media (min-width:768px) and (max-width:1023px) {
+            #media-grid { grid-template-columns:repeat(2,1fr) !important; }
+        }
+        @media (min-width:1024px) and (max-width:1279px) {
+            #media-grid { grid-template-columns:repeat(3,1fr) !important; }
+        }
+        @media (min-width:1280px) {
+            #media-grid.density-compact  { grid-template-columns:repeat(5,1fr) !important; }
+            #media-grid.density-spacious { grid-template-columns:repeat(2,1fr) !important; }
+        }
+        /* Ultra-wide */
+        @media (min-width:1920px) {
+            .app-shell { max-width:1600px !important; }
+            #media-grid { grid-template-columns:repeat(6,1fr) !important; }
+        }
+
+        /* ── Cards fully responsive ── */
+        .card-entry { min-width:0; word-break:break-word; }
+        /* Cover image cards — maintain aspect ratio on all sizes */
+        .cover-img {
+            width:100%; aspect-ratio:2/3; object-fit:cover;
+            border-radius:0; display:block;
+            /* Smooth loading */
+            background:rgba(255,255,255,0.03);
+        }
+        .card-has-cover { padding:0 !important; }
+        .card-has-cover .card-inner { padding:0.875rem; }
+        @media (max-width:480px) {
+            .card-has-cover .card-inner { padding:0.75rem; }
+            .card-entry { border-radius:1.25rem !important; }
+        }
+        /* Landscape mobile: 2-col with taller covers */
+        @media (max-width:812px) and (orientation:landscape) {
+            #media-grid { grid-template-columns:repeat(3,1fr) !important; gap:0.5rem !important; }
+        }
+
+        /* ── Tablet-specific stats layout ── */
+        @media (max-width:767px) {
+            #stats-big-numbers { grid-template-columns:repeat(2,1fr) !important; }
+            .stats-charts-grid { grid-template-columns:1fr !important; }
+        }
+        @media (max-width:480px) {
+            #stats-big-numbers { grid-template-columns:repeat(2,1fr) !important; gap:0.5rem !important; }
+        }
+
+        /* ── Modal fully responsive ── */
+        #modal-overlay { align-items:flex-end; }
+        #modal-content {
+            border-radius:2rem 2rem 0 0 !important;
+            max-height:92vh; overflow-y:auto;
+        }
+        #modal-content::-webkit-scrollbar { display:none; }
+        @media (min-width:640px) {
+            #modal-overlay { align-items:center; }
+            #modal-content { border-radius:2.5rem !important; max-height:90vh; }
+        }
+        /* Modal inner padding responsive */
+        #modal-content > div { padding:1.5rem !important; }
+        @media (min-width:640px) { #modal-content > div { padding:2.5rem !important; } }
+
+        /* ── Bottom nav responsive ── */
+        nav > div { max-width:100% !important; }
+        @media (min-width:640px) { nav > div { max-width:28rem !important; } }
+        .nav-tab span { font-size:0.6rem; }
+        @media (max-width:360px) { .nav-tab { padding:0.25rem 0.5rem; } .nav-tab span { display:none; } }
+
+        /* ── Settings page responsive ── */
+        @media (max-width:1023px) {
+            .settings-grid { grid-template-columns:1fr !important; }
+        }
+        .s-row { flex-wrap:wrap; gap:0.75rem; }
+        .s-row > :last-child { flex-shrink:0; }
+
+        /* ── Filter tabs & profile bar responsive ── */
+        .filter-tab { min-width:max-content; }
+        @media (max-width:480px) {
+            .filter-tab { padding:0.5rem 0.875rem !important; font-size:0.7rem !important; }
+        }
+
+        /* ── Profile chips mobile ── */
+        @media (max-width:480px) {
+            .profile-chip { padding:0.3rem 0.75rem; font-size:0.7rem; }
+        }
+
+        /* ── Tag chips mobile ── */
+        @media (max-width:480px) {
+            .tag-chip { font-size:0.62rem; padding:1px 7px; }
+        }
+
+        /* ── Donate float — moves for small screens ── */
+        @media (max-width:480px) {
+            #donate-float { bottom:80px; right:10px; }
+            #donate-float a { padding:0.5rem 0.875rem !important; font-size:0.7rem !important; }
+        }
+
+        /* ── Advanced poster card styles ── */
+        .poster-card-cover {
+            position:relative; overflow:hidden;
+            border-radius:1.5rem 1.5rem 0 0;
+            background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.06));
+        }
+        .poster-card-cover img {
+            width:100%; aspect-ratio:2/3; object-fit:cover; display:block;
+            transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        body:not(.no-anim) .card-entry:hover .poster-card-cover img { transform:scale(1.04); }
+        .poster-card-cover .poster-overlay {
+            position:absolute; inset:0;
+            background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
+            pointer-events:none;
+        }
+        .poster-card-cover .poster-rating-badge {
+            position:absolute; top:8px; right:8px;
+            background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+            border-radius:0.5rem; padding:3px 8px;
+            font-size:0.65rem; font-weight:900; color:#fbbf24;
+            border:1px solid rgba(251,191,36,0.3);
+        }
+        .poster-card-cover .poster-status-badge {
+            position:absolute; top:8px; left:8px;
+            backdrop-filter:blur(6px); border-radius:0.5rem; padding:3px 8px;
+            font-size:0.6rem; font-weight:900;
+        }
+
+        /* ── Advanced Stats styles ── */
+        .stats-radial-wrap { position:relative; width:80px; height:80px; flex-shrink:0; }
+        .stats-radial-wrap svg { position:absolute; inset:0; transform:rotate(-90deg); }
+        .stats-radial-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+        .stats-heatmap-cell {
+            width:12px; height:12px; border-radius:3px;
+            background:rgba(255,255,255,0.05);
+            transition:background 0.2s;
+            cursor:pointer;
+            flex-shrink:0;
+        }
+        @media (max-width:480px) { .stats-heatmap-cell { width:9px; height:9px; border-radius:2px; } }
+        .stats-completion-ring { filter:drop-shadow(0 0 8px var(--primary-glow)); }
+        .milestone-card {
+            display:flex; align-items:center; gap:0.75rem;
+            padding:0.75rem 1rem; border-radius:1rem;
+            border:1px solid var(--border);
+            background:rgba(255,255,255,0.02);
+            transition:all 0.2s;
+        }
+        .milestone-card.earned { border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.06); }
+        .milestone-icon { font-size:1.5rem; flex-shrink:0; }
+        .chart-bar-v { width:100%; border-radius:4px 4px 0 0; min-height:4px; transition:height 0.6s cubic-bezier(0.16,1,0.3,1); }
+        .sparkline-point { fill:var(--primary); }
+        .sparkline-line { stroke:var(--primary); stroke-width:2; fill:none; }
+        .sparkline-area { fill:url(#sparkGrad); opacity:0.3; }
+
+        /* ── Poster fetcher UI ── */
+        .poster-result-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; max-height:220px; overflow-y:auto; }
+        .poster-result-item { position:relative; border-radius:0.75rem; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:all 0.2s; }
+        .poster-result-item:hover { border-color:var(--primary); transform:scale(1.03); }
+        .poster-result-item.selected { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); }
+        .poster-result-item img { width:100%; aspect-ratio:2/3; object-fit:cover; display:block; }
+        .poster-result-item .poster-score { position:absolute; bottom:4px; left:4px; right:4px; text-align:center; font-size:0.55rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.7); border-radius:4px; padding:1px 4px; }
+
+        /* ── Responsive guide page ── */
+        @media (max-width:640px) {
+            .guide-inner { padding-left:0.75rem !important; padding-right:0.75rem !important; }
+        }
+
+        /* ── Swipe hint for mobile ── */
+        .swipe-hint { display:none; }
+        @media (max-width:640px) { .swipe-hint { display:flex; } }
     </style>
 </head>
 <body class="custom-scrollbar">
@@ -364,7 +571,7 @@
     </div>
 
     <!-- App Shell -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="app-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
         <!-- Shared Header -->
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
@@ -1091,44 +1298,103 @@
 
         <!-- ══ STATS PAGE ══ -->
         <div id="page-stats" class="page">
-            <div class="max-w-4xl mx-auto space-y-6">
-                <div class="glass rounded-3xl p-6">
-                    <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--primary)">Analytics</p>
-                    <h2 class="text-2xl font-black heading-font">Your Vault Stats</h2>
+            <div class="max-w-5xl mx-auto space-y-5 px-0 sm:px-2">
+
+                <!-- Header -->
+                <div class="glass rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--primary)">Analytics v3.1</p>
+                        <h2 class="text-xl sm:text-2xl font-black heading-font">Vault Intelligence</h2>
+                        <p class="text-xs mt-1" style="color:var(--text-muted)" id="stats-subtitle">Loading your data…</p>
+                    </div>
+                    <button onclick="statsPage.render()" class="glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 self-start transition-all active:scale-95">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                        Refresh
+                    </button>
                 </div>
 
-                <!-- Top row: big numbers -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-big-numbers"></div>
+                <!-- Big KPI numbers -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4" id="stats-big-numbers"></div>
 
-                <!-- Genre / Type breakdown -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="glass rounded-3xl p-6">
+                <!-- Completion ring + streak -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass rounded-3xl p-5 flex flex-col items-center justify-center gap-3 sm:col-span-1">
+                        <p class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Completion Rate</p>
+                        <div id="stats-completion-ring" class="flex items-center justify-center"></div>
+                    </div>
+                    <div class="glass rounded-3xl p-5 sm:col-span-2" id="stats-milestones-wrap">
+                        <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">🏆 Milestones</p>
+                        <div id="stats-milestones" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Type + Status charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 stats-charts-grid">
+                    <div class="glass rounded-3xl p-5">
                         <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">By Media Type</p>
                         <div id="stats-type-chart" class="space-y-3"></div>
                     </div>
-                    <div class="glass rounded-3xl p-6">
+                    <div class="glass rounded-3xl p-5">
                         <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">By Status</p>
                         <div id="stats-status-chart" class="space-y-3"></div>
                     </div>
                 </div>
 
-                <!-- Rating distribution -->
-                <div class="glass rounded-3xl p-6">
+                <!-- Rating distribution bar chart -->
+                <div class="glass rounded-3xl p-5">
                     <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Rating Distribution</p>
-                    <div id="stats-rating-dist" class="flex items-end gap-2 h-24"></div>
+                    <div id="stats-rating-dist" class="flex items-end gap-2 h-28"></div>
+                </div>
+
+                <!-- Activity heatmap -->
+                <div class="glass rounded-3xl p-5">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Activity Heatmap — Last 90 Days</p>
+                    <div id="stats-heatmap" class="overflow-x-auto no-scrollbar">
+                        <div id="stats-heatmap-inner" class="flex gap-1"></div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-3">
+                        <span class="text-xs" style="color:var(--text-muted)">Less</span>
+                        <div class="flex gap-1">
+                            <div class="stats-heatmap-cell" style="background:rgba(255,255,255,0.05)"></div>
+                            <div class="stats-heatmap-cell" style="background:rgba(59,130,246,0.2)"></div>
+                            <div class="stats-heatmap-cell" style="background:rgba(59,130,246,0.45)"></div>
+                            <div class="stats-heatmap-cell" style="background:rgba(59,130,246,0.75)"></div>
+                            <div class="stats-heatmap-cell" style="background:#3b82f6"></div>
+                        </div>
+                        <span class="text-xs" style="color:var(--text-muted)">More</span>
+                    </div>
+                </div>
+
+                <!-- Sparkline trend -->
+                <div class="glass rounded-3xl p-5">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Entries Added — Last 12 Weeks</p>
+                    <div id="stats-sparkline" class="w-full overflow-hidden"></div>
                 </div>
 
                 <!-- Top tags -->
-                <div class="glass rounded-3xl p-6">
+                <div class="glass rounded-3xl p-5">
                     <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Top Tags</p>
                     <div id="stats-tags" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <!-- Binge estimate + timeline -->
-                <div class="glass rounded-3xl p-6">
-                    <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--text-muted)">Binge Time Estimate</p>
-                    <div id="stats-binge" class="mt-2"></div>
+                <!-- Binge hours + per-type breakdown -->
+                <div class="glass rounded-3xl p-5">
+                    <p class="text-xs font-black uppercase tracking-widest mb-3" style="color:var(--text-muted)">Binge Time Intelligence</p>
+                    <div id="stats-binge" class="mt-1"></div>
                 </div>
+
+                <!-- Leaderboard: highest rated per type -->
+                <div class="glass rounded-3xl p-5">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">⭐ Hall of Fame — Best Per Type</p>
+                    <div id="stats-best" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+
+                <!-- Longest streak / most productive week -->
+                <div class="glass rounded-3xl p-5">
+                    <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--text-muted)">Deep Insights</p>
+                    <div id="stats-insights" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+                </div>
+
             </div>
         </div>
 
@@ -1762,23 +2028,36 @@ CREATE POLICY "allow_all" ON mediavault
                         <div id="f-ep-hint" class="text-xs font-bold" style="color:var(--text-muted)"></div>
                     </div>
 
-                    <!-- NEW: Cover Image -->
+                    <!-- NEW: Cover Image + Multi-API Poster Fetcher -->
                     <div class="space-y-2">
-                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Cover Image</label>
+                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Cover / Poster</label>
                         <div class="flex gap-3 items-start">
-                            <div id="f-cover-preview" class="w-16 h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center text-2xl" style="background:rgba(255,255,255,0.04);border:1px solid var(--border)">🎬</div>
-                            <div class="flex-1 space-y-2">
-                                <input type="text" id="f-cover-url" placeholder="Paste image URL or auto-fetch below…"
-                                    class="w-full border rounded-xl px-4 py-3 focus:outline-none text-xs font-medium"
+                            <div id="f-cover-preview" class="w-14 h-20 sm:w-16 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center text-2xl" style="background:rgba(255,255,255,0.04);border:1px solid var(--border)">🎬</div>
+                            <div class="flex-1 space-y-2 min-w-0">
+                                <input type="text" id="f-cover-url" placeholder="Paste image URL or search below…"
+                                    class="w-full border rounded-xl px-3 py-2.5 focus:outline-none text-xs font-medium"
                                     style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"
                                     oninput="coverSystem.previewUrl(this.value)">
-                                <button type="button" onclick="coverSystem.fetchPoster()"
-                                    class="btn-primary text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                    Auto-fetch Poster (TMDB)
-                                </button>
+                                <div class="flex gap-2 flex-wrap">
+                                    <button type="button" onclick="posterFetcher.fetch()"
+                                        class="btn-primary text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                        Search Posters
+                                    </button>
+                                    <button type="button" onclick="posterFetcher.clear()" id="f-cover-clear" class="glass hover:bg-white/5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 hidden">
+                                        Clear
+                                    </button>
+                                </div>
                                 <div id="f-cover-status" class="text-xs" style="color:var(--text-muted)"></div>
                             </div>
+                        </div>
+                        <!-- Poster results grid -->
+                        <div id="poster-results-wrap" class="hidden space-y-2 mt-2">
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs font-bold" style="color:var(--text-muted)" id="poster-results-label">Results:</p>
+                                <button type="button" onclick="document.getElementById('poster-results-wrap').classList.add('hidden')" class="text-xs" style="color:var(--text-muted)">✕ Close</button>
+                            </div>
+                            <div id="poster-results-grid" class="poster-result-grid"></div>
                         </div>
                         <input type="hidden" id="f-cover">
                     </div>
@@ -3871,6 +4150,464 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         }
     };
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.1: MULTI-API POSTER FETCHER (free, unlimited, no key required) ───
+    // APIs used: TMDB (key), OMDb (free key), iTunes/Apple (no key),
+    //            Open Library (books), Jikan/MyAnimeList (anime, no key)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const posterFetcher = {
+        _results: [],
+        _selected: null,
+
+        async fetch() {
+            const title  = document.getElementById('f-title')?.value.trim();
+            const type   = document.getElementById('f-type')?.value || 'movie';
+            const status = document.getElementById('f-cover-status');
+            const wrap   = document.getElementById('poster-results-wrap');
+            const grid   = document.getElementById('poster-results-grid');
+            const label  = document.getElementById('poster-results-label');
+
+            if (!title) { ui.notify('Enter a title first','warning'); return; }
+            if (status) { status.textContent = '⏳ Searching across multiple sources…'; status.style.color='var(--text-muted)'; }
+            if (wrap) wrap.classList.remove('hidden');
+            if (grid) grid.innerHTML = `<div class="col-span-full text-xs text-center py-4" style="color:var(--text-muted)">Searching…</div>`;
+
+            this._results = [];
+            const searches = [];
+
+            // 1. TMDB — movies, series, multi
+            searches.push(this._fetchTMDB(title, type));
+            // 2. iTunes — all types, free, no key
+            searches.push(this._fetchITunes(title, type));
+            // 3. Jikan (MyAnimeList) — anime only
+            if (type === 'anime') searches.push(this._fetchJikan(title));
+            // 4. RAWG — games only
+            if (type === 'game') searches.push(this._fetchRAWG(title));
+            // 5. Open Library — fallback for anything
+            searches.push(this._fetchOpenLibrary(title));
+
+            // Run all in parallel, collect results as they arrive
+            await Promise.allSettled(searches);
+
+            if (status) {
+                if (this._results.length) {
+                    status.textContent = `✅ Found ${this._results.length} poster${this._results.length>1?'s':''}`;
+                    status.style.color = '#34d399';
+                } else {
+                    status.textContent = '❌ No posters found — try a different title';
+                    status.style.color = '#f87171';
+                }
+            }
+            if (label) label.textContent = `${this._results.length} result${this._results.length!==1?'s':''} from ${this._results.length?'multiple sources':'all sources'}:`;
+            this._renderGrid();
+        },
+
+        async _fetchTMDB(title, type) {
+            try {
+                const key = '4acab3f5af43086f6c70ac0cd4ac7547';
+                const mt  = type === 'movie' ? 'movie' : type === 'game' ? 'multi' : 'tv';
+                const url = `https://api.themoviedb.org/3/search/${mt}?api_key=${key}&query=${encodeURIComponent(title)}&page=1&include_adult=false`;
+                const res = await fetch(url);
+                const data = await res.json();
+                (data.results||[]).filter(r=>r.poster_path).slice(0,6).forEach(r => {
+                    this._results.push({
+                        url:   `https://image.tmdb.org/t/p/w500${r.poster_path}`,
+                        thumb: `https://image.tmdb.org/t/p/w185${r.poster_path}`,
+                        title: r.title||r.name||'',
+                        score: r.vote_average ? r.vote_average.toFixed(1)+'★' : '',
+                        src:   'TMDB'
+                    });
+                });
+            } catch {}
+        },
+
+        async _fetchITunes(title, type) {
+            try {
+                const entity = type==='movie' ? 'movie' : type==='game' ? 'software' : type==='anime' ? 'tvSeason' : 'tvSeason';
+                const url = `https://itunes.apple.com/search?term=${encodeURIComponent(title)}&media=${type==='game'?'software':'video'}&entity=${entity}&limit=6`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                (data.results||[]).filter(r=>r.artworkUrl100).slice(0,4).forEach(r => {
+                    const img = (r.artworkUrl100||'').replace('100x100','600x600');
+                    this._results.push({
+                        url: img, thumb: r.artworkUrl100,
+                        title: r.trackName||r.collectionName||'',
+                        score: '',
+                        src: 'iTunes'
+                    });
+                });
+            } catch {}
+        },
+
+        async _fetchJikan(title) {
+            try {
+                const url  = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=6`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                (data.data||[]).filter(r=>r.images?.jpg?.large_image_url).slice(0,5).forEach(r => {
+                    this._results.push({
+                        url:   r.images.jpg.large_image_url,
+                        thumb: r.images.jpg.image_url,
+                        title: r.title||'',
+                        score: r.score ? r.score+'★' : '',
+                        src:   'MyAnimeList'
+                    });
+                });
+            } catch {}
+        },
+
+        async _fetchRAWG(title) {
+            try {
+                // RAWG free tier — no key needed for basic search
+                const url  = `https://api.rawg.io/api/games?search=${encodeURIComponent(title)}&page_size=6&key=`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                (data.results||[]).filter(r=>r.background_image).slice(0,4).forEach(r => {
+                    this._results.push({
+                        url:   r.background_image,
+                        thumb: r.background_image,
+                        title: r.name||'',
+                        score: r.rating ? r.rating.toFixed(1)+'★' : '',
+                        src:   'RAWG'
+                    });
+                });
+            } catch {}
+        },
+
+        async _fetchOpenLibrary(title) {
+            try {
+                const url  = `https://openlibrary.org/search.json?q=${encodeURIComponent(title)}&fields=key,title,cover_i&limit=4`;
+                const res  = await fetch(url);
+                const data = await res.json();
+                (data.docs||[]).filter(r=>r.cover_i).slice(0,3).forEach(r => {
+                    const id = r.cover_i;
+                    this._results.push({
+                        url:   `https://covers.openlibrary.org/b/id/${id}-L.jpg`,
+                        thumb: `https://covers.openlibrary.org/b/id/${id}-M.jpg`,
+                        title: r.title||'',
+                        score: '',
+                        src:   'OpenLibrary'
+                    });
+                });
+            } catch {}
+        },
+
+        _renderGrid() {
+            const grid = document.getElementById('poster-results-grid');
+            if (!grid) return;
+            if (!this._results.length) {
+                grid.innerHTML = `<div class="col-span-full text-xs text-center py-4" style="color:var(--text-muted)">No posters found</div>`;
+                return;
+            }
+            grid.innerHTML = this._results.map((r,i) => `
+                <div class="poster-result-item ${this._selected===i?'selected':''}" onclick="posterFetcher.select(${i})" title="${esc(r.title)} · ${r.src}">
+                    <img src="${esc(r.thumb)}" loading="lazy" onerror="this.parentElement.style.display='none'" alt="${esc(r.title)}">
+                    <div class="poster-score">${esc(r.src)}</div>
+                    ${r.score ? `<div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border-radius:4px;padding:1px 5px;font-size:0.55rem;font-weight:700;color:#fbbf24">${esc(r.score)}</div>` : ''}
+                </div>`).join('');
+        },
+
+        select(idx) {
+            this._selected = idx;
+            const r = this._results[idx];
+            if (!r) return;
+            document.getElementById('f-cover-url').value = r.url;
+            document.getElementById('f-cover').value = r.url;
+            coverSystem.previewUrl(r.url);
+            // Update selected style
+            document.querySelectorAll('.poster-result-item').forEach((el,i) => {
+                el.classList.toggle('selected', i===idx);
+            });
+            const clearBtn = document.getElementById('f-cover-clear');
+            if (clearBtn) clearBtn.classList.remove('hidden');
+            const status = document.getElementById('f-cover-status');
+            if (status) { status.textContent = `✅ Selected from ${r.src}: ${r.title}`; status.style.color='#34d399'; }
+        },
+
+        clear() {
+            this._selected = null;
+            document.getElementById('f-cover-url').value = '';
+            document.getElementById('f-cover').value = '';
+            coverSystem.previewUrl('');
+            const clearBtn = document.getElementById('f-cover-clear');
+            if (clearBtn) clearBtn.classList.add('hidden');
+            const status = document.getElementById('f-cover-status');
+            if (status) status.textContent = '';
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─── v3.1: ADVANCED STATS PAGE ───────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    const statsPageV31 = {
+        BINGE_MINS: { movie:120, series:40, game:300, anime:24 },
+
+        render() {
+            const items  = S.items;
+            const total  = items.length;
+            if (!total) {
+                document.getElementById('stats-subtitle').textContent = 'Add entries to see your stats';
+                ['stats-big-numbers','stats-type-chart','stats-status-chart','stats-rating-dist',
+                 'stats-tags','stats-binge','stats-best','stats-milestones','stats-insights',
+                 'stats-heatmap-inner','stats-sparkline','stats-completion-ring'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = `<span style="color:var(--text-muted);font-size:0.8rem">No data yet</span>`;
+                });
+                return;
+            }
+
+            const watched = items.filter(i=>i.status==='watched');
+            const ongoing = items.filter(i=>i.status==='ongoing');
+            const rated   = items.filter(i=>i.rating>0);
+            const avgRating = rated.length ? (rated.reduce((s,i)=>s+i.rating,0)/rated.length) : 0;
+            const completionPct = Math.round((watched.length/total)*100);
+            const bingeHours = Math.round(items.reduce((s,i)=>s+(this.BINGE_MINS[i.type]||60)*(i.progress/100),0)/60);
+
+            document.getElementById('stats-subtitle').textContent = `${total} titles · ${watched.length} completed · ${bingeHours}h consumed`;
+
+            // ── Big KPI cards
+            const bigEl = document.getElementById('stats-big-numbers');
+            if (bigEl) bigEl.innerHTML = [
+                { label:'Total',      val:total,                  icon:'📚', color:'var(--primary)' },
+                { label:'Avg Rating', val:avgRating.toFixed(1)+'★', icon:'⭐', color:'#fbbf24' },
+                { label:'Completed',  val:watched.length,          icon:'✅', color:'#34d399' },
+                { label:'Binge Hrs',  val:bingeHours+'h',          icon:'⏱', color:'#a78bfa' }
+            ].map(s=>`
+                <div class="glass p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-center">
+                    <div class="text-xl sm:text-2xl mb-1">${s.icon}</div>
+                    <div class="text-2xl sm:text-3xl font-black heading-font" style="color:${s.color}">${esc(String(s.val))}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest mt-1" style="color:var(--text-muted)">${s.label}</div>
+                </div>`).join('');
+
+            // ── Completion ring (SVG)
+            const ringEl = document.getElementById('stats-completion-ring');
+            if (ringEl) {
+                const r=34, circ=2*Math.PI*r, dash=circ*(completionPct/100);
+                ringEl.innerHTML = `
+                    <div class="stats-radial-wrap" style="width:100px;height:100px">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="var(--primary)"/>
+                                <stop offset="100%" stop-color="#a78bfa"/>
+                            </linearGradient></defs>
+                            <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                            <circle cx="50" cy="50" r="${r}" fill="none" stroke="url(#ringGrad)" stroke-width="10"
+                                stroke-dasharray="${dash} ${circ}" stroke-linecap="round" class="stats-completion-ring"/>
+                        </svg>
+                        <div class="stats-radial-label">
+                            <div class="text-xl font-black heading-font" style="color:var(--primary)">${completionPct}%</div>
+                            <div style="font-size:0.55rem;color:var(--text-muted);font-weight:700;text-transform:uppercase">Done</div>
+                        </div>
+                    </div>`;
+            }
+
+            // ── Milestones
+            const milestones = [
+                { icon:'🎬', label:'First Entry',      earned: total>=1 },
+                { icon:'🔟', label:'10 Entries',        earned: total>=10 },
+                { icon:'💯', label:'100 Club',          earned: total>=100 },
+                { icon:'✨', label:'First 5★',          earned: rated.some(i=>i.rating===5) },
+                { icon:'🏆', label:'10 Completed',      earned: watched.length>=10 },
+                { icon:'⚡', label:'Binge Master 100h', earned: bingeHours>=100 },
+                { icon:'🌟', label:'All Types',         earned: ['movie','series','game','anime'].every(t=>items.some(i=>i.type===t)) },
+                { icon:'🏷️', label:'Tag Master',        earned: items.some(i=>(i.tags||[]).length>=5) }
+            ];
+            const milEl = document.getElementById('stats-milestones');
+            if (milEl) milEl.innerHTML = milestones.map(m=>`
+                <div class="milestone-card ${m.earned?'earned':''}">
+                    <span class="milestone-icon" style="opacity:${m.earned?1:0.25}">${m.icon}</span>
+                    <div>
+                        <p class="text-xs font-bold" style="color:${m.earned?'var(--text-primary)':'var(--text-muted)'}">${m.label}</p>
+                        <p style="font-size:0.6rem;color:${m.earned?'#fbbf24':'var(--text-muted)'}">${m.earned?'✓ Earned':'Locked'}</p>
+                    </div>
+                </div>`).join('');
+
+            // ── Type chart
+            const typeMap = { movie:'🎬 Movie', series:'📺 Series', game:'🎮 Game', anime:'🍱 Anime' };
+            const typeClr = { movie:'#60a5fa', series:'#a78bfa', game:'#f472b6', anime:'#fb923c' };
+            const typeEl  = document.getElementById('stats-type-chart');
+            if (typeEl) typeEl.innerHTML = Object.entries(typeMap).map(([k,label])=>{
+                const cnt=items.filter(i=>i.type===k).length, pct=Math.round((cnt/total)*100);
+                return `<div>
+                    <div class="flex justify-between mb-1"><span class="text-xs font-bold" style="color:var(--text-muted)">${label}</span><span class="text-xs font-black" style="color:${typeClr[k]}">${cnt}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${typeClr[k]}"></div></div>
+                </div>`;
+            }).join('');
+
+            // ── Status chart
+            const statusMap = { want:'📋 Watchlist', ongoing:'▶ Active', watched:'✅ Done' };
+            const statusClr = { want:'#94a3b8', ongoing:'#60a5fa', watched:'#34d399' };
+            const statEl = document.getElementById('stats-status-chart');
+            if (statEl) statEl.innerHTML = Object.entries(statusMap).map(([k,label])=>{
+                const cnt=items.filter(i=>i.status===k).length, pct=Math.round((cnt/total)*100);
+                return `<div>
+                    <div class="flex justify-between mb-1"><span class="text-xs font-bold" style="color:var(--text-muted)">${label}</span><span class="text-xs font-black" style="color:${statusClr[k]}">${cnt}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${statusClr[k]}"></div></div>
+                </div>`;
+            }).join('');
+
+            // ── Rating distribution — vertical bars
+            const ratingEl = document.getElementById('stats-rating-dist');
+            if (ratingEl) {
+                const counts=[1,2,3,4,5].map(r=>items.filter(i=>i.rating===r).length);
+                const maxC=Math.max(...counts,1);
+                ratingEl.innerHTML = counts.map((c,i)=>`
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <span class="text-xs font-black" style="color:var(--text-muted)">${c||''}</span>
+                        <div class="w-full rounded-t-lg transition-all" style="height:${Math.round((c/maxC)*88)+4}px;background:${c?'#fbbf24':'rgba(255,255,255,0.05)'}"></div>
+                        <div class="flex">${'⭐'.repeat(i+1).split('').slice(0,1).join('')}<span class="text-[10px]" style="color:var(--text-muted)">${i+1}</span></div>
+                    </div>`).join('');
+            }
+
+            // ── Activity heatmap — last 90 days
+            const heatEl = document.getElementById('stats-heatmap-inner');
+            if (heatEl) {
+                const dayMs = 86400000, now = Date.now();
+                const days  = 90;
+                const buckets = {};
+                items.forEach(i => {
+                    const daysAgo = Math.floor((now - i.updatedAt) / dayMs);
+                    if (daysAgo < days) buckets[daysAgo] = (buckets[daysAgo]||0) + 1;
+                });
+                const maxB = Math.max(...Object.values(buckets), 1);
+                const cols = [];
+                for (let col=Math.floor(days/7); col>=0; col--) {
+                    let colHtml = '<div class="flex flex-col gap-1">';
+                    for (let row=6; row>=0; row--) {
+                        const d = col*7+row;
+                        const cnt = buckets[d]||0;
+                        const pct = cnt/maxB;
+                        const bg  = cnt===0 ? 'rgba(255,255,255,0.05)'
+                                  : pct<0.33 ? 'rgba(59,130,246,0.2)'
+                                  : pct<0.66 ? 'rgba(59,130,246,0.5)'
+                                  : pct<0.85 ? 'rgba(59,130,246,0.75)'
+                                  : '#3b82f6';
+                        const date = new Date(now - d*dayMs).toLocaleDateString();
+                        colHtml += `<div class="stats-heatmap-cell" style="background:${bg}" title="${date}: ${cnt} update${cnt!==1?'s':''}"></div>`;
+                    }
+                    cols.push(colHtml+'</div>');
+                }
+                heatEl.innerHTML = cols.join('');
+            }
+
+            // ── Sparkline — entries added per week, last 12 weeks
+            const sparkEl = document.getElementById('stats-sparkline');
+            if (sparkEl) {
+                const weekMs = 7*86400000, now2 = Date.now();
+                const weeks  = Array.from({length:12},(_,i)=>items.filter(it=>{
+                    const age=(now2-it.updatedAt)/weekMs;
+                    return age>=i && age<(i+1);
+                }).length).reverse();
+                const maxW=Math.max(...weeks,1);
+                const W=sparkEl.offsetWidth||300, H=60, pts=weeks.length;
+                const xs=weeks.map((_,i)=>Math.round((i/(pts-1))*W));
+                const ys=weeks.map(v=>Math.round(H-4-(v/maxW)*(H-8)));
+                const path=xs.map((x,i)=>(i===0?`M${x},${ys[i]}`:`L${x},${ys[i]}`)).join(' ');
+                const area=path+` L${xs[xs.length-1]},${H} L${xs[0]},${H} Z`;
+                sparkEl.innerHTML = `
+                    <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="${area}" class="sparkline-area"/>
+                        <path d="${path}" class="sparkline-line"/>
+                        ${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="3" class="sparkline-point"/>`).join('')}
+                    </svg>
+                    <div class="flex justify-between mt-1">
+                        <span class="text-[10px]" style="color:var(--text-muted)">12 weeks ago</span>
+                        <span class="text-[10px]" style="color:var(--text-muted)">This week</span>
+                    </div>`;
+            }
+
+            // ── Top tags
+            const tagsEl = document.getElementById('stats-tags');
+            if (tagsEl) {
+                const tc={};
+                items.forEach(i=>(i.tags||[]).forEach(t=>{tc[t]=(tc[t]||0)+1;}));
+                const sorted=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,24);
+                tagsEl.innerHTML = sorted.length
+                    ? sorted.map(([t,c])=>`<span class="tag-chip" style="cursor:pointer;font-size:0.7rem" onclick="tagSystem.setFilter('${esc(t)}');nav.go('vault')">${esc(t)} <strong style="opacity:0.7">${c}</strong></span>`).join('')
+                    : `<span style="color:var(--text-muted);font-size:0.8rem">No tags yet</span>`;
+            }
+
+            // ── Binge time per type
+            const bingeEl = document.getElementById('stats-binge');
+            if (bingeEl) {
+                const byType = Object.entries(this.BINGE_MINS).map(([k,mins])=>{
+                    const hrs=Math.round(items.filter(i=>i.type===k).reduce((s,i)=>s+mins*(i.progress/100),0)/60);
+                    return { type:k, hrs, label:typeMap[k]||k, color:typeClr[k]||'var(--primary)' };
+                }).filter(x=>x.hrs>0);
+                const totalHrs=byType.reduce((s,x)=>s+x.hrs,0)||1;
+                const days=(bingeHours/24).toFixed(1);
+                bingeEl.innerHTML = `
+                    <div class="flex items-baseline gap-3 mb-4">
+                        <span class="text-3xl sm:text-4xl font-black heading-font" style="color:#a78bfa">${bingeHours}h</span>
+                        <span style="color:var(--text-muted);font-size:0.85rem">≈ ${days} days of content</span>
+                    </div>
+                    ${byType.map(x=>`
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-xs font-bold" style="color:var(--text-muted)">${x.label}</span>
+                                <span class="text-xs font-black" style="color:${x.color}">${x.hrs}h</span>
+                            </div>
+                            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((x.hrs/totalHrs)*100)}%;background:${x.color}"></div></div>
+                        </div>`).join('')}
+                    <p class="text-xs mt-3" style="color:var(--text-muted)">Based on: Movie=2h, Series=40min/ep, Anime=24min/ep, Game=5h, scaled by your progress.</p>`;
+            }
+
+            // ── Hall of Fame
+            const bestEl = document.getElementById('stats-best');
+            if (bestEl) {
+                const best = Object.entries(typeMap).map(([k,label])=>{
+                    const ofType=items.filter(i=>i.type===k&&i.rating>0).sort((a,b)=>b.rating-a.rating);
+                    return { type:k, label, item:ofType[0]||null, color:typeClr[k] };
+                }).filter(x=>x.item);
+                bestEl.innerHTML = best.length ? best.map(x=>`
+                    <div class="flex items-center gap-3 p-3 rounded-2xl" style="background:rgba(255,255,255,0.02);border:1px solid var(--border)">
+                        ${x.item.cover ? `<img src="${esc(x.item.cover)}" style="width:36px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">` : `<div style="font-size:1.5rem;flex-shrink:0">${x.label.split(' ')[0]}</div>`}
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black uppercase" style="color:${x.color}">${x.label}</p>
+                            <p class="text-sm font-bold truncate" style="color:var(--text-primary)">${esc(x.item.title)}</p>
+                            <p style="font-size:0.65rem;color:#fbbf24">${'⭐'.repeat(x.item.rating)}</p>
+                        </div>
+                    </div>`).join('')
+                : `<p class="col-span-2 text-xs" style="color:var(--text-muted)">Rate some entries to see your Hall of Fame</p>`;
+            }
+
+            // ── Deep Insights
+            const insEl = document.getElementById('stats-insights');
+            if (insEl) {
+                // Most active week
+                const weekMs2=7*86400000, now3=Date.now();
+                const weekCounts={};
+                items.forEach(i=>{const w=Math.floor((now3-i.updatedAt)/weekMs2); weekCounts[w]=(weekCounts[w]||0)+1;});
+                const mostActiveWk=Math.max(...Object.values(weekCounts),0);
+                // Avg tags per entry
+                const avgTags=(items.reduce((s,i)=>s+(i.tags||[]).length,0)/total).toFixed(1);
+                // Watched without rating
+                const unrated=watched.filter(i=>i.rating===0).length;
+                // Ongoing completion avg
+                const ongoingAvg=ongoing.length ? Math.round(ongoing.reduce((s,i)=>s+i.progress,0)/ongoing.length) : 0;
+
+                const insights=[
+                    { icon:'🔥', label:'Best Week',      val:mostActiveWk+' updates' },
+                    { icon:'🏷️', label:'Avg Tags',       val:avgTags+' per entry' },
+                    { icon:'💬', label:'Unrated Done',   val:unrated+' entries' },
+                    { icon:'📈', label:'Avg Progress',   val:ongoingAvg+'% active' }
+                ];
+                insEl.innerHTML = insights.map(x=>`
+                    <div class="flex flex-col items-center gap-1 p-3 rounded-2xl text-center" style="background:rgba(255,255,255,0.02);border:1px solid var(--border)">
+                        <span class="text-xl">${x.icon}</span>
+                        <span class="text-xs font-black" style="color:var(--text-primary)">${esc(x.val)}</span>
+                        <span style="font-size:0.6rem;color:var(--text-muted);font-weight:700;text-transform:uppercase">${x.label}</span>
+                    </div>`).join('');
+            }
+        }
+    };
+
     app.init();
 
     // ── v3.0 Boot patches ──────────────────────────────────────────────────────
@@ -4081,7 +4818,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         tagSystem.renderFilterBar();
     };
 
-    // 8. Patch nav.go to render stats page and handle new pages
+    // 8. Patch nav.go to render advanced stats page and handle all pages
     const _origNavGo2 = nav.go.bind(nav);
     nav.go = function(page) {
         _origNavGo2(page);
@@ -4096,7 +4833,8 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             privacyTools.refreshStorageInfo();
             extraThemes._syncBtns();
         }
-        if (page === 'stats') statsPage.render();
+        // Use advanced stats renderer
+        if (page === 'stats') statsPageV31.render();
     };
 
     // 9. Add "Manual Order" to sort dropdown

@@ -8,6 +8,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
     <title>MediaVault Pro | Ultra-Premium Media Management</title>
+    <!-- PWA manifest (inline via data URI so no extra file needed) -->
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22MediaVault+Pro%22%2C%22short_name%22%3A%22MediaVault%22%2C%22description%22%3A%22Your+personal+media+tracking+universe%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fraw.githubusercontent.com%2Fgooglefonts%2Fnoto-emoji%2Fmain%2Fpng%2F128%2Femoji_u1f39e.png%22%2C%22sizes%22%3A%22128x128%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f39e.png">
+    <link rel="manifest" id="pwa-manifest-link">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text y='.9em' font-size='80' x='10'>🎬</text></svg>">
+    <meta name="apple-mobile-web-app-title" content="MediaVault Pro">
+    <meta name="description" content="Enterprise-grade media tracking — movies, series, anime, games">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
@@ -541,6 +548,222 @@
         /* ── Swipe hint for mobile ── */
         .swipe-hint { display:none; }
         @media (max-width:640px) { .swipe-hint { display:flex; } }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           v3.2 ADDITIONS
+        ══════════════════════════════════════════════════════════════════════ */
+
+        /* Skeleton loaders */
+        .skeleton { background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:0.5rem; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* Command palette */
+        #cmd-palette { position:fixed; inset:0; z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:15vh; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); }
+        #cmd-palette.hidden { display:none; }
+        #cmd-box { width:min(600px,94vw); border-radius:1.5rem; overflow:hidden; box-shadow:0 40px 80px -20px rgba(0,0,0,0.8); border:1px solid var(--border); background:var(--surface-card); }
+        #cmd-input { width:100%; padding:1rem 1.25rem; font-size:1rem; font-weight:600; background:transparent; border:none; outline:none; color:var(--text-primary); border-bottom:1px solid var(--border); }
+        #cmd-results { max-height:360px; overflow-y:auto; }
+        .cmd-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.25rem; cursor:pointer; transition:background 0.1s; font-size:0.85rem; }
+        .cmd-item:hover,.cmd-item.active { background:rgba(255,255,255,0.06); }
+        .cmd-icon { width:28px; height:28px; border-radius:0.5rem; display:flex; align-items:center; justify-content:center; font-size:0.85rem; background:rgba(255,255,255,0.07); flex-shrink:0; }
+
+        /* Vault lock overlay */
+        #vault-lock-overlay { position:fixed; inset:0; z-index:300; background:var(--bg-base); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.5rem; }
+        #vault-lock-overlay.hidden { display:none; }
+
+        /* Recently deleted bin */
+        #deleted-bin-modal { position:fixed; inset:0; z-index:150; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:1rem; }
+        #deleted-bin-modal.hidden { display:none; }
+
+        /* Detail view modal */
+        #detail-modal { position:fixed; inset:0; z-index:120; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; padding:1rem; overflow-y:auto; }
+        #detail-modal.hidden { display:none; }
+        #detail-modal-inner { width:min(680px,96vw); border-radius:2rem; overflow:hidden; background:var(--surface-card); border:1px solid var(--border); max-height:92vh; overflow-y:auto; }
+
+        /* Toast queue */
+        #notify-container { display:flex; flex-direction:column-reverse; }
+
+        /* Inline quick-edit */
+        .quick-edit-input { background:transparent; border:none; outline:none; border-bottom:1px solid var(--primary); font-size:inherit; font-weight:inherit; color:var(--text-primary); font-family:inherit; min-width:0; flex:1; }
+
+        /* Kanban columns */
+        .kanban-col { min-width:280px; max-width:320px; flex:0 0 auto; }
+        #kanban-board { display:flex; gap:1rem; overflow-x:auto; padding-bottom:1rem; }
+        .kanban-col-header { font-size:0.7rem; font-weight:900; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between; }
+        .kanban-card { border-radius:1rem; padding:0.875rem; margin-bottom:0.625rem; border:1px solid var(--border); background:var(--card); cursor:grab; transition:all 0.2s; }
+        .kanban-card:hover { transform:translateY(-2px); border-color:var(--primary-glow); }
+
+        /* Onboarding */
+        #onboarding-overlay { position:fixed; inset:0; z-index:250; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; padding:1rem; }
+        #onboarding-overlay.hidden { display:none; }
+        .onboarding-step { display:none; }
+        .onboarding-step.active { display:block; }
+
+        /* Offline indicator */
+        #offline-banner { position:fixed; top:0; left:0; right:0; z-index:80; background:rgba(239,68,68,0.9); color:#fff; text-align:center; padding:0.4rem; font-size:0.75rem; font-weight:700; transform:translateY(-100%); transition:transform 0.3s; }
+        #offline-banner.visible { transform:translateY(0); }
+
+        /* Debug panel */
+        #debug-panel { position:fixed; bottom:80px; left:0; z-index:90; background:rgba(0,0,0,0.95); border-right:1px solid var(--border); border-top:1px solid var(--border); border-bottom:1px solid var(--border); border-radius:0 1rem 1rem 0; width:min(360px,90vw); max-height:60vh; overflow-y:auto; font-family:monospace; font-size:0.7rem; transition:transform 0.3s; }
+        #debug-panel.hidden { transform:translateX(-100%); }
+
+        /* Changelog */
+        #changelog-modal { position:fixed; inset:0; z-index:160; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:1rem; }
+        #changelog-modal.hidden { display:none; }
+
+        /* Bulk selection */
+        .card-entry.bulk-selected { outline:2px solid var(--primary); outline-offset:3px; }
+        .card-entry.bulk-selected::before { content:'✓'; position:absolute; top:8px; left:8px; width:20px; height:20px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:900; color:#fff; z-index:5; }
+        #bulk-action-bar { position:fixed; bottom:72px; left:50%; transform:translateX(-50%); z-index:70; transition:all 0.3s; pointer-events:none; opacity:0; }
+        #bulk-action-bar.visible { opacity:1; pointer-events:all; }
+
+        /* PWA install banner */
+        #pwa-install-banner { position:fixed; bottom:80px; left:1rem; right:1rem; z-index:65; max-width:480px; margin:0 auto; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); }
+        #pwa-install-banner.hidden { opacity:0; transform:translateY(20px); pointer-events:none; }
+
+        /* Favorites star */
+        .fav-star { color:#fbbf24; } .fav-star-empty { color:rgba(255,255,255,0.15); }
+
+        /* Pin badge */
+        .pin-badge { position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:#f59e0b; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; }
+
+        /* Reduce motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+        }
+        body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+
+        /* Accessibility focus */
+        :focus-visible { outline:2px solid var(--primary); outline-offset:3px; border-radius:4px; }
+        body.high-contrast { --text-muted:#cbd5e1; --border:rgba(255,255,255,0.25); }
+
+        /* Custom CSS injection target */
+        #custom-css-el { }
+
+        /* Fullscreen mode */
+        body.fullscreen-mode .app-shell { max-width:100% !important; padding:0.5rem !important; }
+        body.fullscreen-mode header { display:none; }
+        body.fullscreen-mode nav { display:none; }
+        #fullscreen-exit { position:fixed; top:8px; right:8px; z-index:50; display:none; }
+        body.fullscreen-mode #fullscreen-exit { display:flex; }
+
+        /* Timeline view */
+        .timeline-item { display:flex; gap:1rem; position:relative; padding-bottom:1.5rem; }
+        .timeline-item::before { content:''; position:absolute; left:20px; top:40px; bottom:0; width:2px; background:var(--border); }
+        .timeline-dot { width:40px; height:40px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--surface-card); font-size:1rem; }
+
+        /* QR modal */
+        #qr-modal { position:fixed; inset:0; z-index:170; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:1rem; }
+        #qr-modal.hidden { display:none; }
+
+        /* Tooltip */
+        [data-tip] { position:relative; }
+        [data-tip]:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); color:#fff; font-size:0.65rem; font-weight:600; padding:4px 10px; border-radius:6px; white-space:nowrap; pointer-events:none; z-index:999; }
+        /* ═══════════════════════════════════════════════════════════════════
+           v4.0 UI STYLES
+        ════════════════════════════════════════════════════════════════════ */
+
+        /* PIN pad */
+        .pin-btn { aspect-ratio:1; border-radius:1rem; font-size:1.25rem; font-weight:700; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text-primary); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; }
+        .pin-btn:hover { background:rgba(255,255,255,0.12); }
+        .pin-btn:active { transform:scale(0.92); }
+        .pin-dot { width:14px; height:14px; border-radius:50%; border:2px solid var(--text-muted); transition:all 0.2s; }
+        .pin-dot.filled { background:var(--primary); border-color:var(--primary); transform:scale(1.1); }
+        #vault-lock-screen { display:flex; }
+        #vault-lock-screen.hidden { display:none !important; }
+
+        /* Command palette */
+        .cmd-item { display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer; transition:background 0.12s; border-radius:0.75rem; margin:0 6px; }
+        .cmd-item:hover, .cmd-item.focused { background:rgba(255,255,255,0.07); }
+        .cmd-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; background:rgba(255,255,255,0.06); }
+        .cmd-label { font-size:0.83rem; font-weight:600; color:var(--text-primary); flex:1; }
+        .cmd-hint { font-size:0.68rem; color:var(--text-muted); flex-shrink:0; }
+
+        /* Bulk bar */
+        #bulk-bar { white-space:nowrap; }
+        .card-entry .sel-check { position:absolute; top:8px; left:8px; z-index:10; width:22px; height:22px; border-radius:6px; border:2px solid rgba(255,255,255,0.3); background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; font-size:0.75rem; }
+        body.bulk-mode .card-entry .sel-check { display:flex; }
+        .card-entry.selected-card .sel-check { background:var(--primary); border-color:var(--primary); color:#fff; }
+        body.bulk-mode .card-entry { cursor:pointer; user-select:none; }
+
+        /* Favorites & pinned */
+        .pinned-strip { position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--primary),#a78bfa); z-index:5; border-radius:2rem 2rem 0 0; }
+
+        /* Views */
+        .list-view-item { display:flex; align-items:center; gap:1rem; padding:0.875rem 1rem; border-radius:1.25rem; border:1px solid var(--border); background:var(--card); transition:all 0.2s; cursor:pointer; }
+        .list-view-item:hover { border-color:var(--primary); background:rgba(255,255,255,0.04); }
+        .list-view-thumb { width:36px; height:52px; border-radius:6px; flex-shrink:0; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:1.2rem; overflow:hidden; }
+        .kanban-card { padding:0.75rem; border-radius:1rem; background:rgba(255,255,255,0.03); border:1px solid var(--border); cursor:pointer; transition:all 0.18s; }
+        .kanban-card:hover { border-color:var(--primary); background:rgba(255,255,255,0.05); }
+        .timeline-item { position:relative; padding-left:1.5rem; }
+        .timeline-item::before { content:''; position:absolute; left:5px; top:14px; bottom:-8px; width:2px; background:var(--border); }
+        .timeline-item:last-child::before { display:none; }
+        .timeline-dot { position:absolute; left:0; top:12px; width:12px; height:12px; border-radius:50%; background:var(--primary); border:2px solid var(--bg-base); z-index:1; }
+
+        /* View toggle buttons */
+        .view-btn { padding:0.4rem 0.65rem; border-radius:0.65rem; font-size:0.75rem; font-weight:700; border:1px solid var(--border); cursor:pointer; transition:all 0.18s; background:transparent; color:var(--text-muted); }
+        .view-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .view-btn:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+
+        /* Tooltips */
+        [data-tip] { position:relative; }
+        [data-tip]::after { content:attr(data-tip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); color:#fff; padding:4px 10px; border-radius:8px; font-size:0.65rem; font-weight:700; white-space:nowrap; pointer-events:none; opacity:0; transition:opacity 0.18s; z-index:200; }
+        [data-tip]:hover::after { opacity:1; }
+
+        /* Skeleton loaders */
+        .skeleton { background:rgba(255,255,255,0.05); border-radius:0.75rem; position:relative; overflow:hidden; }
+        .skeleton::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent); animation:shimmer 1.4s infinite; }
+
+        /* Goal bar */
+        .goal-bar { height:8px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,0.06); }
+        .goal-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--primary),#a78bfa); transition:width 0.6s cubic-bezier(0.16,1,0.3,1); }
+
+        /* Debug panel */
+        .dbg-kpi { background:rgba(0,255,0,0.05); border:1px solid rgba(0,255,0,0.15); border-radius:0.75rem; padding:0.75rem; text-align:center; }
+        .dbg-kpi-val { font-family:monospace; font-size:1.1rem; font-weight:900; color:#4ade80; }
+        .dbg-kpi-label { font-size:0.6rem; color:#6b7280; margin-top:2px; text-transform:uppercase; }
+        .dbg-action-btn { font-family:monospace; font-size:0.7rem; padding:0.4rem 0.75rem; border-radius:0.5rem; border:1px solid rgba(74,222,128,0.3); background:rgba(74,222,128,0.05); color:#4ade80; cursor:pointer; transition:all 0.15s; }
+        .dbg-action-btn:hover { background:rgba(74,222,128,0.15); }
+
+        /* Onboarding */
+        #onboarding-overlay { display:flex; }
+        #onboarding-overlay.hidden { display:none !important; }
+
+        /* Feedback type buttons */
+        .fb-type-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
+        /* Reduced motion */
+        body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+
+        /* Accessibility focus */
+        body.accessibility-mode :focus { outline:3px solid var(--primary) !important; outline-offset:3px; }
+
+        /* PWA standalone */
+        @media (display-mode:standalone) {
+            body { padding-top:env(safe-area-inset-top,0); }
+            nav  { padding-bottom:max(1rem,env(safe-area-inset-bottom,0)); }
+        }
+
+        /* Undo toast position */
+        #undo-toast { left:50%; transform:translateX(-50%); bottom:88px; }
+
+        /* Offline bar */
+        #offline-bar { display:none; }
+
+        /* Network badge */
+        #network-badge { display:none; }
+
+        /* Toast container override — put above nav */
+        #notify-container { bottom:88px !important; }
+
+        /* Changelog */
+        #changelog-overlay { display:flex; }
+        #changelog-overlay.hidden { display:none !important; }
+        #feedback-overlay { display:flex; }
+        #feedback-overlay.hidden { display:none !important; }
+
+        /* Mobile: list-view-item compact */
+        @media (max-width:480px) { .list-view-item { padding:0.65rem 0.75rem; gap:0.75rem; } .list-view-thumb { width:30px; height:44px; } }
     </style>
 </head>
 <body class="custom-scrollbar">
@@ -1273,7 +1496,7 @@
                             <svg class="text-white" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                         </div>
                         <p class="font-black heading-font text-base">MediaVault<span style="color:var(--primary)">Pro</span></p>
-                        <p class="text-xs mt-1" style="color:var(--text-muted)">Version 3.0.0</p>
+                        <p class="text-xs mt-1" style="color:var(--text-muted)">Version 4.0.0</p>
                         <p class="text-xs mt-3 leading-relaxed" style="color:var(--text-muted)">All data stored locally in your browser. No cloud. No account required.</p>
                     </div>
 
@@ -1897,6 +2120,169 @@ CREATE POLICY "allow_all" ON mediavault
         </div>
 
     </div><!-- /shell -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         v4.0 NEW PANELS & MODALS
+    ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Command Palette -->
+    <div id="cmd-palette-overlay" class="fixed inset-0 z-[90] hidden" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)" onclick="commandPalette.close()">
+        <div class="max-w-xl mx-auto mt-16 sm:mt-24 px-4" onclick="event.stopPropagation()">
+            <div class="glass rounded-3xl overflow-hidden shadow-2xl">
+                <div class="flex items-center gap-3 px-5 py-4" style="border-bottom:1px solid var(--border)">
+                    <svg width="18" height="18" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input id="cmd-input" type="text" placeholder="Search commands, entries, actions…" autocomplete="off" spellcheck="false"
+                        class="flex-1 bg-transparent border-none outline-none font-medium text-sm"
+                        style="color:var(--text-primary)" oninput="commandPalette.search(this.value)" onkeydown="commandPalette.keyNav(event)">
+                    <span class="kbd text-xs">Esc</span>
+                </div>
+                <div id="cmd-results" class="max-h-80 overflow-y-auto custom-scrollbar py-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail View Modal -->
+    <div id="detail-overlay" class="fixed inset-0 z-[80] hidden overflow-y-auto" style="background:rgba(0,0,0,0.85);backdrop-filter:blur(12px)" onclick="detailView.close(event)">
+        <div class="min-h-screen flex items-start justify-center p-4 pt-8" onclick="event.stopPropagation()">
+            <div id="detail-panel" class="glass w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl"></div>
+        </div>
+    </div>
+
+    <!-- Vault Lock Screen -->
+    <div id="vault-lock-screen" class="fixed inset-0 z-[95] hidden flex-col items-center justify-center p-6" style="background:var(--bg-base)">
+        <div class="glass rounded-3xl p-8 w-full max-w-sm text-center space-y-6">
+            <div class="text-5xl mb-2">🔒</div>
+            <div>
+                <h2 class="text-2xl font-black heading-font">Vault Locked</h2>
+                <p class="text-sm mt-1" style="color:var(--text-muted)">Enter your PIN to unlock</p>
+            </div>
+            <div class="flex justify-center gap-3" id="pin-dots"></div>
+            <div class="grid grid-cols-3 gap-3">
+                <button class="pin-btn" onclick="vaultLock.press(1)">1</button>
+                <button class="pin-btn" onclick="vaultLock.press(2)">2</button>
+                <button class="pin-btn" onclick="vaultLock.press(3)">3</button>
+                <button class="pin-btn" onclick="vaultLock.press(4)">4</button>
+                <button class="pin-btn" onclick="vaultLock.press(5)">5</button>
+                <button class="pin-btn" onclick="vaultLock.press(6)">6</button>
+                <button class="pin-btn" onclick="vaultLock.press(7)">7</button>
+                <button class="pin-btn" onclick="vaultLock.press(8)">8</button>
+                <button class="pin-btn" onclick="vaultLock.press(9)">9</button>
+                <button class="pin-btn col-start-2" onclick="vaultLock.press(0)">0</button>
+                <button class="pin-btn" onclick="vaultLock.backspace()" style="color:#f87171">⌫</button>
+            </div>
+            <div id="pin-error" class="hidden text-xs font-bold" style="color:#f87171">Incorrect PIN. Try again.</div>
+            <button onclick="vaultLock.forgotPin()" class="text-xs" style="color:var(--text-muted)">Forgot PIN? Reset vault lock</button>
+        </div>
+    </div>
+
+    <!-- Onboarding Walkthrough -->
+    <div id="onboarding-overlay" class="fixed inset-0 z-[85] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)">
+        <div class="glass rounded-3xl p-8 w-full max-w-md text-center">
+            <div id="onboarding-content"></div>
+            <div class="flex justify-between items-center mt-8">
+                <button onclick="onboarding.prev()" id="ob-prev" class="glass px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 hidden">← Back</button>
+                <div id="ob-dots" class="flex gap-2 mx-auto"></div>
+                <button onclick="onboarding.next()" id="ob-next" class="btn-primary text-white px-5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div id="changelog-overlay" class="fixed inset-0 z-[88] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)" onclick="changelogModal.close()">
+        <div class="glass rounded-3xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-6 pt-6 pb-4" style="border-bottom:1px solid var(--border)">
+                <h3 class="text-lg font-black heading-font">What's New 🎉</h3>
+                <button onclick="changelogModal.close()" class="h-9 w-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-red-500/20 transition-all">✕</button>
+            </div>
+            <div id="changelog-body" class="overflow-y-auto custom-scrollbar px-6 py-4 space-y-4 flex-1"></div>
+        </div>
+    </div>
+
+    <!-- Feedback / Bug Report Modal -->
+    <div id="feedback-overlay" class="fixed inset-0 z-[88] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)" onclick="feedbackTool.close()">
+        <div class="glass rounded-3xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-6 pt-6 pb-4" style="border-bottom:1px solid var(--border)">
+                <h3 class="text-lg font-black heading-font">Send Feedback</h3>
+                <button onclick="feedbackTool.close()" class="h-9 w-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-red-500/20 transition-all">✕</button>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <div class="flex gap-2">
+                    <button onclick="feedbackTool.setType('bug')" data-fb="bug" class="fb-type-btn flex-1 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border)">🐛 Bug</button>
+                    <button onclick="feedbackTool.setType('idea')" data-fb="idea" class="fb-type-btn flex-1 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border)">💡 Idea</button>
+                    <button onclick="feedbackTool.setType('praise')" data-fb="praise" class="fb-type-btn flex-1 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border)">❤️ Praise</button>
+                </div>
+                <textarea id="feedback-text" rows="4" placeholder="Describe your feedback…" class="w-full border rounded-2xl px-4 py-3 focus:outline-none resize-none text-sm" style="background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text-primary)"></textarea>
+                <div class="flex gap-3">
+                    <button onclick="feedbackTool.submit()" class="btn-primary text-white flex-1 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95">Send Feedback</button>
+                    <a href="https://zelvior.github.io/Support/" target="_blank" rel="noopener noreferrer" class="glass hover:bg-white/5 px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition-all">Support Dev</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div id="debug-panel" class="fixed inset-0 z-[92] hidden flex-col" style="background:rgba(2,6,23,0.97)">
+        <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid rgba(255,255,255,0.1)">
+            <h3 class="font-mono font-bold text-green-400">🛠 Debug Panel — MediaVault v4.0</h3>
+            <button onclick="debugPanel.close()" class="text-red-400 font-mono text-xs">✕ Close</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="dbg-kpis"></div>
+            <div class="font-mono text-xs space-y-1" id="dbg-log-out" style="color:#4ade80;max-height:300px;overflow-y:auto;background:rgba(0,0,0,0.4);border-radius:12px;padding:12px"></div>
+            <div class="flex flex-wrap gap-2" id="dbg-actions"></div>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar (appears when items selected) -->
+    <div id="bulk-bar" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 glass rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl" style="border-color:var(--primary);min-width:280px">
+        <span id="bulk-count" class="text-xs font-black" style="color:var(--primary)">0 selected</span>
+        <div class="flex gap-2 ml-auto">
+            <button onclick="bulkOps.editSelected()" class="glass px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-white/5 transition-all">✏️ Edit</button>
+            <button onclick="bulkOps.deleteSelected()" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all" style="background:rgba(239,68,68,0.15);color:#f87171">🗑 Delete</button>
+            <button onclick="bulkOps.clearSelection()" class="text-xs font-bold px-2" style="color:var(--text-muted)">✕</button>
+        </div>
+    </div>
+
+    <!-- Undo Toast (floats above nav) -->
+    <div id="undo-toast" class="hidden fixed z-[65] left-1/2 -translate-x-1/2" style="bottom:96px">
+        <div class="glass rounded-2xl px-5 py-3 flex items-center gap-4 shadow-2xl" style="border-color:var(--primary)">
+            <span class="text-sm font-bold" id="undo-msg">Entry deleted</span>
+            <button onclick="undoSystem.undo()" class="btn-primary text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95">↩ Undo</button>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div id="offline-bar" class="hidden fixed top-0 left-0 right-0 z-[98] text-center py-2 text-xs font-bold" style="background:#f59e0b;color:#000">
+        📡 You're offline — changes are saved locally and will sync when reconnected
+    </div>
+
+    <!-- PWA Install Prompt -->
+    <div id="pwa-prompt" class="hidden fixed z-[88] bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:w-80">
+        <div class="glass rounded-2xl p-4 shadow-2xl" style="border-color:rgba(59,130,246,0.4)">
+            <div class="flex items-start gap-3">
+                <div class="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="text-white" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold">Install MediaVault Pro</p>
+                    <p class="text-xs mt-0.5" style="color:var(--text-muted)">Add to Home Screen for instant access — works offline too!</p>
+                </div>
+                <button onclick="pwaManager.dismiss()" class="text-lg leading-none" style="color:var(--text-muted)">✕</button>
+            </div>
+            <div class="flex gap-2 mt-3">
+                <button onclick="pwaManager.install()" class="btn-primary text-white flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">📲 Install</button>
+                <button onclick="pwaManager.dismiss()" class="glass flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:bg-white/5">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Status -->
+    <div id="network-badge" class="fixed top-4 left-4 z-60 hidden">
+        <div class="glass px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2">
+            <div id="net-dot" class="w-2 h-2 rounded-full bg-green-400"></div>
+            <span id="net-label">Online</span>
+        </div>
+    </div>
 
     <!-- Bottom Nav -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 glass" style="border-top:1px solid var(--border)">
@@ -4858,6 +5244,1109 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
 
     // 12. Keyboard shortcuts listener
     document.addEventListener('keydown', e => shortcuts.handle(e));
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // v4.0 FEATURE SYSTEMS — CHUNK 1
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // ── TOAST QUEUE ─────────────────────────────────────────────────────────
+    const toastQueue = {
+        _q: [], _active: 0, _max: 4,
+        push(msg, type='success', duration=4000) {
+            this._q.push({msg, type, duration});
+            this._drain();
+        },
+        _drain() {
+            if (this._active >= this._max || !this._q.length) return;
+            const {msg, type, duration} = this._q.shift();
+            this._active++;
+            const colors = { success:'border-emerald-500', error:'border-red-500', warning:'border-amber-500', info:'border-blue-500' };
+            const c = document.getElementById('notify-container');
+            if (!c) { this._active--; return; }
+            const t = document.createElement('div');
+            t.className = `glass border-l-4 ${colors[type]||colors.success} p-4 rounded-2xl shadow-2xl flex items-center gap-3 toast-animate pointer-events-auto`;
+            t.innerHTML = `<div class="flex-grow font-bold text-sm" style="color:var(--text-primary)">${esc(msg)}</div><button style="opacity:0.4;font-size:1.2rem;line-height:1" onclick="this.parentElement.remove()">×</button>`;
+            c.appendChild(t);
+            const rm = () => { t.remove(); this._active--; this._drain(); };
+            const timer = setTimeout(rm, duration);
+            t.addEventListener('mouseenter', () => clearTimeout(timer));
+            t.addEventListener('mouseleave', () => setTimeout(rm, 1200));
+        }
+    };
+
+    // ── UNDO DELETE ──────────────────────────────────────────────────────────
+    const undoSystem = {
+        _stack: [], _timer: null,
+        push(items, label) {
+            this._stack.push({items: items.map(i=>({...i})), label});
+            if (this._stack.length > 10) this._stack.shift();
+            this._show(label || `${items.length} entr${items.length>1?'ies':'y'} deleted`);
+        },
+        _show(msg) {
+            const t = document.getElementById('undo-toast');
+            const m = document.getElementById('undo-msg');
+            if (t) { t.classList.remove('hidden'); if (m) m.textContent = msg; }
+            clearTimeout(this._timer);
+            this._timer = setTimeout(() => this.dismiss(), 7000);
+        },
+        undo() {
+            if (!this._stack.length) return;
+            const {items} = this._stack.pop();
+            S.items.unshift(...items.map(sanitize));
+            dataManager.save(); ui.render(); this.dismiss();
+            toastQueue.push(`Restored ${items.length} entr${items.length>1?'ies':'y'}`, 'success');
+        },
+        dismiss() {
+            document.getElementById('undo-toast')?.classList.add('hidden');
+            clearTimeout(this._timer);
+        }
+    };
+
+    // ── FAVORITES ────────────────────────────────────────────────────────────
+    const favoriteSystem = {
+        toggle(id) {
+            const item = S.items.find(i=>i.id===id);
+            if (!item) return;
+            item.favorite = !item.favorite;
+            item.updatedAt = Date.now();
+            dataManager.save(); ui.render();
+            toastQueue.push(item.favorite ? '⭐ Added to favorites' : 'Removed from favorites', 'success');
+        }
+    };
+
+    // ── PINNED ENTRIES ───────────────────────────────────────────────────────
+    const pinnedSystem = {
+        toggle(id) {
+            const item = S.items.find(i=>i.id===id);
+            if (!item) return;
+            item.pinned = !item.pinned;
+            item.updatedAt = Date.now();
+            dataManager.save(); ui.render();
+            toastQueue.push(item.pinned ? '📌 Pinned' : 'Unpinned', 'success');
+        }
+    };
+
+    // ── RECYCLE BIN ──────────────────────────────────────────────────────────
+    const TRASH_KEY = 'mvp_trash_v1';
+    const recycleBin = {
+        _bin: [],
+        load() { try { const r=localStorage.getItem(TRASH_KEY); if(r) this._bin=JSON.parse(r); } catch {} },
+        save() { try { localStorage.setItem(TRASH_KEY, JSON.stringify(this._bin.slice(0,50))); } catch {} },
+        add(items) {
+            const ts = Date.now();
+            items.forEach(i => this._bin.unshift({...i, _deletedAt: ts}));
+            this._bin = this._bin.slice(0,50); this.save();
+        },
+        restore(id) {
+            const idx = this._bin.findIndex(i=>i.id===id);
+            if (idx===-1) return;
+            const [item] = this._bin.splice(idx,1);
+            delete item._deletedAt;
+            if (!S.items.find(i=>i.id===item.id)) S.items.unshift(sanitize(item));
+            dataManager.save(); this.save(); ui.render();
+            toastQueue.push('Entry restored', 'success');
+            this.openModal();
+        },
+        permanentDelete(id) {
+            this._bin = this._bin.filter(i=>i.id!==id); this.save();
+            toastQueue.push('Permanently deleted', 'warning');
+            this.openModal();
+        },
+        clearAll() {
+            if (!confirm('Empty the recycle bin?')) return;
+            this._bin = []; this.save();
+            toastQueue.push('Bin emptied', 'warning');
+            document.getElementById('trash-modal')?.remove();
+        },
+        openModal() {
+            document.getElementById('trash-modal')?.remove();
+            const m = document.createElement('div');
+            m.id = 'trash-modal';
+            m.className = 'fixed inset-0 z-[88] flex items-center justify-center p-4';
+            m.style.cssText = 'background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)';
+            m.innerHTML = `
+                <div class="glass rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--border)">
+                        <h3 class="text-lg font-black heading-font">🗑 Recycle Bin</h3>
+                        <div class="flex gap-2">
+                            <button onclick="recycleBin.clearAll()" class="text-xs font-bold px-3 py-1.5 rounded-xl" style="background:rgba(239,68,68,0.1);color:#f87171">Clear All</button>
+                            <button onclick="document.getElementById('trash-modal').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                        </div>
+                    </div>
+                    <div class="overflow-y-auto flex-1 p-4 custom-scrollbar space-y-2">
+                        ${this._bin.length ? this._bin.map(i=>`
+                            <div class="flex items-center gap-3 p-3 rounded-2xl glass">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold truncate" style="color:var(--text-primary)">${esc(i.title)}</p>
+                                    <p class="text-xs" style="color:var(--text-muted)">Deleted ${new Date(i._deletedAt).toLocaleDateString()}</p>
+                                </div>
+                                <button onclick="recycleBin.restore('${esc(i.id)}')" class="text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0" style="background:rgba(52,211,153,0.1);color:#34d399">Restore</button>
+                                <button onclick="recycleBin.permanentDelete('${esc(i.id)}')" class="text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0" style="background:rgba(239,68,68,0.1);color:#f87171">Delete</button>
+                            </div>`).join('')
+                        : '<p class="text-center py-8 text-sm" style="color:var(--text-muted)">Bin is empty</p>'}
+                    </div>
+                </div>`;
+            m.onclick = (e) => { if(e.target===m) m.remove(); };
+            document.body.appendChild(m);
+        }
+    };
+
+    // ── DUPLICATE DETECTION ──────────────────────────────────────────────────
+    const duplicateDetector = {
+        _norm(s) { return s.toLowerCase().replace(/[^a-z0-9]/g,''); },
+        find() {
+            const g = {};
+            S.items.forEach(i => { const k=this._norm(i.title); if(!g[k])g[k]=[]; g[k].push(i); });
+            return Object.values(g).filter(arr=>arr.length>1);
+        },
+        openModal() {
+            const dupes = this.find();
+            document.getElementById('dupe-modal')?.remove();
+            const m = document.createElement('div');
+            m.id = 'dupe-modal';
+            m.className = 'fixed inset-0 z-[88] flex items-center justify-center p-4';
+            m.style.cssText = 'background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)';
+            m.innerHTML = `
+                <div class="glass rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--border)">
+                        <h3 class="text-lg font-black heading-font">🔍 Duplicates</h3>
+                        <button onclick="document.getElementById('dupe-modal').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                    </div>
+                    <div class="overflow-y-auto flex-1 p-4 custom-scrollbar space-y-4">
+                        ${dupes.length ? dupes.map(grp=>`
+                            <div class="glass p-4 rounded-2xl">
+                                <p class="text-sm font-black mb-3" style="color:var(--primary)">"${esc(grp[0].title)}" — ${grp.length} copies</p>
+                                ${grp.map(i=>`<div class="flex items-center gap-2 mb-2 text-xs" style="color:var(--text-muted)">
+                                    <span class="flex-1">${esc(i.status)} · ⭐${i.rating} · ${new Date(i.updatedAt).toLocaleDateString()}</span>
+                                    <button onclick="duplicateDetector.keep('${esc(i.id)}','${grp.map(x=>x.id).join(',')}')" class="font-bold px-3 py-1.5 rounded-xl flex-shrink-0" style="background:rgba(59,130,246,0.1);color:#60a5fa">Keep</button>
+                                </div>`).join('')}
+                            </div>`).join('')
+                        : '<p class="text-center py-8 text-sm" style="color:var(--text-muted)">✅ No duplicates found!</p>'}
+                    </div>
+                </div>`;
+            m.onclick = (e) => { if(e.target===m) m.remove(); };
+            document.body.appendChild(m);
+        },
+        keep(keepId, allStr) {
+            const all = allStr.split(',');
+            const remove = all.filter(id=>id!==keepId);
+            recycleBin.add(S.items.filter(i=>remove.includes(i.id)));
+            S.items = S.items.filter(i=>!remove.includes(i.id));
+            dataManager.save(); ui.render();
+            document.getElementById('dupe-modal')?.remove();
+            toastQueue.push(`Merged — removed ${remove.length} duplicate${remove.length>1?'s':''}`, 'success');
+        }
+    };
+
+    // ── ADVANCED MULTI-FILTER ────────────────────────────────────────────────
+    const advancedFilter = {
+        _s: { tags:[], rating:0, status:[], hasNotes:false, hasCover:false, isFav:false, isPinned:false },
+        isActive() { const s=this._s; return s.tags.length||s.rating||s.status.length||s.hasNotes||s.hasCover||s.isFav||s.isPinned; },
+        apply(items) {
+            const s=this._s;
+            return items.filter(i => {
+                if (s.tags.length && !s.tags.every(t=>(i.tags||[]).includes(t))) return false;
+                if (s.rating && i.rating < s.rating) return false;
+                if (s.status.length && !s.status.includes(i.status)) return false;
+                if (s.hasNotes && !i.notes) return false;
+                if (s.hasCover && !i.cover) return false;
+                if (s.isFav && !i.favorite) return false;
+                if (s.isPinned && !i.pinned) return false;
+                return true;
+            });
+        },
+        reset() { this._s={tags:[],rating:0,status:[],hasNotes:false,hasCover:false,isFav:false,isPinned:false}; ui.render(); document.getElementById('adv-filter-panel')?.remove(); toastQueue.push('Filters cleared','success'); },
+        openPanel() {
+            document.getElementById('adv-filter-panel')?.remove();
+            const allTags = [...new Set(S.items.flatMap(i=>i.tags||[]))].sort();
+            const s=this._s;
+            const m = document.createElement('div');
+            m.id='adv-filter-panel';
+            m.className='fixed inset-0 z-[88] flex items-end sm:items-center justify-center p-4';
+            m.style.cssText='background:rgba(0,0,0,0.75);backdrop-filter:blur(8px)';
+            m.innerHTML=`
+                <div class="glass rounded-3xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--border)">
+                        <h3 class="text-lg font-black heading-font">⚙️ Advanced Filters</h3>
+                        <button onclick="document.getElementById('adv-filter-panel').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--text-muted)">Min Rating</p>
+                            <div class="flex gap-2 flex-wrap">${[0,1,2,3,4,5].map(r=>`<button onclick="advancedFilter._s.rating=${r};advancedFilter.openPanel()" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${s.rating===r?'border-yellow-400 text-yellow-400':'' }" style="border-color:var(--border);color:var(--text-muted)">${r===0?'Any':r+'★'}</button>`).join('')}</div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--text-muted)">Status</p>
+                            <div class="flex gap-2">${['want','ongoing','watched'].map(st=>`<button onclick="advancedFilter._togStatus('${st}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${s.status.includes(st)?'border-blue-500 text-blue-400':'' }" style="border-color:var(--border);color:var(--text-muted)">${st}</button>`).join('')}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${['hasNotes','hasCover','isFav','isPinned'].map(k=>({ hasNotes:'Has Notes',hasCover:'Has Poster',isFav:'⭐ Favorites',isPinned:'📌 Pinned' })[k]).map((label,idx)=>{const key=['hasNotes','hasCover','isFav','isPinned'][idx];return `<button onclick="advancedFilter._s.${key}=!advancedFilter._s.${key};advancedFilter.openPanel()" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${s[['hasNotes','hasCover','isFav','isPinned'][idx]]?'border-blue-500 text-blue-400':'' }" style="border-color:var(--border);color:var(--text-muted)">${label}</button>`;}).join('')}
+                        </div>
+                        ${allTags.length?`<div><p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--text-muted)">Tags</p><div class="flex flex-wrap gap-1">${allTags.map(t=>`<span onclick="advancedFilter._togTag('${esc(t)}')" class="tag-chip ${s.tags.includes(t)?'filter-active':''}" style="cursor:pointer">${esc(t)}</span>`).join('')}</div></div>`:''}
+                        <div class="flex gap-3 pt-2">
+                            <button onclick="advancedFilter.reset()" class="flex-1 glass py-3 rounded-2xl text-sm font-bold hover:bg-white/5">Reset</button>
+                            <button onclick="advancedFilter.openPanel()" class="flex-1 btn-primary text-white py-3 rounded-2xl text-sm font-bold active:scale-95">Apply</button>
+                        </div>
+                    </div>
+                </div>`;
+            m.onclick=(e)=>{if(e.target===m)m.remove();};
+            document.body.appendChild(m);
+        },
+        _togStatus(st){const idx=this._s.status.indexOf(st);idx===-1?this._s.status.push(st):this._s.status.splice(idx,1);this.openPanel();},
+        _togTag(t){const idx=this._s.tags.indexOf(t);idx===-1?this._s.tags.push(t):this._s.tags.splice(idx,1);this.openPanel();}
+    };
+
+
+    // ── COMMAND PALETTE ──────────────────────────────────────────────────────
+    const commandPalette = {
+        _focused: -1, _items: [],
+        open() {
+            const el=document.getElementById('cmd-palette-overlay');
+            if (el){el.classList.remove('hidden');document.getElementById('cmd-input')?.focus();this.search('');}
+        },
+        close() { document.getElementById('cmd-palette-overlay')?.classList.add('hidden'); this._focused=-1; },
+        _cmds() {
+            return [
+                {icon:'➕',label:'Add New Entry',      hint:'A',       fn:()=>ui.toggleModal(true)},
+                {icon:'🔍',label:'Focus Search',        hint:'/',       fn:()=>document.getElementById('global-search')?.focus()},
+                {icon:'⚙️',label:'Advanced Filters',   hint:'',        fn:()=>advancedFilter.openPanel()},
+                {icon:'🗑',label:'Recycle Bin',         hint:'',        fn:()=>recycleBin.openModal()},
+                {icon:'🔍',label:'Find Duplicates',     hint:'',        fn:()=>duplicateDetector.openModal()},
+                {icon:'📊',label:'Stats Page',          hint:'',        fn:()=>nav.go('stats')},
+                {icon:'⚙️',label:'Settings',            hint:'2',       fn:()=>nav.go('settings')},
+                {icon:'📦',label:'Export Backup',       hint:'Ctrl+E',  fn:()=>dataManager.export()},
+                {icon:'🔒',label:'Lock Vault',          hint:'',        fn:()=>vaultLock.lock()},
+                {icon:'🎯',label:'Goals',               hint:'',        fn:()=>goalTracker.openModal()},
+                {icon:'📜',label:'Activity Log',        hint:'',        fn:()=>activityLog.openViewer()},
+                {icon:'🃏',label:'Card View',           hint:'',        fn:()=>viewToggle.set('grid')},
+                {icon:'☰',label:'List View',           hint:'',        fn:()=>viewToggle.set('list')},
+                {icon:'⊞',label:'Kanban View',         hint:'',        fn:()=>viewToggle.set('kanban')},
+                {icon:'⏱',label:'Timeline View',       hint:'',        fn:()=>viewToggle.set('timeline')},
+                {icon:'🌙',label:'Dark Theme',          hint:'',        fn:()=>cfg.setTheme('dark')},
+                {icon:'☀️',label:'Light Theme',         hint:'',        fn:()=>cfg.setTheme('light')},
+                {icon:'📲',label:'Install App (PWA)',   hint:'',        fn:()=>pwaManager.promptInstall()},
+                {icon:'🛠',label:'Debug Panel',         hint:'',        fn:()=>debugPanel.open()},
+                {icon:'🎉',label:'Changelog',           hint:'',        fn:()=>changelogModal.open()},
+                {icon:'📤',label:'Bulk Select',         hint:'',        fn:()=>bulkOps.startMode()},
+                {icon:'🎲',label:'Generate Test Data',  hint:'',        fn:()=>testDataGen.generate()},
+                {icon:'🔁',label:'Onboarding Tour',     hint:'',        fn:()=>onboarding.reset()},
+            ];
+        },
+        search(q) {
+            this._focused = -1;
+            const base = this._cmds();
+            let items = q ? base.filter(c=>c.label.toLowerCase().includes(q.toLowerCase())) : base;
+            if (q.length>1) {
+                S.items.filter(i=>i.title.toLowerCase().includes(q.toLowerCase())).slice(0,4)
+                    .forEach(i=>items.push({icon:'🎬',label:i.title,hint:'Open',fn:()=>detailView.open(i.id)}));
+            }
+            this._items = items;
+            const el=document.getElementById('cmd-results');
+            if (!el) return;
+            el.innerHTML = !items.length
+                ? `<div class="py-8 text-center text-sm" style="color:var(--text-muted)">No results for "${esc(q)}"</div>`
+                : items.map((it,i)=>`<div class="cmd-item" data-idx="${i}" onclick="commandPalette.run(${i})"><div class="cmd-icon">${it.icon}</div><span class="cmd-label">${esc(it.label)}</span>${it.hint?`<span class="cmd-hint kbd">${esc(it.hint)}</span>`:''}</div>`).join('');
+        },
+        run(i) { const it=this._items[i]; if(it){this.close();it.fn();} },
+        keyNav(e) {
+            const items=document.querySelectorAll('.cmd-item');
+            if (e.key==='ArrowDown'){e.preventDefault();this._focused=Math.min(this._focused+1,items.length-1);}
+            else if (e.key==='ArrowUp'){e.preventDefault();this._focused=Math.max(this._focused-1,0);}
+            else if (e.key==='Enter'){e.preventDefault();if(this._focused>=0)this.run(this._focused);return;}
+            else if (e.key==='Escape'){this.close();return;}
+            items.forEach((el,i)=>el.classList.toggle('focused',i===this._focused));
+            items[this._focused]?.scrollIntoView({block:'nearest'});
+        }
+    };
+
+    // ── VAULT LOCK (PIN) ─────────────────────────────────────────────────────
+    const VLOCK_KEY = 'mvp_vlock_v1';
+    const vaultLock = {
+        _pin:'', _entered:'', _enabled:false,
+        load() {
+            try{const r=localStorage.getItem(VLOCK_KEY);if(r){const d=JSON.parse(r);this._pin=d.pin||'';this._enabled=d.enabled||false;}}catch{}
+            if(this._enabled&&this._pin) this.lock();
+        },
+        lock() {
+            this._entered='';
+            const s=document.getElementById('vault-lock-screen');
+            if(s){s.classList.remove('hidden');this._dots();}
+        },
+        press(d) {
+            if(this._entered.length>=6)return;
+            this._entered+=d; this._dots();
+            if(this._entered.length>=this._pin.length) this._check();
+        },
+        backspace() { this._entered=this._entered.slice(0,-1); this._dots(); },
+        _dots() {
+            const el=document.getElementById('pin-dots');
+            if(!el)return;
+            el.innerHTML=Array.from({length:Math.max(this._pin.length,4)},(_,i)=>
+                `<div class="pin-dot ${i<this._entered.length?'filled':''}"></div>`).join('');
+        },
+        _check() {
+            if(this._entered===this._pin){
+                document.getElementById('vault-lock-screen')?.classList.add('hidden');
+                this._entered='';
+            } else {
+                const e=document.getElementById('pin-error');
+                if(e){e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),2000);}
+                this._entered=''; this._dots();
+            }
+        },
+        forgotPin() {
+            if(confirm('Disable vault lock?')){
+                this._pin='';this._enabled=false;
+                localStorage.setItem(VLOCK_KEY,JSON.stringify({pin:'',enabled:false}));
+                document.getElementById('vault-lock-screen')?.classList.add('hidden');
+                toastQueue.push('Vault lock disabled','warning');
+            }
+        },
+        showSetupDialog() {
+            const p=prompt('Enter a 4–6 digit PIN:');
+            if(!p||!/^\d{4,6}$/.test(p)){toastQueue.push('PIN must be 4–6 digits','error');return;}
+            const c=prompt('Confirm PIN:');
+            if(p!==c){toastQueue.push('PINs do not match','error');return;}
+            this._pin=p;this._enabled=true;
+            localStorage.setItem(VLOCK_KEY,JSON.stringify({pin:p,enabled:true}));
+            toastQueue.push('🔒 Vault PIN set successfully','success');
+        },
+        disable() {
+            this._pin='';this._enabled=false;
+            localStorage.setItem(VLOCK_KEY,JSON.stringify({pin:'',enabled:false}));
+            toastQueue.push('Vault lock disabled','warning');
+        }
+    };
+
+    // ── BULK OPERATIONS ──────────────────────────────────────────────────────
+    const bulkOps = {
+        _sel: new Set(), _mode: false,
+        startMode() {
+            this._mode=true;this._sel.clear();
+            document.body.classList.add('bulk-mode');
+            toastQueue.push('Tap cards to select them','info');
+            this._bar();
+        },
+        clearSelection() {
+            this._sel.clear();this._mode=false;
+            document.body.classList.remove('bulk-mode');
+            document.querySelectorAll('.card-entry.selected-card').forEach(c=>c.classList.remove('selected-card'));
+            document.getElementById('bulk-bar')?.classList.add('hidden');
+        },
+        toggleCard(id) {
+            if(!this._mode)return;
+            const card=document.getElementById(`item-${id}`);
+            if(this._sel.has(id)){this._sel.delete(id);card?.classList.remove('selected-card');}
+            else{this._sel.add(id);card?.classList.add('selected-card');}
+            this._bar();
+        },
+        _bar() {
+            const bar=document.getElementById('bulk-bar');
+            const cnt=document.getElementById('bulk-count');
+            if(!bar)return;
+            bar.classList.toggle('hidden', !this._mode&&this._sel.size===0);
+            if(cnt) cnt.textContent=`${this._sel.size} selected`;
+        },
+        deleteSelected() {
+            if(!this._sel.size){toastQueue.push('Nothing selected','warning');return;}
+            if(!confirm(`Delete ${this._sel.size} entries?`))return;
+            const ids=[...this._sel];
+            const removed=S.items.filter(i=>ids.includes(i.id));
+            recycleBin.add(removed);
+            undoSystem.push(removed,`${removed.length} entries deleted`);
+            S.items=S.items.filter(i=>!ids.includes(i.id));
+            dataManager.save();ui.render();this.clearSelection();
+            toastQueue.push(`Deleted ${removed.length} entries`,'warning');
+        },
+        editSelected() { toastQueue.push('Select a field to batch-update below','info'); }
+    };
+
+    // ── VIEW TOGGLE ──────────────────────────────────────────────────────────
+    const VIEW_KEY = 'mvp_view_v1';
+    const viewToggle = {
+        _v:'grid',
+        load() { try{this._v=localStorage.getItem(VIEW_KEY)||'grid';}catch{} this._sync(); },
+        set(v) { this._v=v; try{localStorage.setItem(VIEW_KEY,v);}catch{} this._sync(); ui.render(); },
+        get() { return this._v; },
+        _sync() { document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===this._v)); }
+    };
+
+    // ── DETAIL VIEW MODAL ────────────────────────────────────────────────────
+    const detailView = {
+        open(id) {
+            const item=S.items.find(i=>i.id===id);
+            if(!item)return;
+            const ov=document.getElementById('detail-overlay');
+            const panel=document.getElementById('detail-panel');
+            if(!ov||!panel)return;
+            const stars='⭐'.repeat(item.rating)||'Unrated';
+            const tagsHtml=(item.tags||[]).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('');
+            panel.innerHTML=`
+                ${item.cover?`<img src="${esc(item.cover)}" class="w-full" style="max-height:260px;object-fit:cover;object-position:top" loading="lazy" onerror="this.remove()">`:''}
+                <div class="p-6 space-y-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <div><h2 class="text-xl font-black heading-font">${esc(item.title)}</h2>
+                        <p class="text-sm mt-1" style="color:var(--text-muted)">${{movie:'🎬 Movie',series:'📺 Series',game:'🎮 Game',anime:'🍱 Anime'}[item.type]||'Media'}</p></div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button onclick="ui.toggleModal(true,'${esc(item.id)}');detailView.close()" class="btn-primary text-white px-3 py-1.5 rounded-xl text-xs font-bold active:scale-95">✏️ Edit</button>
+                            <button onclick="detailView.close()" class="glass px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-white/5">✕</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div class="glass p-3 rounded-2xl"><p class="text-xs" style="color:var(--text-muted)">Status</p><p class="font-bold text-sm">${esc(item.status)}</p></div>
+                        <div class="glass p-3 rounded-2xl"><p class="text-xs" style="color:var(--text-muted)">Rating</p><p class="font-bold text-sm">${esc(stars)}</p></div>
+                        <div class="glass p-3 rounded-2xl"><p class="text-xs" style="color:var(--text-muted)">Progress</p><p class="font-bold text-sm">${item.progress}%</p></div>
+                        <div class="glass p-3 rounded-2xl"><p class="text-xs" style="color:var(--text-muted)">Rewatched</p><p class="font-bold text-sm">${item.rewatchCount||0}×</p></div>
+                    </div>
+                    ${item.epTotal?`<div class="glass p-4 rounded-2xl"><p class="text-xs font-bold mb-1" style="color:var(--text-muted)">Episodes</p><p class="font-bold">${item.epWatched||0} / ${item.epTotal}</p></div>`:''}
+                    ${item.notes?`<div class="glass p-4 rounded-2xl"><p class="text-xs font-bold mb-1" style="color:var(--text-muted)">Notes</p><p class="text-sm leading-relaxed">${esc(item.notes)}</p></div>`:''}
+                    ${tagsHtml?`<div class="flex flex-wrap gap-2">${tagsHtml}</div>`:''}
+                    ${item.trailerUrl?`<a href="${esc(item.trailerUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 w-fit active:scale-95">▶ Watch Trailer</a>`:''}
+                    ${item.externalUrl?`<a href="${esc(item.externalUrl)}" target="_blank" rel="noopener noreferrer" class="glass px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 w-fit hover:bg-white/5">🔗 External Link</a>`:''}
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="favoriteSystem.toggle('${esc(item.id)}')" class="glass px-3 py-2 rounded-xl text-xs font-bold hover:bg-white/5">${item.favorite?'💛 Unfav':'🤍 Fav'}</button>
+                        <button onclick="pinnedSystem.toggle('${esc(item.id)}')" class="glass px-3 py-2 rounded-xl text-xs font-bold hover:bg-white/5">${item.pinned?'📌 Unpin':'📌 Pin'}</button>
+                        <button onclick="rewatchTracker.add('${esc(item.id)}')" class="glass px-3 py-2 rounded-xl text-xs font-bold hover:bg-white/5">🔁 Rewatch</button>
+                        <button onclick="qrShare.show('${esc(item.id)}')" class="glass px-3 py-2 rounded-xl text-xs font-bold hover:bg-white/5">📲 QR Share</button>
+                    </div>
+                    <p class="text-xs" style="color:var(--text-muted)">Updated ${new Date(item.updatedAt).toLocaleString()}</p>
+                </div>`;
+            ov.classList.remove('hidden');
+        },
+        close(e) {
+            if(!e||e.target===document.getElementById('detail-overlay'))
+                document.getElementById('detail-overlay')?.classList.add('hidden');
+        }
+    };
+
+    // ── REWATCH TRACKER ──────────────────────────────────────────────────────
+    const rewatchTracker = {
+        add(id) {
+            const item=S.items.find(i=>i.id===id);
+            if(!item)return;
+            item.rewatchCount=(item.rewatchCount||0)+1;
+            item.updatedAt=Date.now();
+            dataManager.save(); ui.render();
+            toastQueue.push(`🔁 Rewatch #${item.rewatchCount} logged`,'success');
+        }
+    };
+
+    // ── QR SHARE ─────────────────────────────────────────────────────────────
+    const qrShare = {
+        show(id) {
+            const item=S.items.find(i=>i.id===id);
+            if(!item)return;
+            const data=encodeURIComponent(JSON.stringify({t:item.title,ty:item.type,r:item.rating}));
+            const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data}`;
+            document.getElementById('qr-dyn')?.remove();
+            const m=document.createElement('div');
+            m.id='qr-dyn';
+            m.className='fixed inset-0 z-[99] flex items-center justify-center p-4';
+            m.style.cssText='background:rgba(0,0,0,0.85);backdrop-filter:blur(8px)';
+            m.innerHTML=`<div class="glass rounded-3xl p-8 text-center max-w-sm w-full space-y-4" onclick="event.stopPropagation()">
+                <h3 class="text-lg font-black heading-font">${esc(item.title)}</h3>
+                <img src="${qrUrl}" alt="QR" class="w-44 h-44 mx-auto rounded-2xl bg-white p-2">
+                <p class="text-xs" style="color:var(--text-muted)">Scan to share entry details</p>
+                <div class="flex gap-2">
+                    <button onclick="navigator.clipboard?.writeText(location.href).then(()=>toastQueue.push('Link copied!','success'))" class="btn-primary text-white flex-1 py-2.5 rounded-2xl text-sm font-bold active:scale-95">📋 Copy Link</button>
+                    <button onclick="document.getElementById('qr-dyn').remove()" class="glass flex-1 py-2.5 rounded-2xl text-sm font-bold hover:bg-white/5">Close</button>
+                </div>
+            </div>`;
+            m.onclick=(e)=>{if(e.target===m)m.remove();};
+            document.body.appendChild(m);
+        }
+    };
+
+
+    // ── ACTIVITY LOG ─────────────────────────────────────────────────────────
+    const HISTORY_KEY = 'mvp_history_v1';
+    const activityLog = {
+        _log: [],
+        load() { try{const r=localStorage.getItem(HISTORY_KEY);if(r)this._log=JSON.parse(r).slice(0,200);}catch{} },
+        push(action, detail='') {
+            this._log.unshift({action,detail,ts:Date.now()});
+            this._log=this._log.slice(0,200);
+            try{localStorage.setItem(HISTORY_KEY,JSON.stringify(this._log));}catch{}
+        },
+        openViewer() {
+            document.getElementById('alog-modal')?.remove();
+            const m=document.createElement('div');
+            m.id='alog-modal';
+            m.className='fixed inset-0 z-[88] flex items-center justify-center p-4';
+            m.style.cssText='background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)';
+            m.innerHTML=`<div class="glass rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--border)">
+                    <h3 class="text-lg font-black heading-font">📜 Activity Log</h3>
+                    <button onclick="document.getElementById('alog-modal').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                </div>
+                <div class="overflow-y-auto flex-1 px-6 py-4 custom-scrollbar space-y-2">
+                    ${this._log.length ? this._log.map(e=>`
+                        <div class="flex gap-3 items-start py-2" style="border-bottom:1px solid var(--border)">
+                            <div class="flex-1"><p class="text-xs font-bold" style="color:var(--text-primary)">${esc(e.action)}</p>${e.detail?`<p class="text-xs" style="color:var(--text-muted)">${esc(e.detail)}</p>`:''}</div>
+                            <span class="text-xs flex-shrink-0" style="color:var(--text-muted)">${new Date(e.ts).toLocaleTimeString()}</span>
+                        </div>`).join('')
+                    : '<p class="text-center py-8 text-sm" style="color:var(--text-muted)">No activity yet</p>'}
+                </div>
+            </div>`;
+            m.onclick=(e)=>{if(e.target===m)m.remove();};
+            document.body.appendChild(m);
+        }
+    };
+
+    // ── NETWORK STATUS ───────────────────────────────────────────────────────
+    const networkStatus = {
+        _online: navigator.onLine,
+        init() {
+            window.addEventListener('online',  ()=>this._update(true));
+            window.addEventListener('offline', ()=>this._update(false));
+        },
+        _update(on) {
+            this._online=on;
+            const bar=document.getElementById('offline-bar');
+            if(bar) bar.classList.toggle('hidden',on);
+            if(!on) toastQueue.push('📡 Offline — changes saved locally','warning',6000);
+        },
+        check() { toastQueue.push(this._online?'✅ Online':'📡 Offline',this._online?'success':'warning'); }
+    };
+
+    // ── PWA MANAGER ──────────────────────────────────────────────────────────
+    const pwaManager = {
+        _dp: null,
+        init() {
+            window.addEventListener('beforeinstallprompt',(e)=>{
+                e.preventDefault();this._dp=e;
+                if(localStorage.getItem('pwa_dismissed')!=='1') setTimeout(()=>document.getElementById('pwa-prompt')?.classList.remove('hidden'),4000);
+            });
+            window.addEventListener('appinstalled',()=>{
+                document.getElementById('pwa-prompt')?.classList.add('hidden');
+                toastQueue.push('🎉 MediaVault Pro installed!','success');
+            });
+        },
+        install() {
+            if(this._dp){
+                this._dp.prompt();
+                this._dp.userChoice.then(r=>{ if(r.outcome==='accepted') toastQueue.push('Installing…','success'); this._dp=null; });
+            } else { toastQueue.push('Browser menu → "Add to Home Screen"','info',5000); }
+            document.getElementById('pwa-prompt')?.classList.add('hidden');
+        },
+        promptInstall() { if(this._dp) this.install(); else toastQueue.push('Browser menu → "Add to Home Screen"','info',5000); },
+        dismiss() { document.getElementById('pwa-prompt')?.classList.add('hidden'); localStorage.setItem('pwa_dismissed','1'); }
+    };
+
+    // ── GOAL TRACKER ─────────────────────────────────────────────────────────
+    const GOALS_KEY = 'mvp_goals_v1';
+    const goalTracker = {
+        _goals:[],
+        load() { try{const r=localStorage.getItem(GOALS_KEY);if(r)this._goals=JSON.parse(r);}catch{} },
+        save() { try{localStorage.setItem(GOALS_KEY,JSON.stringify(this._goals));}catch{} },
+        _prog(g) {
+            const n=S.items;
+            if(g.type==='complete') return {c:n.filter(i=>i.status==='watched').length,t:g.target};
+            if(g.type==='add')      return {c:n.length,t:g.target};
+            if(g.type==='rated')    return {c:n.filter(i=>i.rating>=4).length,t:g.target};
+            return {c:0,t:g.target};
+        },
+        openModal() {
+            this.load();
+            document.getElementById('goals-modal')?.remove();
+            const m=document.createElement('div');
+            m.id='goals-modal';
+            m.className='fixed inset-0 z-[88] flex items-end sm:items-center justify-center p-4';
+            m.style.cssText='background:rgba(0,0,0,0.8);backdrop-filter:blur(8px)';
+            m.innerHTML=`<div class="glass rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--border)">
+                    <h3 class="text-lg font-black heading-font">🎯 Watch Goals</h3>
+                    <button onclick="document.getElementById('goals-modal').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                </div>
+                <div class="overflow-y-auto flex-1 p-5 custom-scrollbar space-y-4">
+                    ${this._goals.map((g,i)=>{const p=this._prog(g);const pct=Math.min(Math.round((p.c/p.t)*100),100);
+                        return `<div class="glass p-4 rounded-2xl">
+                            <div class="flex justify-between mb-1"><span class="text-sm font-bold">${esc(g.label)}</span><span class="text-xs font-black" style="color:var(--primary)">${p.c}/${p.t}</span></div>
+                            <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
+                            <div class="flex justify-between mt-1"><span class="text-xs" style="color:var(--text-muted)">${pct}%</span>
+                            <button onclick="goalTracker._goals.splice(${i},1);goalTracker.save();document.getElementById('goals-modal').remove();goalTracker.openModal()" class="text-xs" style="color:#f87171">Remove</button></div>
+                        </div>`;
+                    }).join('')}
+                    <div class="glass p-4 rounded-2xl space-y-3">
+                        <p class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Add Goal</p>
+                        <select id="g-type" class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none" style="background:var(--surface-input);border-color:var(--border);color:var(--text-primary)">
+                            <option value="complete">Complete N titles</option>
+                            <option value="add">Add N titles</option>
+                            <option value="rated">Rate N titles 4★+</option>
+                        </select>
+                        <input type="number" id="g-target" placeholder="Target (e.g. 50)" min="1" class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none" style="background:var(--surface-input);border-color:var(--border);color:var(--text-primary)">
+                        <input type="text" id="g-label" placeholder="Goal name (e.g. Watch 50 movies)" class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none" style="background:var(--surface-input);border-color:var(--border);color:var(--text-primary)">
+                        <button onclick="goalTracker._add()" class="btn-primary text-white w-full py-2.5 rounded-xl text-sm font-bold active:scale-95">Add Goal</button>
+                    </div>
+                </div>
+            </div>`;
+            m.onclick=(e)=>{if(e.target===m)m.remove();};
+            document.body.appendChild(m);
+        },
+        _add() {
+            const t=document.getElementById('g-type')?.value;
+            const n=parseInt(document.getElementById('g-target')?.value)||0;
+            const l=document.getElementById('g-label')?.value.trim();
+            if(!n||!l){toastQueue.push('Fill all fields','error');return;}
+            this._goals.push({type:t,target:n,label:l});
+            this.save();
+            document.getElementById('goals-modal')?.remove();
+            this.openModal();
+            toastQueue.push('Goal added!','success');
+        }
+    };
+
+    // ── ONBOARDING ────────────────────────────────────────────────────────────
+    const OB_KEY = 'mvp_onboarded_v1';
+    const onboarding = {
+        _step:0,
+        _steps:[
+            {emoji:'🎬',title:'Welcome to MediaVault Pro!',desc:'Your personal media universe. Movies, series, games, anime — all in one beautiful vault.'},
+            {emoji:'➕',title:'Add Your First Entry',desc:'Tap "Add Media" or press A. Add a title, pick type and status, set rating, and auto-fetch a poster!'},
+            {emoji:'🏷️',title:'Smart Tags',desc:'Tag entries with anything — "binge-worthy", "late night", "masterpiece". Filter and find them instantly.'},
+            {emoji:'☁️',title:'Cloud Sync',desc:'Connect Supabase or Firebase in Settings for automatic cloud backup and cross-device sync.'},
+            {emoji:'🔑',title:'Ctrl+K — Command Palette',desc:'Press Ctrl+K from anywhere to open the command palette. Search any action or entry instantly.'},
+            {emoji:'🚀',title:"You're all set!",desc:'Explore Stats, try Kanban view, set Goals, lock your vault with a PIN. Enjoy! 🎉'}
+        ],
+        show() {
+            if(localStorage.getItem(OB_KEY)==='1')return;
+            this._step=0;this._render();
+            document.getElementById('onboarding-overlay')?.classList.remove('hidden');
+        },
+        _render() {
+            const s=this._steps[this._step];
+            const content=document.getElementById('onboarding-content');
+            const dots=document.getElementById('ob-dots');
+            const prev=document.getElementById('ob-prev');
+            const next=document.getElementById('ob-next');
+            if(content) content.innerHTML=`<div style="font-size:3.5rem;margin-bottom:1rem">${s.emoji}</div><h2 class="text-xl font-black heading-font mb-3">${s.title}</h2><p class="text-sm leading-relaxed" style="color:var(--text-muted)">${s.desc}</p>`;
+            if(dots) dots.innerHTML=this._steps.map((_,i)=>`<div class="transition-all rounded-full ${i===this._step?'bg-blue-500':'bg-white/20'}" style="width:${i===this._step?16:8}px;height:8px"></div>`).join('');
+            if(prev) prev.classList.toggle('hidden',this._step===0);
+            if(next) next.textContent=this._step===this._steps.length-1?'🚀 Let\'s Go!':'Next →';
+        },
+        next() { if(this._step===this._steps.length-1){this.finish();return;} this._step++;this._render(); },
+        prev() { if(this._step>0){this._step--;this._render();} },
+        finish() { document.getElementById('onboarding-overlay')?.classList.add('hidden'); localStorage.setItem(OB_KEY,'1'); },
+        reset() { localStorage.removeItem(OB_KEY);this.show(); }
+    };
+
+    // ── CHANGELOG ────────────────────────────────────────────────────────────
+    const changelogModal = {
+        _data:[
+            {v:'4.0.0',date:'Latest',icon:'🚀',changes:['Command palette (Ctrl+K)','Vault PIN lock','Recycle bin + undo delete','Favorites & pinned entries','Bulk select + delete','Duplicate detection & merge','Advanced multi-filter','Grid/List/Kanban/Timeline views','Detail view modal','Rewatch counter','QR share entries','Activity log','Goal tracker','Onboarding walkthrough','Debug panel','Test data generator','PWA install support','Network status detection','Offline sync queue']},
+            {v:'3.1.0',date:'Previous',icon:'🎨',changes:['5-source poster fetcher (TMDB, iTunes, Jikan, RAWG, OpenLibrary)','Full responsive redesign','Advanced stats: heatmap, sparkline, milestones, hall of fame','Cover image cards','Urgency episode bars']},
+            {v:'3.0.0',date:'Earlier',icon:'⚡',changes:['Smart tags','Episode tracker','Multi-profile vaults','Drag & drop','Stats dashboard','Firebase sync','Auto-backup']}
+        ],
+        open() {
+            const ov=document.getElementById('changelog-overlay');
+            const body=document.getElementById('changelog-body');
+            if(!ov||!body)return;
+            body.innerHTML=this._data.map(v=>`
+                <div>
+                    <div class="flex items-center gap-3 mb-3"><span class="text-2xl">${v.icon}</span>
+                        <div><p class="font-black heading-font">v${v.v}</p><p class="text-xs" style="color:var(--text-muted)">${v.date}</p></div></div>
+                    <ul class="space-y-1 ml-9">${v.changes.map(c=>`<li class="text-sm flex items-start gap-2" style="color:var(--text-muted)"><span style="color:var(--primary);flex-shrink:0">✓</span>${esc(c)}</li>`).join('')}</ul>
+                </div>`).join('<div style="height:1px;background:var(--border);margin:1rem 0"></div>');
+            ov.classList.remove('hidden');
+        },
+        close() { document.getElementById('changelog-overlay')?.classList.add('hidden'); }
+    };
+
+    // ── FEEDBACK TOOL ────────────────────────────────────────────────────────
+    const feedbackTool = {
+        _type:'idea',
+        open()  { document.getElementById('feedback-overlay')?.classList.remove('hidden'); },
+        close() { document.getElementById('feedback-overlay')?.classList.add('hidden'); },
+        setType(t) { this._type=t; document.querySelectorAll('.fb-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.fb===t)); },
+        submit() {
+            const text=document.getElementById('feedback-text')?.value.trim();
+            if(!text){toastQueue.push('Write something first','error');return;}
+            const log=JSON.parse(localStorage.getItem('mvp_feedback')||'[]');
+            log.push({type:this._type,text,ts:Date.now()});
+            localStorage.setItem('mvp_feedback',JSON.stringify(log.slice(0,20)));
+            document.getElementById('feedback-text').value='';
+            this.close();
+            toastQueue.push('💛 Thanks! Consider supporting the dev.','success',6000);
+            setTimeout(()=>window.open('https://zelvior.github.io/Support/','_blank'),2000);
+        }
+    };
+
+    // ── DEBUG PANEL ──────────────────────────────────────────────────────────
+    const debugPanel = {
+        _logs:[],
+        log(msg) { this._logs.unshift(`[${new Date().toLocaleTimeString()}] ${msg}`); if(this._logs.length>100)this._logs.pop(); },
+        open() {
+            const p=document.getElementById('debug-panel');
+            if(!p)return;
+            p.classList.remove('hidden');
+            const kpis=document.getElementById('dbg-kpis');
+            const logEl=document.getElementById('dbg-log-out');
+            const acts=document.getElementById('dbg-actions');
+            if(kpis) kpis.innerHTML=[
+                {v:S.items.length,l:'Items'},{v:Object.keys(localStorage).length,l:'LS Keys'},
+                {v:Math.round(JSON.stringify(S.items).length/1024)+'KB',l:'Data'},{v:S.activeProfile||'default',l:'Profile'}
+            ].map(k=>`<div class="dbg-kpi"><div class="dbg-kpi-val">${esc(String(k.v))}</div><div class="dbg-kpi-label">${k.l}</div></div>`).join('');
+            if(logEl) logEl.innerHTML=this._logs.slice(0,30).map(l=>`<div>${esc(l)}</div>`).join('') || '<div style="color:#6b7280">No logs yet</div>';
+            if(acts) acts.innerHTML=[
+                ['Dump Items','console.log(JSON.stringify(S.items.slice(0,3),null,2))'],
+                ['Gen Test Data','testDataGen.generate()'],
+                ['Run Onboarding','onboarding.reset()'],
+                ['Toggle Motion','document.body.classList.toggle("reduce-motion")'],
+                ['Clear All LS','if(confirm("Clear all localStorage?")){Object.keys(localStorage).forEach(k=>localStorage.removeItem(k));location.reload()}'],
+            ].map(([l,fn])=>`<button class="dbg-action-btn" onclick="${fn}">${l}</button>`).join('');
+        },
+        close() { document.getElementById('debug-panel')?.classList.add('hidden'); }
+    };
+
+    // ── TEST DATA GENERATOR ──────────────────────────────────────────────────
+    const testDataGen = {
+        _t:['Interstellar','The Witcher','Elden Ring','Attack on Titan','Cyberpunk 2077','Chainsaw Man','Inception','Dark','Demon Slayer','God of War','Parasite','Jujutsu Kaisen','Hollow Knight','Steins;Gate','Breaking Bad','Hades','Your Name',"Baldur's Gate 3",'Oppenheimer','The Last of Us'],
+        _tg:['masterpiece','late night','binge','slow burn','trash but fun','hidden gem','emotional','rewatchable','underrated','must watch'],
+        generate(n=10) {
+            if(!confirm(`Add ${n} sample entries?`))return;
+            const types=['movie','series','game','anime'];
+            const statuses=['want','ongoing','watched'];
+            for(let i=0;i<n;i++){
+                const t=this._t[Math.floor(Math.random()*this._t.length)];
+                const ty=types[Math.floor(Math.random()*4)];
+                const st=statuses[Math.floor(Math.random()*3)];
+                const tags=this._tg.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*3)+1);
+                S.items.unshift(sanitize({
+                    id:uid(),title:t,type:ty,status:st,
+                    rating:Math.floor(Math.random()*5)+1,
+                    progress:st==='watched'?100:st==='want'?0:Math.floor(Math.random()*85)+5,
+                    notes:'Test entry.',tags,updatedAt:Date.now()-Math.random()*30*86400000,
+                    epTotal:['series','anime'].includes(ty)?Math.floor(Math.random()*24)+6:0,
+                    epWatched:0,rewatchCount:0,sortOrder:S.items.length
+                }));
+            }
+            dataManager.save();ui.render();tagSystem.renderFilterBar();
+            toastQueue.push(`Added ${n} test entries`,'success');
+            debugPanel.log(`Generated ${n} test items`);
+        }
+    };
+
+    // ── FEATURE FLAGS ────────────────────────────────────────────────────────
+    const FF_KEY='mvp_flags_v1';
+    const featureFlags={
+        _f:{experimentalKanban:true,debugMode:false,hapticFeedback:true},
+        load(){try{const r=localStorage.getItem(FF_KEY);if(r)this._f={...this._f,...JSON.parse(r)};}catch{}},
+        get(k){return!!this._f[k]},
+        set(k,v){this._f[k]=v;try{localStorage.setItem(FF_KEY,JSON.stringify(this._f));}catch{}}
+    };
+
+    // ── HAPTIC FEEDBACK ──────────────────────────────────────────────────────
+    const haptic={
+        light() {if(featureFlags.get('hapticFeedback')&&navigator.vibrate)navigator.vibrate(10);},
+        medium(){if(featureFlags.get('hapticFeedback')&&navigator.vibrate)navigator.vibrate(25);},
+        error() {if(featureFlags.get('hapticFeedback')&&navigator.vibrate)navigator.vibrate([30,10,30]);}
+    };
+
+    // ── SWIPE GESTURES ───────────────────────────────────────────────────────
+    const swipeGestures={
+        _sx:0,_sy:0,_el:null,
+        init(){
+            document.addEventListener('touchstart',e=>{this._sx=e.touches[0].clientX;this._sy=e.touches[0].clientY;this._el=e.target.closest('.card-entry');},{passive:true});
+            document.addEventListener('touchend',e=>{
+                const dx=e.changedTouches[0].clientX-this._sx;
+                const dy=e.changedTouches[0].clientY-this._sy;
+                if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>70&&this._el){
+                    const id=this._el.id?.replace('item-','');
+                    if(id){
+                        if(dx>0){favoriteSystem.toggle(id);haptic.light();}
+                    }
+                }
+            },{passive:true});
+        }
+    };
+
+    // ── ACCESSIBILITY MODE ───────────────────────────────────────────────────
+    const ACC_KEY='mvp_acc_v1';
+    const accessibilityMode={
+        _s:{reduce_motion:false,focus_mode:false,large_text:false},
+        load(){try{const r=localStorage.getItem(ACC_KEY);if(r)this._s={...this._s,...JSON.parse(r)};}catch{} this._apply();},
+        _apply(){
+            document.body.classList.toggle('reduce-motion',this._s.reduce_motion);
+            document.body.classList.toggle('accessibility-mode',this._s.focus_mode);
+        },
+        toggle(k){this._s[k]=!this._s[k];this._apply();try{localStorage.setItem(ACC_KEY,JSON.stringify(this._s));}catch{} toastQueue.push(`${k} ${this._s[k]?'on':'off'}`,'info');}
+    };
+
+    // ── URL STATE ────────────────────────────────────────────────────────────
+    const urlState={
+        save(){try{const p=new URLSearchParams();if(S.filter!=='all')p.set('f',S.filter);if(S.search)p.set('q',S.search);const u=p.toString()?`${location.pathname}?${p}`:location.pathname;history.replaceState(null,'',u);}catch{}},
+        load(){try{const p=new URLSearchParams(location.search);if(p.get('f'))S.filter=p.get('f');if(p.get('q')){S.search=p.get('q');const el=document.getElementById('global-search');if(el)el.value=S.search;}}catch{}}
+    };
+
+    // ── FULLSCREEN MODE ──────────────────────────────────────────────────────
+    const fullscreenMode={
+        toggle(){
+            const on=document.body.classList.toggle('fullscreen-mode');
+            if(on&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});
+            else if(!on&&document.exitFullscreen&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+            toastQueue.push(on?'⤢ Fullscreen — press F to exit':'Exited fullscreen','info',2000);
+        }
+    };
+
+    // ── CUSTOM CSS ───────────────────────────────────────────────────────────
+    const CSS_KEY='mvp_custom_css_v1';
+    const customCSS={
+        load(){try{const c=localStorage.getItem(CSS_KEY);if(c)this._inject(c);}catch{}},
+        _inject(css){let el=document.getElementById('custom-css-inject');if(!el){el=document.createElement('style');el.id='custom-css-inject';document.head.appendChild(el);}el.textContent=css;},
+        set(css){try{localStorage.setItem(CSS_KEY,css);}catch{} this._inject(css);}
+    };
+
+    // ── LOCAL ANALYTICS ──────────────────────────────────────────────────────
+    const analyticsLocal={
+        _d:{sessions:0,totalMs:0,added:0,_start:0},
+        load(){try{const r=localStorage.getItem('mvp_analytics');if(r)this._d={...this._d,...JSON.parse(r)};}catch{}},
+        startSession(){this._d._start=Date.now();this._d.sessions=(this._d.sessions||0)+1;this.save();},
+        endSession(){if(this._d._start){this._d.totalMs=(this._d.totalMs||0)+(Date.now()-this._d._start);this._d._start=0;this.save();}},
+        trackAdd(){this._d.added=(this._d.added||0)+1;this.save();},
+        save(){try{const d={...this._d};delete d._start;localStorage.setItem('mvp_analytics',JSON.stringify(d));}catch{}},
+        summary(){return `${this._d.sessions||0} sessions · ${Math.round((this._d.totalMs||0)/3600000*10)/10}h · ${this._d.added||0} entries added`;}
+    };
+
+    // ── OFFLINE SYNC QUEUE ───────────────────────────────────────────────────
+    const offlineSyncQueue={
+        _q:[],
+        load(){try{const r=localStorage.getItem('mvp_syncq');if(r)this._q=JSON.parse(r);}catch{}},
+        add(op){this._q.push({...op,ts:Date.now(),tries:0});try{localStorage.setItem('mvp_syncq',JSON.stringify(this._q));}catch{}},
+        async flush(){
+            if(!navigator.onLine||!this._q.length)return;
+            const failed=[];
+            for(const op of this._q){
+                try{
+                    if(op.type==='supa')await supaAdvanced.pushToCloud(true);
+                    else if(op.type==='firebase')await firebaseConn.push(true);
+                    debugPanel.log(`SyncQ: ${op.type} ok`);
+                }catch(e){op.tries=(op.tries||0)+1;if(op.tries<3)failed.push(op);debugPanel.log(`SyncQ: ${op.type} fail ${op.tries}`);}
+            }
+            this._q=failed;try{localStorage.setItem('mvp_syncq',JSON.stringify(this._q));}catch{}
+        }
+    };
+
+    // ── IndexedDB upgrade ────────────────────────────────────────────────────
+    const indexedStorage={
+        _db:null,
+        async init(){
+            return new Promise(resolve=>{
+                if(!window.indexedDB){resolve(false);return;}
+                const req=indexedDB.open('MediaVaultPro',1);
+                req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('items'))db.createObjectStore('items',{keyPath:'id'});};
+                req.onsuccess=e=>{this._db=e.target.result;resolve(true);};
+                req.onerror=()=>resolve(false);
+            });
+        },
+        async save(items){if(!this._db)return;const tx=this._db.transaction('items','readwrite');const s=tx.objectStore('items');s.clear();items.forEach(i=>s.put(i));},
+        async load(){if(!this._db)return null;return new Promise(r=>{const tx=this._db.transaction('items','readonly');const req=tx.objectStore('items').getAll();req.onsuccess=()=>r(req.result||[]);req.onerror=()=>r(null);});}
+    };
+
+    // ═══ VIEW RENDERERS ══════════════════════════════════════════════════════
+    function renderListView(data, grid) {
+        grid.className='space-y-2';
+        if(!data.length){grid.innerHTML=`<div class="text-center py-12" style="color:var(--text-muted)">No entries</div>`;return;}
+        const tl={movie:'🎬',series:'📺',game:'🎮',anime:'🍱'};
+        grid.innerHTML=data.map(item=>`
+            <div class="list-view-item" onclick="detailView.open('${esc(item.id)}')">
+                ${item.cover?`<img src="${esc(item.cover)}" class="list-view-thumb" style="object-fit:cover" loading="lazy" onerror="this.style.display='none'">`
+                            :`<div class="list-view-thumb">${tl[item.type]||'📄'}</div>`}
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-sm truncate" style="color:var(--text-primary)">${item.pinned?'📌 ':''}${item.favorite?'⭐ ':''}${esc(item.title)}</p>
+                    <p class="text-xs" style="color:var(--text-muted)">${item.status} · ${item.rating?item.rating+'★':'Unrated'} · ${item.progress}%</p>
+                </div>
+                <button onclick="event.stopPropagation();ui.toggleModal(true,'${esc(item.id)}')" class="glass px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-white/5 flex-shrink-0">Edit</button>
+            </div>`).join('');
+    }
+
+    function renderKanbanView(data, grid) {
+        grid.className='flex gap-3 overflow-x-auto no-scrollbar pb-4 items-start';
+        const cols={want:{l:'📋 Watchlist',c:'#94a3b8'},ongoing:{l:'▶ In Progress',c:'#60a5fa'},watched:{l:'✅ Completed',c:'#34d399'}};
+        grid.innerHTML=Object.entries(cols).map(([status,{l,c}])=>{
+            const items=data.filter(i=>i.status===status);
+            return `<div class="glass p-4 rounded-3xl flex-shrink-0" style="min-width:220px;max-width:280px">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-black uppercase tracking-wider" style="color:${c}">${l}</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06)">${items.length}</span>
+                </div>
+                <div class="space-y-2">
+                    ${items.map(i=>`<div class="kanban-card" onclick="detailView.open('${esc(i.id)}')">
+                        ${i.cover?`<img src="${esc(i.cover)}" style="width:100%;height:70px;object-fit:cover;border-radius:0.5rem;margin-bottom:0.5rem" loading="lazy" onerror="this.remove()">`:''}
+                        <p class="text-sm font-bold truncate">${esc(i.title)}</p>
+                        <p class="text-xs mt-0.5" style="color:var(--text-muted)">${i.rating?i.rating+'★':'—'} ${i.progress?'· '+i.progress+'%':''}</p>
+                    </div>`).join('')}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderTimelineView(data, grid) {
+        grid.className='max-w-2xl mx-auto pl-4';
+        const sorted=[...data].sort((a,b)=>b.updatedAt-a.updatedAt);
+        grid.innerHTML=sorted.map(i=>`
+            <div class="timeline-item cursor-pointer" onclick="detailView.open('${esc(i.id)}')">
+                <div class="timeline-dot"></div>
+                <div class="glass p-4 rounded-2xl ml-3 mb-3 hover:border-blue-500 transition-all" style="border:1px solid var(--border)">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0"><p class="font-bold text-sm truncate">${esc(i.title)}</p>
+                        <p class="text-xs" style="color:var(--text-muted)">${i.status} · ${new Date(i.updatedAt).toLocaleDateString()}</p></div>
+                        ${i.cover?`<img src="${esc(i.cover)}" style="width:28px;height:42px;object-fit:cover;border-radius:4px;flex-shrink:0" loading="lazy" onerror="this.remove()">`:'' }
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    // ═══ v4.0 BOOT ════════════════════════════════════════════════════════════
+    featureFlags.load();
+    customCSS.load();
+    accessibilityMode.load();
+    recycleBin.load();
+    activityLog.load();
+    goalTracker.load();
+    analyticsLocal.load();
+    analyticsLocal.startSession();
+    offlineSyncQueue.load();
+    networkStatus.init();
+    pwaManager.init();
+    swipeGestures.init();
+    viewToggle.load();
+    vaultLock.load();
+    urlState.load();
+    indexedStorage.init().then(ok=>{ if(ok) debugPanel.log('IndexedDB ready'); });
+    window.addEventListener('beforeunload',()=>analyticsLocal.endSession());
+    window.addEventListener('online',()=>offlineSyncQueue.flush());
+    setTimeout(()=>onboarding.show(), 800);
+
+    // Ctrl+K → command palette; F → fullscreen
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();commandPalette.open();}
+        if (e.key==='f'&&!e.ctrlKey&&!e.metaKey&&!e.altKey) {
+            const tag=document.activeElement?.tagName;
+            if(!['INPUT','TEXTAREA','SELECT'].includes(tag)){e.preventDefault();fullscreenMode.toggle();}
+        }
+    });
+
+    // Patch ui.render for view modes + adv filter + pin sorting
+    const _origRenderV4 = ui.render.bind(ui);
+    ui.render = function() {
+        _origRenderV4();
+        const v = viewToggle.get();
+        if (v==='list'||v==='kanban'||v==='timeline'||advancedFilter.isActive()) {
+            const grid=document.getElementById('media-grid');
+            if(!grid)return;
+            const sort=document.getElementById('global-sort').value;
+            let data=[...S.items].filter(item=>{
+                const mf=S.filter==='all'||item.status===S.filter;
+                const q=S.search;
+                const ms=!q||item.title.toLowerCase().includes(q)||(item.notes||'').toLowerCase().includes(q)||(item.tags||[]).some(t=>t.toLowerCase().includes(q));
+                const mtf=!S.activeTagFilter||(item.tags||[]).includes(S.activeTagFilter);
+                return mf&&ms&&mtf&&(!advancedFilter.isActive()||advancedFilter.apply([item]).length>0);
+            }).sort((a,b)=>{
+                if(b.pinned&&!a.pinned)return 1; if(a.pinned&&!b.pinned)return -1;
+                if(sort==='rating')return b.rating-a.rating||b.updatedAt-a.updatedAt;
+                if(sort==='alpha')return a.title.localeCompare(b.title);
+                if(sort==='order')return (a.sortOrder||0)-(b.sortOrder||0);
+                return b.updatedAt-a.updatedAt;
+            });
+            if(v==='list')     renderListView(data,grid);
+            else if(v==='kanban')   renderKanbanView(data,grid);
+            else if(v==='timeline') renderTimelineView(data,grid);
+        }
+        urlState.save();
+    };
+
+    // Inject view toggle + advanced filter button into vault toolbar
+    setTimeout(()=>{
+        // View toggle buttons
+        const sortEl=document.getElementById('global-sort');
+        if(sortEl&&!document.getElementById('view-toggle-btns')){
+            const wrap=document.createElement('div');
+            wrap.id='view-toggle-btns';wrap.className='flex gap-1 flex-shrink-0';
+            [['grid','🃏'],['list','☰'],['kanban','⊞'],['timeline','⏱']].forEach(([v,icon])=>{
+                const b=document.createElement('button');
+                b.className=`view-btn ${viewToggle.get()===v?'active':''}`;b.dataset.v=v;
+                b.setAttribute('data-tip',v.charAt(0).toUpperCase()+v.slice(1));
+                b.innerHTML=icon;b.onclick=()=>viewToggle.set(v);
+                wrap.appendChild(b);
+            });
+            sortEl.parentElement?.appendChild(wrap);
+        }
+        // Advanced filter button
+        const searchRow=document.getElementById('global-search')?.parentElement?.parentElement;
+        if(searchRow&&!document.getElementById('adv-filter-btn')){
+            const btn=document.createElement('button');
+            btn.id='adv-filter-btn';
+            btn.className='glass hover:bg-white/5 px-4 py-4 rounded-2xl font-semibold text-sm flex items-center gap-2 transition-all active:scale-95 flex-shrink-0';
+            btn.setAttribute('data-tip','Advanced Filters');
+            btn.innerHTML='⚙️ <span class="hidden sm:inline">Filter</span>';
+            btn.onclick=()=>advancedFilter.openPanel();
+            searchRow.appendChild(btn);
+        }
+        // Tools menu in header
+        const hdrVault=document.getElementById('hdr-vault');
+        if(hdrVault&&!document.getElementById('hdr-tools-btn')){
+            const btn=document.createElement('button');
+            btn.id='hdr-tools-btn';
+            btn.className='glass hover:bg-white/5 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all active:scale-95';
+            btn.setAttribute('data-tip','Tools');btn.innerHTML='🛠 <span class="hidden sm:inline">Tools</span>';
+            btn.onclick=()=>{
+                const fns=[recycleBin.openModal,duplicateDetector.openModal,goalTracker.openModal,activityLog.openViewer,
+                    vaultLock.showSetupDialog,changelogModal.open,feedbackTool.open,debugPanel.open,
+                    pwaManager.promptInstall,()=>accessibilityMode.toggle('focus_mode'),testDataGen.generate,bulkOps.startMode];
+                const labels=['🗑 Recycle Bin','🔍 Duplicates','🎯 Goals','📜 Activity Log',
+                    '🔒 Vault Lock','🎉 Changelog','💬 Feedback','🛠 Debug',
+                    '📲 Install App','♿ Accessibility','🎲 Test Data','📤 Bulk Select'];
+                document.getElementById('tools-menu-pop')?.remove();
+                const pop=document.createElement('div');
+                pop.id='tools-menu-pop';
+                pop.className='fixed inset-0 z-[88] flex items-end sm:items-center justify-center p-4';
+                pop.style.cssText='background:rgba(0,0,0,0.75);backdrop-filter:blur(8px)';
+                pop.innerHTML=`<div class="glass rounded-3xl w-full max-w-sm overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+                        <h3 class="font-black heading-font">🛠 Tools</h3>
+                        <button onclick="document.getElementById('tools-menu-pop').remove()" class="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5">✕</button>
+                    </div>
+                    <div class="p-3 grid grid-cols-2 gap-2">
+                        ${labels.map((l,i)=>`<button class="text-left px-3 py-2.5 rounded-xl text-xs font-bold glass hover:bg-white/5 transition-all active:scale-95" onclick="document.getElementById('tools-menu-pop').remove();window._tfns[${i}]()">${esc(l)}</button>`).join('')}
+                    </div>
+                </div>`;
+                window._tfns=fns.map(f=>f.bind?f.bind(f===recycleBin.openModal?recycleBin:f===duplicateDetector.openModal?duplicateDetector:f===goalTracker.openModal?goalTracker:f===activityLog.openViewer?activityLog:f===vaultLock.showSetupDialog?vaultLock:f===changelogModal.open?changelogModal:f===feedbackTool.open?feedbackTool:f===debugPanel.open?debugPanel:f===pwaManager.promptInstall?pwaManager:f===testDataGen.generate?testDataGen:bulkOps):f);
+                pop.onclick=(e)=>{if(e.target===pop)pop.remove();};
+                document.body.appendChild(pop);
+            };
+            const addBtn=hdrVault.querySelector('button:last-child');
+            if(addBtn) hdrVault.insertBefore(btn,addBtn); else hdrVault.appendChild(btn);
+        }
+    }, 900);
+
+    // v4.0: patch app.remove to route through recycleBin + undo
+    const _origAppRemove = app.remove.bind(app);
+    app.remove = async function(id) {
+        if (S.isDeleting) return;
+        const item = S.items.find(i=>i.id===id);
+        if (!item) return;
+        if (S.prefs.confirmDelete && !confirm(`Move "${item.title}" to Recycle Bin?`)) return;
+        S.isDeleting = true;
+        const card = document.getElementById(`item-${id}`);
+        if (card && S.prefs.animations) {
+            card.classList.add('item-exit');
+            await new Promise(r=>setTimeout(r,480));
+        }
+        recycleBin.add([item]);
+        undoSystem.push([item], `"${item.title}" moved to bin`);
+        S.items = S.items.filter(i=>i.id!==id);
+        activityLog.push('Deleted entry', item.title);
+        dataManager.save(); ui.render();
+        S.isDeleting = false;
+    };
+
+    // v4.0: patch dataManager.save to also write to IndexedDB
+    const _origDmSaveV4 = dataManager.save.bind(dataManager);
+    dataManager.save = function() {
+        _origDmSaveV4();
+        indexedStorage.save(S.items).catch(()=>{});
+    };
 
     // Patch nav.go to sync all connection UIs on settings open
     const _origNavGo = nav.go.bind(nav);

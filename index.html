@@ -2944,6 +2944,11 @@ CREATE POLICY "allow_all" ON mediavault
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                         Search Posters
                                     </button>
+                                    <button type="button" onclick="metaFetcher.fetch()" id="f-meta-btn"
+                                        class="glass hover:bg-white/5 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95" style="border-color:var(--border)">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        Auto-fill Info
+                                    </button>
                                     <button type="button" onclick="posterFetcher.clear()" id="f-cover-clear" class="glass hover:bg-white/5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 hidden">
                                         Clear
                                     </button>
@@ -5149,12 +5154,25 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                 const res = await fetch(url);
                 const data = await res.json();
                 (data.results||[]).filter(r=>r.poster_path).slice(0,6).forEach(r => {
+                    // Fetch trailer key for first result (best match)
+                    const tmdbId = r.id;
+                    const mediaKind = r.media_type === 'movie' || type === 'movie' ? 'movie' : 'tv';
+                    const trailerUrl = ''; // will be fetched lazily by metaFetcher
                     this._results.push({
                         url:   `https://image.tmdb.org/t/p/w500${r.poster_path}`,
                         thumb: `https://image.tmdb.org/t/p/w185${r.poster_path}`,
                         title: r.title||r.name||'',
                         score: r.vote_average ? r.vote_average.toFixed(1)+'★' : '',
-                        src:   'TMDB'
+                        src:   'TMDB',
+                        _meta: {
+                            src: 'TMDB',
+                            tmdbId,
+                            mediaKind,
+                            rating: r.vote_average ? Math.round(r.vote_average/2) : 0,
+                            description: r.overview||'',
+                            epTotal: r.number_of_episodes||0,
+                            trailerUrl: '',
+                        }
                     });
                 });
             } catch {}
@@ -5189,7 +5207,14 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                         thumb: r.images.jpg.image_url,
                         title: r.title||'',
                         score: r.score ? r.score+'★' : '',
-                        src:   'MyAnimeList'
+                        src:   'MyAnimeList',
+                        _meta: {
+                            src: 'Jikan',
+                            rating: r.score ? Math.round(r.score/2) : 0,
+                            description: r.synopsis||'',
+                            epTotal: r.episodes||0,
+                            trailerUrl: r.trailer?.url||'',
+                        }
                     });
                 });
             } catch {}
@@ -5207,7 +5232,15 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                         thumb: r.background_image,
                         title: r.name||'',
                         score: r.rating ? r.rating.toFixed(1)+'★' : '',
-                        src:   'RAWG'
+                        src:   'RAWG',
+                        _meta: {
+                            src: 'RAWG',
+                            rating: r.rating ? Math.round(r.rating) : 0,
+                            description: r.short_screenshots?.[0]?.image ? '' : '',
+                            epTotal: 0,
+                            trailerUrl: '',
+                            rawgSlug: r.slug||'',
+                        }
                     });
                 });
             } catch {}
@@ -5261,6 +5294,8 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             if (clearBtn) clearBtn.classList.remove('hidden');
             const status = document.getElementById('f-cover-status');
             if (status) { status.textContent = `✅ Selected from ${r.src}: ${r.title}`; status.style.color='#34d399'; }
+            // Auto-fill metadata from the selected result's embedded meta
+            if (r._meta) metaFetcher.applyMeta(r._meta);
         },
 
         clear() {
@@ -5276,8 +5311,190 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ─── v3.1: ADVANCED STATS PAGE ───────────────────────────────────────────
+    // ─── META FETCHER: auto-fill rating, description, episodes, trailer ───────
+    // Platforms: TMDB (movies/series), Jikan/MAL (anime), RAWG (games), OMDb
     // ═══════════════════════════════════════════════════════════════════════════
+    const metaFetcher = {
+        _TMDB_KEY: '4acab3f5af43086f6c70ac0cd4ac7547',
+
+        async fetch() {
+            const title  = document.getElementById('f-title')?.value.trim();
+            const type   = document.getElementById('f-type')?.value || 'movie';
+            const status = document.getElementById('f-cover-status');
+            if (!title) { ui.notify('Enter a title first','warning'); return; }
+            if (status) { status.textContent = '⏳ Fetching info…'; status.style.color='var(--text-muted)'; }
+
+            let meta = null;
+            try {
+                if (type === 'anime') {
+                    meta = await this._fromJikan(title);
+                } else if (type === 'game') {
+                    meta = await this._fromRAWG(title);
+                } else {
+                    meta = await this._fromTMDB(title, type);
+                    if (!meta) meta = await this._fromOMDb(title);
+                }
+            } catch(e) { console.warn('metaFetcher error', e); }
+
+            if (!meta) {
+                if (status) { status.textContent = '❌ No info found — try a different title'; status.style.color='#f87171'; }
+                return;
+            }
+            this.applyMeta(meta);
+            if (status) { status.textContent = `✅ Info filled from ${meta.src}`; status.style.color='#34d399'; }
+        },
+
+        async _fromTMDB(title, type) {
+            const key = this._TMDB_KEY;
+            const mt  = type === 'movie' ? 'movie' : 'tv';
+            // 1. Search
+            const sRes  = await fetch(`https://api.themoviedb.org/3/search/${mt}?api_key=${key}&query=${encodeURIComponent(title)}&page=1&include_adult=false`);
+            const sData = await sRes.json();
+            const hit   = (sData.results||[])[0];
+            if (!hit) return null;
+            // 2. Detail + videos + keywords in one call
+            const dRes  = await fetch(`https://api.themoviedb.org/3/${mt}/${hit.id}?api_key=${key}&append_to_response=videos,keywords,content_ratings`);
+            const d     = await dRes.json();
+            // Trailer: prefer official Trailer, fallback Teaser, YouTube only
+            const videos = (d.videos?.results||[]).filter(v=>v.site==='YouTube');
+            const trailer = videos.find(v=>v.type==='Trailer'&&v.official) ||
+                            videos.find(v=>v.type==='Trailer') ||
+                            videos.find(v=>v.type==='Teaser');
+            // Genres → tags
+            const genres = (d.genres||[]).map(g=>g.name.toLowerCase());
+            // Keywords → extra tags (top 5)
+            const kwList = (d.keywords?.keywords || d.keywords?.results || []).slice(0,5).map(k=>k.name.toLowerCase());
+            const tags = [...new Set([...genres, ...kwList])].slice(0,8);
+            // Total episodes: for TV sum all season episode counts (exclude specials season 0)
+            let epTotal = 0;
+            if (mt === 'tv') {
+                (d.seasons||[]).forEach(s => { if (s.season_number > 0) epTotal += (s.episode_count||0); });
+                if (!epTotal) epTotal = d.number_of_episodes||0;
+            }
+            // Rating: TMDB vote_average is /10, convert to /5
+            const rating10 = d.vote_average || hit.vote_average || 0;
+            const rating = rating10 > 0 ? Math.min(5, Math.max(1, Math.round(rating10/2))) : 0;
+            // Description: use tagline if short + overview, else just overview
+            let description = d.overview || hit.overview || '';
+            if (d.tagline && d.tagline.trim()) description = `${d.tagline.trim()}\n\n${description}`;
+            return {
+                src: 'TMDB',
+                rating,
+                description: description.substring(0, 800),
+                epTotal,
+                trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : '',
+                tags,
+            };
+        },
+
+        async _fromJikan(title) {
+            // Jikan v4 — MyAnimeList
+            const res  = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title)}&limit=1&sfw=true`);
+            const data = await res.json();
+            const r    = (data.data||[])[0];
+            if (!r) return null;
+            // Genres + themes → tags
+            const genres = [...(r.genres||[]), ...(r.themes||[]), ...(r.demographics||[])].map(g=>g.name.toLowerCase());
+            const tags   = [...new Set(genres)].slice(0,8);
+            // Episodes total (use episodes field; if ongoing/null use aired episodes)
+            const epTotal = r.episodes || 0;
+            // Score /10 → /5
+            const rating = r.score ? Math.min(5, Math.max(1, Math.round(r.score/2))) : 0;
+            // Trailer: prefer YouTube embed url
+            let trailerUrl = '';
+            if (r.trailer?.youtube_id) trailerUrl = `https://www.youtube.com/watch?v=${r.trailer.youtube_id}`;
+            else if (r.trailer?.url)   trailerUrl = r.trailer.url;
+            return {
+                src: 'MyAnimeList',
+                rating,
+                description: (r.synopsis||'').replace(/\[Written by MAL Rewrite\]/gi,'').trim().substring(0,800),
+                epTotal,
+                trailerUrl,
+                tags,
+            };
+        },
+
+        async _fromRAWG(title) {
+            // RAWG search then detail for full description + genres + clip
+            const sRes  = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(title)}&page_size=1&key=`);
+            const sData = await sRes.json();
+            const hit   = (sData.results||[])[0];
+            if (!hit) return null;
+            // Fetch detail for description_raw, genres, clip
+            let desc = '', tags = [], trailerUrl = '';
+            try {
+                const dRes  = await fetch(`https://api.rawg.io/api/games/${hit.slug}?key=`);
+                const d     = await dRes.json();
+                desc       = (d.description_raw||'').substring(0,800);
+                tags       = (d.genres||[]).map(g=>g.name.toLowerCase()).slice(0,5);
+                trailerUrl = d.clip?.clip || '';
+            } catch {}
+            if (!tags.length) tags = (hit.genres||[]).map(g=>g.name.toLowerCase()).slice(0,5);
+            // RAWG rating is /5 directly
+            const rating = hit.rating ? Math.min(5, Math.max(1, Math.round(hit.rating))) : 0;
+            return {
+                src: 'RAWG',
+                rating,
+                description: desc,
+                epTotal: 0,
+                trailerUrl,
+                tags,
+            };
+        },
+
+        async _fromOMDb(title) {
+            // OMDb fallback — uses public demo key
+            const res  = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=trilogy&plot=full`);
+            const d    = await res.json();
+            if (d.Response === 'False') return null;
+            const imdbRating = parseFloat(d.imdbRating) || 0;
+            const rating = imdbRating > 0 ? Math.min(5, Math.max(1, Math.round(imdbRating/2))) : 0;
+            const genres = (d.Genre||'').split(',').map(g=>g.trim().toLowerCase()).filter(Boolean);
+            return {
+                src: 'OMDb',
+                rating,
+                description: (d.Plot && d.Plot !== 'N/A' ? d.Plot : '').substring(0,800),
+                epTotal: 0,
+                trailerUrl: '',
+                tags: genres.slice(0,6),
+            };
+        },
+
+        applyMeta(meta) {
+            if (!meta) return;
+            // Rating
+            if (meta.rating > 0) {
+                const ratingEl = document.getElementById('f-rating');
+                if (ratingEl) ratingEl.value = meta.rating;
+            }
+            // Description → notes (only if notes is empty)
+            if (meta.description) {
+                const notesEl = document.getElementById('f-notes');
+                if (notesEl && !notesEl.value.trim()) notesEl.value = meta.description;
+            }
+            // Total episodes (only if empty)
+            if (meta.epTotal > 0) {
+                const epTotalEl = document.getElementById('f-ep-total');
+                if (epTotalEl && !epTotalEl.value) {
+                    epTotalEl.value = meta.epTotal;
+                    if (typeof episodeTracker !== 'undefined') episodeTracker.autoCalcProgress();
+                }
+            }
+            // Trailer URL (only if empty)
+            if (meta.trailerUrl) {
+                const trailerEl = document.getElementById('f-trailer');
+                if (trailerEl && !trailerEl.value.trim()) trailerEl.value = meta.trailerUrl;
+            }
+            // Tags — merge with existing tags via tagSystem
+            if (meta.tags?.length && typeof tagSystem !== 'undefined') {
+                const existing = tagSystem.getFormTags ? tagSystem.getFormTags() : [];
+                const merged   = [...new Set([...existing, ...meta.tags])].slice(0,10);
+                tagSystem.loadFormTags(merged);
+            }
+        }
+    };
+
+
     const statsPageV31 = {
         BINGE_MINS: { movie:120, series:40, game:300, anime:24 },
 
@@ -6013,11 +6230,52 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         },
 
         forgotPin() {
-            if (!confirm('Reset vault lock? This removes your PIN.')) return;
+            // Build an in-screen reset dialog instead of native confirm
+            const scr = document.getElementById('vault-lock-screen');
+            if (!scr) return;
+            const existing = document.getElementById('pin-reset-dialog');
+            if (existing) { existing.remove(); return; }
+            const dlg = document.createElement('div');
+            dlg.id = 'pin-reset-dialog';
+            dlg.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border-radius:1.5rem;z-index:10;';
+            dlg.innerHTML = `
+                <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:300px;width:90%;text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:0.75rem;">🔑</div>
+                    <h3 style="font-weight:900;font-size:1.1rem;margin-bottom:0.5rem;">Reset Vault Lock</h3>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
+                        This will remove your PIN and unlock the vault.<br>
+                        Your media data is <strong style="color:var(--text-primary)">not deleted</strong>.<br><br>
+                        Type <strong style="color:#f87171">RESET</strong> to confirm:
+                    </p>
+                    <input id="pin-reset-confirm-input" type="text" placeholder="Type RESET" autocomplete="off" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
+                    <div style="display:flex;gap:0.75rem;">
+                        <button onclick="document.getElementById('pin-reset-dialog').remove()"
+                            style="flex:1;padding:0.6rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                            Cancel
+                        </button>
+                        <button onclick="vaultLock._confirmReset()"
+                            style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                            Reset PIN
+                        </button>
+                    </div>
+                </div>`;
+            scr.style.position = 'relative';
+            scr.appendChild(dlg);
+            setTimeout(() => document.getElementById('pin-reset-confirm-input')?.focus(), 100);
+        },
+
+        _confirmReset() {
+            const val = document.getElementById('pin-reset-confirm-input')?.value.trim().toUpperCase();
+            if (val !== 'RESET') {
+                const inp = document.getElementById('pin-reset-confirm-input');
+                if (inp) { inp.style.borderColor='#f87171'; inp.value=''; inp.placeholder='Type RESET exactly'; }
+                return;
+            }
             this._pin = null;
             try { localStorage.removeItem(VLOCK_KEY); } catch {}
+            document.getElementById('pin-reset-dialog')?.remove();
             this._unlock();
-            ui.notify('Vault lock reset', 'warning');
+            ui.notify('Vault PIN removed — set a new one in Tools → Vault Lock', 'success');
         }
     };
 

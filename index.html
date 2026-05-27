@@ -2837,6 +2837,35 @@ CREATE POLICY "allow_all" ON mediavault
                 </div>
                 <form id="media-form" onsubmit="app.save(event)" class="space-y-6" novalidate>
                     <input type="hidden" id="f-id">
+
+                    <!-- ══ SMART SEARCH AUTOCOMPLETE ══ -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black uppercase tracking-widest" style="color:var(--primary)">🔍 Smart Search <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">— type to search &amp; auto-fill all fields</span></label>
+                        <div class="relative" id="smart-search-wrap">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--text-muted)">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </div>
+                            <input type="text" id="smart-search-input" autocomplete="off" spellcheck="false"
+                                placeholder="Search any anime, movie, game, series…"
+                                class="w-full border rounded-2xl pl-11 pr-5 py-4 focus:outline-none font-medium"
+                                style="background:rgba(59,130,246,0.04);border-color:rgba(59,130,246,0.3);color:var(--text-primary)"
+                                oninput="smartSearch.onInput(this.value)"
+                                onkeydown="smartSearch.onKey(event)">
+                            <div id="smart-search-spinner" class="absolute right-4 top-1/2 -translate-y-1/2 hidden">
+                                <div class="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                            </div>
+                        </div>
+                        <!-- Autocomplete dropdown -->
+                        <div id="smart-search-dropdown" class="hidden rounded-2xl overflow-hidden shadow-2xl" style="background:var(--surface-card);border:1px solid var(--border);max-height:320px;overflow-y:auto">
+                            <div id="smart-search-results"></div>
+                        </div>
+                        <div id="smart-search-filled" class="hidden items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span id="smart-search-filled-msg">All fields auto-filled from search!</span>
+                            <button type="button" onclick="smartSearch.clearFill()" class="ml-auto opacity-60 hover:opacity-100 transition-opacity">✕</button>
+                        </div>
+                    </div>
+
                     <div class="space-y-2">
                         <label for="f-title" class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Title *</label>
                         <input type="text" id="f-title" required maxlength="200" autocomplete="off"
@@ -3290,6 +3319,13 @@ CREATE POLICY "allow_all" ON mediavault
             } else {
                 mc.classList.add('scale-95','opacity-0');
                 setTimeout(()=>ov.classList.add('hidden'),300);
+                // Clear smart search state
+                const ssInp = document.getElementById('smart-search-input');
+                if (ssInp) ssInp.value = '';
+                const ssDrop = document.getElementById('smart-search-dropdown');
+                if (ssDrop) ssDrop.classList.add('hidden');
+                const ssFill = document.getElementById('smart-search-filled');
+                if (ssFill) { ssFill.classList.add('hidden'); ssFill.style.display = ''; }
             }
         },
         syncFormStatus() {
@@ -4899,6 +4935,474 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // ─── SMART SEARCH AUTOCOMPLETE (YouTube-style, powered by TMDB) ──────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ─────────────────────────────────────────────────────────────────────────
+    // SMART SEARCH — 6-API waterfall with dedup & merge
+    //
+    //  Priority order (first success wins for search; all called for details):
+    //   1. TMDB         — movies & TV  (key already in codebase)
+    //   2. Jikan v4     — anime        (no key, MyAnimeList mirror)
+    //   3. RAWG         — games        (no key in demo mode)
+    //   4. Open Library — books        (completely free, no key)
+    //   5. iTunes Search— music/movies (Apple, no key)
+    //   6. TVmaze       — TV series    (no key needed)
+    //
+    //  All APIs run in parallel via Promise.allSettled so ONE failure
+    //  never blocks results from the others.
+    // ─────────────────────────────────────────────────────────────────────────
+    const smartSearch = {
+        _debounceTimer: null,
+        _currentQuery:  '',
+        _focusIdx:      -1,
+        _results:       [],   // normalised result objects
+
+        // ── Normalised result shape ──────────────────────────────────────────
+        // { _src, _rawId, _rawType, title, year, type, typeIcon, typeLabel,
+        //   poster, overview, rating, source }
+
+        // ── Keyboard & input handlers ────────────────────────────────────────
+        onInput(val) {
+            this._currentQuery = val.trim();
+            clearTimeout(this._debounceTimer);
+            const dropdown = document.getElementById('smart-search-dropdown');
+            const spinner  = document.getElementById('smart-search-spinner');
+            if (!this._currentQuery || this._currentQuery.length < 2) {
+                if (dropdown) dropdown.classList.add('hidden');
+                if (spinner)  spinner.classList.add('hidden');
+                return;
+            }
+            if (spinner) spinner.classList.remove('hidden');
+            this._debounceTimer = setTimeout(() => this._doSearch(this._currentQuery), 300);
+        },
+
+        onKey(e) {
+            const items = document.querySelectorAll('.ss-result-item');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown')  { e.preventDefault(); this._focusIdx = Math.min(this._focusIdx + 1, items.length - 1); this._highlightItem(); }
+            else if (e.key === 'ArrowUp')   { e.preventDefault(); this._focusIdx = Math.max(this._focusIdx - 1, 0);             this._highlightItem(); }
+            else if (e.key === 'Enter')     { e.preventDefault(); if (this._focusIdx >= 0) items[this._focusIdx]?.click(); }
+            else if (e.key === 'Escape')    { this._hideDropdown(); }
+        },
+
+        _highlightItem() {
+            document.querySelectorAll('.ss-result-item').forEach((el, i) =>
+                el.style.background = (i === this._focusIdx) ? 'rgba(255,255,255,0.08)' : '');
+        },
+
+        // ── Core: run all APIs in parallel, merge, dedup, render ─────────────
+        async _doSearch(query) {
+            const spinner = document.getElementById('smart-search-spinner');
+            const q = encodeURIComponent(query);
+
+            // Fire all 6 in parallel — none can block the others
+            const [tmdb, jikan, rawg, itunes, tvmaze] = await Promise.allSettled([
+                this._searchTMDB(q),
+                this._searchJikan(q),
+                this._searchRAWG(q),
+                this._searchITunes(q),
+                this._searchTVmaze(q),
+            ]);
+
+            // Collect successful results
+            const all = [
+                ...(tmdb.status   === 'fulfilled' ? tmdb.value   : []),
+                ...(jikan.status  === 'fulfilled' ? jikan.value  : []),
+                ...(rawg.status   === 'fulfilled' ? rawg.value   : []),
+                ...(itunes.status === 'fulfilled' ? itunes.value : []),
+                ...(tvmaze.status === 'fulfilled' ? tvmaze.value : []),
+            ];
+
+            // Dedup by title+year, keep highest-quality entry
+            const seen = new Map();
+            for (const r of all) {
+                const key = (r.title + '|' + r.year + '|' + r.type).toLowerCase();
+                if (!seen.has(key) || (r.poster && !seen.get(key).poster)) seen.set(key, r);
+            }
+
+            this._results = [...seen.values()].slice(0, 10);
+            this._renderDropdown(query);
+            if (spinner) spinner.classList.add('hidden');
+        },
+
+        // ── API 1: TMDB (movies + TV) ─────────────────────────────────────────
+        async _searchTMDB(q) {
+            const res  = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${q}&page=1&include_adult=false`, { signal: AbortSignal.timeout(6000) });
+            if (!res.ok) throw new Error('tmdb');
+            const data = await res.json();
+            return (data.results || [])
+                .filter(r => r.media_type !== 'person' && (r.title || r.name))
+                .slice(0, 6)
+                .map(r => {
+                    const isAnime = r.media_type === 'tv' && r.genre_ids?.includes(16) && r.origin_country?.includes('JP');
+                    const type = r.media_type === 'movie' ? 'movie' : isAnime ? 'anime' : 'series';
+                    return {
+                        _src: 'tmdb', _rawId: r.id, _rawType: r.media_type,
+                        title:     r.title || r.name,
+                        year:      (r.release_date || r.first_air_date || '').substring(0, 4),
+                        type,
+                        typeIcon:  { movie:'🎬', series:'📺', anime:'🍱' }[type] || '📺',
+                        typeLabel: { movie:'Movie', series:'TV Series', anime:'Anime' }[type] || 'TV',
+                        poster:    r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : '',
+                        overview:  r.overview || '',
+                        rating:    r.vote_average ? +(r.vote_average / 2).toFixed(1) : 0,   // /10 → /5
+                        source:    'TMDB',
+                        _genres:   r.genre_ids || [],
+                        _originCountry: r.origin_country || [],
+                    };
+                });
+        },
+
+        // ── API 2: Jikan v4 (MyAnimeList mirror — anime specialist) ──────────
+        async _searchJikan(q) {
+            const res  = await fetch(`https://api.jikan.moe/v4/anime?q=${q}&limit=5&sfw=true`, { signal: AbortSignal.timeout(8000) });
+            if (!res.ok) throw new Error('jikan');
+            const data = await res.json();
+            return (data.data || []).slice(0, 5).map(r => ({
+                _src: 'jikan', _rawId: r.mal_id, _rawType: 'anime',
+                title:     r.title_english || r.title || '',
+                year:      String(r.year || r.aired?.prop?.from?.year || ''),
+                type:      'anime',
+                typeIcon:  '🍱',
+                typeLabel: 'Anime',
+                poster:    r.images?.jpg?.image_url || r.images?.webp?.image_url || '',
+                overview:  r.synopsis || '',
+                rating:    r.score ? +(r.score / 2).toFixed(1) : 0,   // MAL /10 → /5
+                source:    'MyAnimeList',
+                _epTotal:  r.episodes || 0,
+                _malId:    r.mal_id,
+                _status:   r.status,
+            }));
+        },
+
+        // ── API 3: RAWG (games, no key in free tier) ──────────────────────────
+        async _searchRAWG(q) {
+            // RAWG free API — no key for basic search (returns 20 results)
+            const res  = await fetch(`https://api.rawg.io/api/games?search=${q}&page_size=4&key=`, { signal: AbortSignal.timeout(7000) });
+            if (!res.ok) throw new Error('rawg');
+            const data = await res.json();
+            return (data.results || []).slice(0, 4).map(r => ({
+                _src: 'rawg', _rawId: r.id, _rawType: 'game',
+                title:     r.name || '',
+                year:      (r.released || '').substring(0, 4),
+                type:      'game',
+                typeIcon:  '🎮',
+                typeLabel: 'Game',
+                poster:    r.background_image || '',
+                overview:  `${r.genres?.map(g=>g.name).join(', ') || ''}${r.metacritic ? ' · Metacritic: '+r.metacritic : ''}`,
+                rating:    r.rating ? +r.rating.toFixed(1) : 0,   // RAWG already /5
+                source:    'RAWG',
+                _genres:   r.genres?.map(g => g.name) || [],
+                _platforms: r.platforms?.map(p => p.platform?.name).filter(Boolean) || [],
+                _metacritic: r.metacritic || 0,
+                _rawgSlug:   r.slug || '',
+            }));
+        },
+
+        // ── API 4: iTunes Search (movies, music, TV — Apple CDN) ─────────────
+        async _searchITunes(q) {
+            const res  = await fetch(`https://itunes.apple.com/search?term=${q}&media=movie&limit=3&entity=movie`, { signal: AbortSignal.timeout(6000) });
+            if (!res.ok) throw new Error('itunes');
+            const data = await res.json();
+            return (data.results || []).slice(0, 3).map(r => ({
+                _src: 'itunes', _rawId: r.trackId, _rawType: 'movie',
+                title:     r.trackName || r.collectionName || '',
+                year:      (r.releaseDate || '').substring(0, 4),
+                type:      'movie',
+                typeIcon:  '🎬',
+                typeLabel: 'Movie',
+                poster:    (r.artworkUrl100 || '').replace('100x100', '500x500'),
+                overview:  r.longDescription || r.shortDescription || '',
+                rating:    r.contentAdvisoryRating ? 0 : 0,
+                source:    'iTunes',
+                _itunesUrl: r.trackViewUrl || '',
+                _director:  r.artistName || '',
+                _genre:     r.primaryGenreName || '',
+                _country:   r.country || '',
+            }));
+        },
+
+        // ── API 5: TVmaze (TV series — free, no key) ──────────────────────────
+        async _searchTVmaze(q) {
+            const res  = await fetch(`https://api.tvmaze.com/search/shows?q=${q}`, { signal: AbortSignal.timeout(6000) });
+            if (!res.ok) throw new Error('tvmaze');
+            const data = await res.json();
+            return (data || []).slice(0, 4).map(entry => {
+                const r = entry.show || entry;
+                const isAnime = (r.genres || []).includes('Anime') || (r.genres || []).includes('Animation');
+                const type = isAnime ? 'anime' : 'series';
+                // Strip basic HTML tags from summary
+                const summary = (r.summary || '').replace(/<[^>]+>/g, '').substring(0, 300);
+                return {
+                    _src: 'tvmaze', _rawId: r.id, _rawType: 'show',
+                    title:     r.name || '',
+                    year:      r.premiered ? r.premiered.substring(0, 4) : '',
+                    type,
+                    typeIcon:  type === 'anime' ? '🍱' : '📺',
+                    typeLabel: type === 'anime' ? 'Anime' : 'TV Series',
+                    poster:    r.image?.medium || r.image?.original || '',
+                    overview:  summary,
+                    rating:    r.rating?.average ? +(r.rating.average / 2).toFixed(1) : 0,
+                    source:    'TVmaze',
+                    _genres:   r.genres || [],
+                    _network:  r.network?.name || r.webChannel?.name || '',
+                    _status:   r.status || '',
+                    _tvmazeId: r.id,
+                    _officialSite: r.officialSite || '',
+                };
+            });
+        },
+
+        // ── Render dropdown ───────────────────────────────────────────────────
+        _renderDropdown(query) {
+            const dropdown = document.getElementById('smart-search-dropdown');
+            const results  = document.getElementById('smart-search-results');
+            if (!dropdown || !results) return;
+
+            if (!this._results.length) {
+                results.innerHTML = `<div style="padding:1.25rem;text-align:center;font-size:0.8rem;color:var(--text-muted)">No results found for "<strong style="color:var(--text-primary)">${esc(query)}</strong>"<br><span style="font-size:0.7rem;opacity:0.7">Try a different spelling or shorter query</span></div>`;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            this._focusIdx = -1;
+            results.innerHTML = this._results.map((r, i) => {
+                const title    = esc(r.title || '');
+                const vote     = r.rating > 0 ? `⭐ ${r.rating}` : '';
+                const overview = esc((r.overview || '').substring(0, 75)) + (r.overview?.length > 75 ? '…' : '');
+                const srcBadge = `<span style="font-size:0.58rem;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(59,130,246,0.15);color:var(--primary);letter-spacing:0.04em;flex-shrink:0;">${esc(r.source)}</span>`;
+
+                return `<div class="ss-result-item" data-idx="${i}"
+                    style="display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--border);"
+                    onclick="smartSearch.selectResult(${i})"
+                    onmouseenter="smartSearch._focusIdx=${i};smartSearch._highlightItem()">
+                    <div style="width:38px;height:56px;border-radius:7px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">
+                        ${r.poster
+                            ? `<img src="${esc(r.poster)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.parentElement.textContent='${r.typeIcon}'">`
+                            : r.typeIcon}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:0.85rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                            <span>${r.typeIcon} ${esc(r.typeLabel)}</span>
+                            ${r.year ? `<span>· ${esc(r.year)}</span>` : ''}
+                            ${vote    ? `<span style="color:#fbbf24">· ${vote}</span>` : ''}
+                            ${srcBadge}
+                        </div>
+                        ${overview ? `<div style="font-size:0.65rem;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${overview}</div>` : ''}
+                    </div>
+                    <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
+                </div>`;
+            }).join('');
+
+            const last = results.querySelector('.ss-result-item:last-child');
+            if (last) last.style.borderBottom = 'none';
+            dropdown.classList.remove('hidden');
+        },
+
+        // ── Select result: fill all form fields ───────────────────────────────
+        async selectResult(idx) {
+            const r = this._results[idx];
+            if (!r) return;
+            this._hideDropdown();
+
+            const spinner = document.getElementById('smart-search-spinner');
+            if (spinner) spinner.classList.remove('hidden');
+
+            // Fetch richer detail based on source
+            const detail = await this._fetchDetail(r);
+
+            if (spinner) spinner.classList.add('hidden');
+
+            // ── Fill every form field ──────────────────────────────────────
+            const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null && val !== '') el.value = val; };
+
+            set('f-title', detail.title || r.title);
+
+            // Type
+            const typeEl = document.getElementById('f-type');
+            if (typeEl) {
+                typeEl.value = detail.type || r.type || 'movie';
+                if (typeof episodeTracker !== 'undefined') episodeTracker.syncFormVisibility();
+            }
+
+            // Rating (normalise to 0–5)
+            const stars = Math.min(5, Math.max(0, Math.round(detail.rating || r.rating || 0)));
+            if (stars > 0) set('f-rating', stars);
+
+            // Description → notes
+            if (detail.overview || r.overview) {
+                set('f-notes', (detail.overview || r.overview).substring(0, 1000));
+            }
+
+            // Poster
+            const posterUrl = detail.poster || r.poster;
+            if (posterUrl) {
+                set('f-cover-url', posterUrl);
+                if (typeof coverSystem !== 'undefined') coverSystem.previewUrl(posterUrl);
+            }
+
+            // Tags from genres
+            const genres = detail.genres || r._genres || [];
+            if (typeof tagSystem !== 'undefined') {
+                tagSystem.loadFormTags([]);
+                (Array.isArray(genres) ? genres : []).slice(0, 5).forEach(g => tagSystem.addTag(typeof g === 'string' ? g : g.name || ''));
+            }
+
+            // Trailer
+            if (detail.trailerUrl) set('f-trailer', detail.trailerUrl);
+
+            // External link
+            if (detail.externalUrl) set('f-external', detail.externalUrl);
+
+            // Episodes (anime / series)
+            if ((detail.type === 'anime' || detail.type === 'series') && detail.epTotal) {
+                set('f-ep-total', detail.epTotal);
+                if (typeof episodeTracker !== 'undefined') episodeTracker.autoCalcProgress();
+            }
+
+            // Clear the search input
+            const si = document.getElementById('smart-search-input');
+            if (si) si.value = '';
+
+            // Show success banner
+            const banner = document.getElementById('smart-search-filled');
+            const msg    = document.getElementById('smart-search-filled-msg');
+            if (banner) { banner.classList.remove('hidden'); banner.style.display = 'flex'; }
+            if (msg) {
+                const yr = detail.year || r.year || '';
+                msg.textContent = `✅ Auto-filled from ${esc(detail.source||r.source)}: ${esc(detail.title||r.title)}${yr ? ' ('+yr+')' : ''}`;
+            }
+        },
+
+        // ── Fetch detailed info per source ────────────────────────────────────
+        async _fetchDetail(r) {
+            const base = { ...r }; // start with what we already have
+
+            try {
+                if (r._src === 'tmdb') {
+                    const url  = `https://api.themoviedb.org/3/${r._rawType}/${r._rawId}?api_key=${TMDB_KEY}&append_to_response=videos`;
+                    const res  = await fetch(url, { signal: AbortSignal.timeout(7000) });
+                    if (!res.ok) return base;
+                    const d = await res.json();
+                    const trailer = (d.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer')
+                                 || (d.videos?.results || []).find(v => v.site === 'YouTube');
+                    const tmdbBase = r._rawType === 'movie' ? 'https://www.themoviedb.org/movie/' : 'https://www.themoviedb.org/tv/';
+                    return {
+                        ...base,
+                        title:       d.title || d.name || base.title,
+                        overview:    d.overview || base.overview,
+                        poster:      d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : base.poster,
+                        rating:      d.vote_average ? +(d.vote_average / 2).toFixed(1) : base.rating,
+                        genres:      d.genres || [],
+                        epTotal:     d.number_of_episodes || 0,
+                        trailerUrl:  trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : '',
+                        externalUrl: tmdbBase + d.id,
+                        year:        (d.release_date || d.first_air_date || base.year || '').substring(0, 4),
+                    };
+
+                } else if (r._src === 'jikan') {
+                    const res = await fetch(`https://api.jikan.moe/v4/anime/${r._rawId}/full`, { signal: AbortSignal.timeout(8000) });
+                    if (!res.ok) return base;
+                    const d = (await res.json()).data || {};
+                    const trailer = d.trailer?.url || (d.trailer?.youtube_id ? `https://www.youtube.com/watch?v=${d.trailer.youtube_id}` : '');
+                    return {
+                        ...base,
+                        title:       d.title_english || d.title || base.title,
+                        overview:    d.synopsis || base.overview,
+                        poster:      d.images?.jpg?.large_image_url || d.images?.jpg?.image_url || base.poster,
+                        rating:      d.score ? +(d.score / 2).toFixed(1) : base.rating,
+                        genres:      (d.genres || []).map(g => g.name),
+                        epTotal:     d.episodes || 0,
+                        trailerUrl:  trailer,
+                        externalUrl: d.url || `https://myanimelist.net/anime/${r._rawId}`,
+                        year:        String(d.year || d.aired?.prop?.from?.year || base.year || ''),
+                    };
+
+                } else if (r._src === 'rawg') {
+                    // RAWG game details (no key needed for basic endpoint)
+                    const res = await fetch(`https://api.rawg.io/api/games/${r._rawId}?key=`, { signal: AbortSignal.timeout(7000) });
+                    if (!res.ok) return base;
+                    const d = await res.json();
+                    return {
+                        ...base,
+                        title:       d.name || base.title,
+                        overview:    (d.description_raw || d.description || '').substring(0, 1000).replace(/<[^>]+>/g, ''),
+                        poster:      d.background_image || base.poster,
+                        rating:      d.rating ? +d.rating.toFixed(1) : base.rating,
+                        genres:      (d.genres || []).map(g => g.name),
+                        epTotal:     0,
+                        trailerUrl:  '',
+                        externalUrl: d.website || `https://rawg.io/games/${r._rawgSlug || r._rawId}`,
+                        year:        (d.released || base.year || '').substring(0, 4),
+                    };
+
+                } else if (r._src === 'itunes') {
+                    // iTunes already has everything from search — enrich with genre tag
+                    return {
+                        ...base,
+                        genres:      r._genre ? [r._genre] : [],
+                        externalUrl: r._itunesUrl || '',
+                    };
+
+                } else if (r._src === 'tvmaze') {
+                    const res = await fetch(`https://api.tvmaze.com/shows/${r._rawId}?embed=episodes`, { signal: AbortSignal.timeout(6000) });
+                    if (!res.ok) return base;
+                    const d = await res.json();
+                    const summary = (d.summary || '').replace(/<[^>]+>/g, '');
+                    const epCount = (d._embedded?.episodes || []).length || 0;
+                    return {
+                        ...base,
+                        title:       d.name || base.title,
+                        overview:    summary || base.overview,
+                        poster:      d.image?.original || d.image?.medium || base.poster,
+                        rating:      d.rating?.average ? +(d.rating.average / 2).toFixed(1) : base.rating,
+                        genres:      d.genres || [],
+                        epTotal:     epCount,
+                        trailerUrl:  '',
+                        externalUrl: d.officialSite || `https://www.tvmaze.com/shows/${r._rawId}`,
+                        year:        (d.premiered || base.year || '').substring(0, 4),
+                    };
+                }
+            } catch(e) { /* network error — use base data */ }
+
+            return base;
+        },
+
+        // ── Utility ───────────────────────────────────────────────────────────
+        clearFill() {
+            const banner = document.getElementById('smart-search-filled');
+            if (banner) { banner.classList.add('hidden'); banner.style.display = ''; }
+            ['f-title','f-notes','f-trailer','f-external'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+            const rEl = document.getElementById('f-rating'); if(rEl) rEl.value='0';
+            const cEl = document.getElementById('f-cover-url'); if(cEl) cEl.value='';
+            if (typeof coverSystem !== 'undefined') coverSystem.previewUrl('');
+            if (typeof tagSystem   !== 'undefined') tagSystem.loadFormTags([]);
+            ['f-ep-total','f-ep-watched'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+        },
+
+        _hideDropdown() {
+            const el = document.getElementById('smart-search-dropdown');
+            if (el) el.classList.add('hidden');
+        },
+
+        _showError(msg) {
+            const results  = document.getElementById('smart-search-results');
+            const dropdown = document.getElementById('smart-search-dropdown');
+            if (results)  results.innerHTML  = `<div style="padding:1.1rem;text-align:center;font-size:0.78rem;color:#f87171;">${esc(msg)}</div>`;
+            if (dropdown) dropdown.classList.remove('hidden');
+        },
+
+        init() {
+            document.addEventListener('click', e => {
+                const wrap = document.getElementById('smart-search-wrap');
+                const drop = document.getElementById('smart-search-dropdown');
+                if (wrap && drop && !wrap.contains(e.target) && !drop.contains(e.target)) drop.classList.add('hidden');
+            });
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // ─── v3.0: OFFLINE AUTO-BACKUP ───────────────────────────────────────────
     // ═══════════════════════════════════════════════════════════════════════════
     const BACKUP_KEY = 'mvp_auto_backup_v1';
@@ -6160,7 +6664,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         _pin: null, _entry: '', _locked: false,
 
         load() {
-            try { const r = localStorage.getItem(VLOCK_KEY); if (r) { const d = JSON.parse(r); this._pin = d.pin||null; } } catch {}
+            try { const r = localStorage.getItem(VLOCK_KEY); if (r) { const d = JSON.parse(r); this._pin = d.pin||null; this._securityData = d.securityData||null; } } catch {}
             if (this._pin) this._lock();
         },
 
@@ -6229,53 +6733,193 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             ui.notify('Vault PIN set! Will lock on next load.', 'success');
         },
 
+        // ── Security questions for PIN reset ──────────────────────────────────
+        _SECURITY_QUESTIONS: [
+            "What was the name of your first pet?",
+            "What city were you born in?",
+            "What is your mother's maiden name?",
+            "What was the name of your elementary school?",
+            "What was the make of your first car?",
+            "What is your oldest sibling's middle name?",
+            "What street did you grow up on?",
+            "What was your childhood nickname?"
+        ],
+        _securityData: null, // { questionIdx, answerHash }
+
+        _hashAnswer(str) {
+            // Simple djb2 hash — good enough for local-only security question
+            let hash = 5381;
+            for (let i = 0; i < str.length; i++) hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+            return (hash >>> 0).toString(36);
+        },
+
+        showSetupDialog() {
+            const pin = prompt('Set a 4–6 digit PIN to lock your vault (leave blank to disable):');
+            if (pin === null) return;
+            if (pin === '') {
+                this._pin = null; this._securityData = null;
+                try { localStorage.removeItem(VLOCK_KEY); } catch {}
+                ui.notify('Vault lock removed', 'success');
+                return;
+            }
+            if (!/^\d{4,6}$/.test(pin)) { ui.notify('PIN must be 4–6 digits', 'error'); return; }
+
+            // Ask user to set a security question for recovery
+            this._showSecuritySetup(pin);
+        },
+
+        _showSecuritySetup(pin) {
+            const scr = document.getElementById('vault-lock-screen') || document.body;
+            const existing = document.getElementById('security-setup-dialog');
+            if (existing) existing.remove();
+
+            const qOpts = this._SECURITY_QUESTIONS.map((q, i) =>
+                `<option value="${i}">${q}</option>`).join('');
+
+            const dlg = document.createElement('div');
+            dlg.id = 'security-setup-dialog';
+            dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:600;padding:1rem;';
+            dlg.innerHTML = `
+                <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.75rem;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 40px 80px -20px rgba(0,0,0,0.8);">
+                    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🛡️</div>
+                    <h3 style="font-weight:900;font-size:1.15rem;margin-bottom:0.4rem;font-family:'Plus Jakarta Sans',sans-serif;">Set Recovery Question</h3>
+                    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">Choose a security question so you can recover your vault if you forget your PIN.</p>
+
+                    <div style="text-align:left;margin-bottom:1rem;">
+                        <label style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Security Question</label>
+                        <select id="security-q-select" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.65rem 1rem;font-size:0.8rem;font-weight:600;background:var(--surface-input,rgba(15,23,42,0.5));color:var(--text-primary);outline:none;cursor:pointer;">
+                            ${qOpts}
+                        </select>
+                    </div>
+                    <div style="text-align:left;margin-bottom:1.5rem;">
+                        <label style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Your Answer</label>
+                        <input id="security-a-input" type="text" placeholder="Enter your answer…" autocomplete="off"
+                            style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.65rem 1rem;font-size:0.875rem;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-primary);outline:none;">
+                        <p style="font-size:0.65rem;color:var(--text-muted);margin-top:0.4rem;">Answer is case-insensitive. Remember this exactly.</p>
+                    </div>
+                    <div id="security-setup-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.5rem 1rem;margin-bottom:1rem;"></div>
+                    <div style="display:flex;gap:0.75rem;">
+                        <button onclick="document.getElementById('security-setup-dialog').remove()"
+                            style="flex:1;padding:0.65rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                            Cancel
+                        </button>
+                        <button onclick="vaultLock._saveSecurityAndPin(${JSON.stringify(pin)})"
+                            style="flex:1;padding:0.65rem;border-radius:0.75rem;border:none;background:var(--primary,#3b82f6);color:#fff;font-weight:800;font-size:0.8rem;cursor:pointer;">
+                            Set PIN & Question
+                        </button>
+                    </div>
+                </div>`;
+            document.body.appendChild(dlg);
+            setTimeout(() => document.getElementById('security-a-input')?.focus(), 100);
+        },
+
+        _saveSecurityAndPin(pin) {
+            const qIdx = parseInt(document.getElementById('security-q-select')?.value) || 0;
+            const ans  = document.getElementById('security-a-input')?.value.trim().toLowerCase();
+            const errEl = document.getElementById('security-setup-err');
+            if (!ans || ans.length < 2) {
+                if (errEl) { errEl.textContent = 'Please enter an answer (at least 2 characters).'; errEl.style.display = 'block'; }
+                return;
+            }
+            this._pin = pin;
+            this._securityData = { questionIdx: qIdx, answerHash: this._hashAnswer(ans) };
+            try { localStorage.setItem(VLOCK_KEY, JSON.stringify({ pin, securityData: this._securityData })); } catch {}
+            document.getElementById('security-setup-dialog')?.remove();
+            ui.notify('✅ Vault PIN & security question set! Will lock on next load.', 'success');
+        },
+
         forgotPin() {
-            // Build an in-screen reset dialog instead of native confirm
             const scr = document.getElementById('vault-lock-screen');
             if (!scr) return;
             const existing = document.getElementById('pin-reset-dialog');
             if (existing) { existing.remove(); return; }
+
+            const hasSecurity = this._securityData !== null;
             const dlg = document.createElement('div');
             dlg.id = 'pin-reset-dialog';
-            dlg.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border-radius:1.5rem;z-index:10;';
-            dlg.innerHTML = `
-                <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:300px;width:90%;text-align:center;">
-                    <div style="font-size:2rem;margin-bottom:0.75rem;">🔑</div>
-                    <h3 style="font-weight:900;font-size:1.1rem;margin-bottom:0.5rem;">Reset Vault Lock</h3>
-                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
-                        This will remove your PIN and unlock the vault.<br>
-                        Your media data is <strong style="color:var(--text-primary)">not deleted</strong>.<br><br>
-                        Type <strong style="color:#f87171">RESET</strong> to confirm:
-                    </p>
-                    <input id="pin-reset-confirm-input" type="text" placeholder="Type RESET" autocomplete="off" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
-                    <div style="display:flex;gap:0.75rem;">
-                        <button onclick="document.getElementById('pin-reset-dialog').remove()"
-                            style="flex:1;padding:0.6rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
-                            Cancel
-                        </button>
-                        <button onclick="vaultLock._confirmReset()"
-                            style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
-                            Reset PIN
-                        </button>
-                    </div>
-                </div>`;
+            dlg.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;border-radius:1.5rem;z-index:10;padding:1rem;';
+
+            if (hasSecurity) {
+                const question = this._SECURITY_QUESTIONS[this._securityData.questionIdx] || this._SECURITY_QUESTIONS[0];
+                dlg.innerHTML = `
+                    <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:320px;width:100%;text-align:center;box-shadow:0 40px 80px -20px rgba(0,0,0,0.8);">
+                        <div style="font-size:2rem;margin-bottom:0.75rem;">🔑</div>
+                        <h3 style="font-weight:900;font-size:1.1rem;margin-bottom:0.4rem;font-family:'Plus Jakarta Sans',sans-serif;">Security Question</h3>
+                        <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Answer your security question to reset the vault PIN.</p>
+                        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:0.75rem;padding:0.75rem 1rem;margin-bottom:1rem;text-align:left;">
+                            <p style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:var(--primary,#3b82f6);margin-bottom:0.3rem;">Your Question</p>
+                            <p style="font-size:0.8rem;font-weight:700;color:var(--text-primary);line-height:1.4;">${question}</p>
+                        </div>
+                        <input id="security-reset-answer" type="text" placeholder="Your answer…" autocomplete="off"
+                            style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:0.75rem;">
+                        <div id="security-reset-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.4rem 0.75rem;margin-bottom:0.75rem;"></div>
+                        <div style="display:flex;gap:0.75rem;">
+                            <button onclick="document.getElementById('pin-reset-dialog').remove()"
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                Cancel
+                            </button>
+                            <button onclick="vaultLock._confirmReset()"
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                Verify &amp; Reset
+                            </button>
+                        </div>
+                    </div>`;
+            } else {
+                // No security question set — fallback to typing RESET
+                dlg.innerHTML = `
+                    <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:300px;width:90%;text-align:center;">
+                        <div style="font-size:2rem;margin-bottom:0.75rem;">🔑</div>
+                        <h3 style="font-weight:900;font-size:1.1rem;margin-bottom:0.5rem;">Reset Vault Lock</h3>
+                        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
+                            No security question was set.<br>
+                            Your media data is <strong style="color:var(--text-primary)">not deleted</strong>.<br><br>
+                            Type <strong style="color:#f87171">RESET</strong> to confirm:
+                        </p>
+                        <input id="security-reset-answer" type="text" placeholder="Type RESET" autocomplete="off" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
+                        <div id="security-reset-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.4rem 0.75rem;margin-bottom:0.75rem;"></div>
+                        <div style="display:flex;gap:0.75rem;">
+                            <button onclick="document.getElementById('pin-reset-dialog').remove()"
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                Cancel
+                            </button>
+                            <button onclick="vaultLock._confirmReset()"
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                Reset PIN
+                            </button>
+                        </div>
+                    </div>`;
+            }
             scr.style.position = 'relative';
             scr.appendChild(dlg);
-            setTimeout(() => document.getElementById('pin-reset-confirm-input')?.focus(), 100);
+            setTimeout(() => document.getElementById('security-reset-answer')?.focus(), 100);
         },
 
         _confirmReset() {
-            const val = document.getElementById('pin-reset-confirm-input')?.value.trim().toUpperCase();
-            if (val !== 'RESET') {
-                const inp = document.getElementById('pin-reset-confirm-input');
-                if (inp) { inp.style.borderColor='#f87171'; inp.value=''; inp.placeholder='Type RESET exactly'; }
-                return;
+            const hasSecurity = this._securityData !== null;
+            const inp = document.getElementById('security-reset-answer');
+            const errEl = document.getElementById('security-reset-err');
+            const val = inp?.value.trim() || '';
+
+            if (hasSecurity) {
+                const ansHash = this._hashAnswer(val.toLowerCase());
+                if (ansHash !== this._securityData.answerHash) {
+                    if (errEl) { errEl.textContent = '❌ Incorrect answer. Please try again.'; errEl.style.display='block'; }
+                    if (inp) { inp.style.borderColor='#f87171'; inp.value=''; inp.placeholder='Try again…'; }
+                    setTimeout(() => { if(errEl) errEl.style.display='none'; }, 3000);
+                    return;
+                }
+            } else {
+                if (val.toUpperCase() !== 'RESET') {
+                    if (errEl) { errEl.textContent = 'Type RESET exactly to confirm.'; errEl.style.display='block'; }
+                    if (inp) { inp.style.borderColor='#f87171'; inp.value=''; inp.placeholder='Type RESET exactly'; }
+                    return;
+                }
             }
-            this._pin = null;
+            this._pin = null; this._securityData = null;
             try { localStorage.removeItem(VLOCK_KEY); } catch {}
             document.getElementById('pin-reset-dialog')?.remove();
             this._unlock();
-            ui.notify('Vault PIN removed — set a new one in Tools → Vault Lock', 'success');
+            ui.notify('✅ Vault PIN removed — set a new one with security question in Tools → Vault Lock', 'success');
         }
     };
 
@@ -7182,6 +7826,8 @@ self.addEventListener('fetch', e => {
     }
     if (typeof firebaseConn !== 'undefined')  firebaseConn.load();
     if (typeof privacyTools !== 'undefined')  privacyTools.refreshStorageInfo();
+    // Initialize smart search outside-click handler
+    if (typeof smartSearch !== 'undefined') smartSearch.init();
 
     // ── Final ui.render call so new card format applies ──────────────────
     setTimeout(() => {

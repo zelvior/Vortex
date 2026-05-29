@@ -6904,6 +6904,8 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             this._locked = false; this._entry = '';
             const scr = document.getElementById('vault-lock-screen');
             if (scr) { scr.classList.add('hidden'); scr.style.display = 'none'; }
+            document.getElementById('pin-reset-dialog')?.remove();
+            document.getElementById('security-setup-dialog')?.remove();
         },
 
         _renderDots() {
@@ -6926,6 +6928,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         },
 
         backspace() {
+            if (!this._locked) return;
             this._entry = this._entry.slice(0, -1);
             this._renderDots();
         },
@@ -6947,15 +6950,13 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             const pin = prompt('Set a 4–6 digit PIN to lock your vault (leave blank to disable):');
             if (pin === null) return;
             if (pin === '') {
-                this._pin = null;
+                this._pin = null; this._securityData = null;
                 try { localStorage.removeItem(VLOCK_KEY); } catch {}
                 ui.notify('Vault lock removed', 'success');
                 return;
             }
             if (!/^\d{4,6}$/.test(pin)) { ui.notify('PIN must be 4–6 digits', 'error'); return; }
-            this._pin = pin;
-            try { localStorage.setItem(VLOCK_KEY, JSON.stringify({ pin })); } catch {}
-            ui.notify('Vault PIN set! Will lock on next load.', 'success');
+            this._showSecuritySetup(pin);
         },
 
         // ── Security questions for PIN reset ──────────────────────────────────
@@ -6969,38 +6970,18 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             "What street did you grow up on?",
             "What was your childhood nickname?"
         ],
-        _securityData: null, // { questionIdx, answerHash }
+        _securityData: null,
 
         _hashAnswer(str) {
-            // Simple djb2 hash — good enough for local-only security question
             let hash = 5381;
             for (let i = 0; i < str.length; i++) hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
             return (hash >>> 0).toString(36);
         },
 
-        showSetupDialog() {
-            const pin = prompt('Set a 4–6 digit PIN to lock your vault (leave blank to disable):');
-            if (pin === null) return;
-            if (pin === '') {
-                this._pin = null; this._securityData = null;
-                try { localStorage.removeItem(VLOCK_KEY); } catch {}
-                ui.notify('Vault lock removed', 'success');
-                return;
-            }
-            if (!/^\d{4,6}$/.test(pin)) { ui.notify('PIN must be 4–6 digits', 'error'); return; }
-
-            // Ask user to set a security question for recovery
-            this._showSecuritySetup(pin);
-        },
-
         _showSecuritySetup(pin) {
-            const scr = document.getElementById('vault-lock-screen') || document.body;
-            const existing = document.getElementById('security-setup-dialog');
-            if (existing) existing.remove();
-
+            document.getElementById('security-setup-dialog')?.remove();
             const qOpts = this._SECURITY_QUESTIONS.map((q, i) =>
                 `<option value="${i}">${q}</option>`).join('');
-
             const dlg = document.createElement('div');
             dlg.id = 'security-setup-dialog';
             dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:600;padding:1rem;';
@@ -7009,7 +6990,6 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                     <div style="font-size:2.5rem;margin-bottom:0.75rem;">🛡️</div>
                     <h3 style="font-weight:900;font-size:1.15rem;margin-bottom:0.4rem;font-family:'Plus Jakarta Sans',sans-serif;">Set Recovery Question</h3>
                     <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">Choose a security question so you can recover your vault if you forget your PIN.</p>
-
                     <div style="text-align:left;margin-bottom:1rem;">
                         <label style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Security Question</label>
                         <select id="security-q-select" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.65rem 1rem;font-size:0.8rem;font-weight:600;background:var(--surface-input,rgba(15,23,42,0.5));color:var(--text-primary);outline:none;cursor:pointer;">
@@ -7019,7 +6999,8 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                     <div style="text-align:left;margin-bottom:1.5rem;">
                         <label style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Your Answer</label>
                         <input id="security-a-input" type="text" placeholder="Enter your answer…" autocomplete="off"
-                            onkeydown="if(event.key==='Enter')vaultLock._saveSecurityAndPin(document.getElementById('security-pin-hidden')?.value||this.dataset.pin)"
+                            onkeydown="if(event.key==='Enter')vaultLock._saveSecurityAndPin(this.dataset.pin)"
+                            data-pin="${pin.replace(/"/g,'&quot;')}"
                             style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.65rem 1rem;font-size:0.875rem;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-primary);outline:none;">
                         <p style="font-size:0.65rem;color:var(--text-muted);margin-top:0.4rem;">Answer is case-insensitive. Remember this exactly.</p>
                     </div>
@@ -7029,9 +7010,9 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                             style="flex:1;padding:0.65rem;border-radius:0.75rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:0.8rem;cursor:pointer;">
                             Cancel
                         </button>
-                        <button onclick="vaultLock._saveSecurityAndPin(${JSON.stringify(pin)})"
+                        <button onclick="vaultLock._saveSecurityAndPin(document.getElementById('security-a-input').dataset.pin)"
                             style="flex:1;padding:0.65rem;border-radius:0.75rem;border:none;background:var(--primary,#3b82f6);color:#fff;font-weight:800;font-size:0.8rem;cursor:pointer;">
-                            Set PIN & Question
+                            Set PIN &amp; Question
                         </button>
                     </div>
                 </div>`;
@@ -7055,15 +7036,12 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         },
 
         forgotPin() {
-            const scr = document.getElementById('vault-lock-screen');
-            if (!scr) return;
-            const existing = document.getElementById('pin-reset-dialog');
-            if (existing) { existing.remove(); return; }
-
+            document.getElementById('pin-reset-dialog')?.remove();
             const hasSecurity = this._securityData !== null;
             const dlg = document.createElement('div');
             dlg.id = 'pin-reset-dialog';
-            dlg.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;border-radius:1.5rem;z-index:10;padding:1rem;';
+            // Fixed overlay — not relative to lock screen
+            dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:600;padding:1rem;';
 
             if (hasSecurity) {
                 const question = this._SECURITY_QUESTIONS[this._securityData.questionIdx] || this._SECURITY_QUESTIONS[0];
@@ -7086,15 +7064,14 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                                 Cancel
                             </button>
                             <button onclick="vaultLock._confirmReset()"
-                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
                                 Verify &amp; Reset
                             </button>
                         </div>
                     </div>`;
             } else {
-                // No security question set — fallback to typing RESET
                 dlg.innerHTML = `
-                    <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:300px;width:90%;text-align:center;">
+                    <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:1.5rem;padding:2rem;max-width:300px;width:100%;text-align:center;">
                         <div style="font-size:2rem;margin-bottom:0.75rem;">🔑</div>
                         <h3 style="font-weight:900;font-size:1.1rem;margin-bottom:0.5rem;">Reset Vault Lock</h3>
                         <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
@@ -7102,7 +7079,9 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                             Your media data is <strong style="color:var(--text-primary)">not deleted</strong>.<br><br>
                             Type <strong style="color:#f87171">RESET</strong> to confirm:
                         </p>
-                        <input id="security-reset-answer" type="text" placeholder="Type RESET" autocomplete="off" onkeydown="if(event.key==='Enter')vaultLock._confirmReset()" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
+                        <input id="security-reset-answer" type="text" placeholder="Type RESET" autocomplete="off"
+                            onkeydown="if(event.key==='Enter')vaultLock._confirmReset()"
+                            style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
                         <div id="security-reset-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.4rem 0.75rem;margin-bottom:0.75rem;"></div>
                         <div style="display:flex;gap:0.75rem;">
                             <button onclick="document.getElementById('pin-reset-dialog').remove()"
@@ -7110,14 +7089,13 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                                 Cancel
                             </button>
                             <button onclick="vaultLock._confirmReset()"
-                                style="flex:1;padding:0.6rem;border-radius:0.75rem;border:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                style="flex:1;padding:0.6rem;border-radius:0.75rem;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-weight:700;font-size:0.8rem;cursor:pointer;">
                                 Reset PIN
                             </button>
                         </div>
                     </div>`;
             }
-            scr.style.position = 'relative';
-            scr.appendChild(dlg);
+            document.body.appendChild(dlg);
             setTimeout(() => document.getElementById('security-reset-answer')?.focus(), 100);
         },
 
@@ -7126,7 +7104,6 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             const inp = document.getElementById('security-reset-answer');
             const errEl = document.getElementById('security-reset-err');
             const val = inp?.value.trim() || '';
-
             if (hasSecurity) {
                 const ansHash = this._hashAnswer(val.toLowerCase());
                 if (ansHash !== this._securityData.answerHash) {

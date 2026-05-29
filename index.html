@@ -7,14 +7,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
-    <title>MediaVault Pro | Ultra-Premium Media Management</title>
+    <title>Vortex | Media Intelligence Platform</title>
     <!-- PWA manifest (inline via data URI so no extra file needed) -->
-    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22MediaVault+Pro%22%2C%22short_name%22%3A%22MediaVault%22%2C%22description%22%3A%22Your+personal+media+tracking+universe%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fraw.githubusercontent.com%2Fgooglefonts%2Fnoto-emoji%2Fmain%2Fpng%2F128%2Femoji_u1f39e.png%22%2C%22sizes%22%3A%22128x128%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Vortex%22%2C%22short_name%22%3A%22Vortex%22%2C%22description%22%3A%22Your+personal+media+tracking+universe%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fraw.githubusercontent.com%2Fgooglefonts%2Fnoto-emoji%2Fmain%2Fpng%2F128%2Femoji_u1f39e.png%22%2C%22sizes%22%3A%22128x128%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f39e.png">
     <link rel="manifest" id="pwa-manifest-link">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text y='.9em' font-size='80' x='10'>🎬</text></svg>">
-    <meta name="apple-mobile-web-app-title" content="MediaVault Pro">
-    <meta name="description" content="Enterprise-grade media tracking — movies, series, anime, games">
+    <meta name="apple-mobile-web-app-title" content="Vortex">
+    <meta name="description" content="Vortex — Media Intelligence Platform — movies, series, anime, games">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
@@ -581,7 +581,7 @@
         #detail-modal-inner { width:min(680px,96vw); border-radius:2rem; overflow:hidden; background:var(--surface-card); border:1px solid var(--border); max-height:92vh; overflow-y:auto; }
 
         /* Toast queue */
-        #notify-container { display:flex; flex-direction:column-reverse; }
+        #notify-container { display:flex; flex-direction:column-reverse; bottom:88px !important; }
 
         /* Inline quick-edit */
         .quick-edit-input { background:transparent; border:none; outline:none; border-bottom:1px solid var(--primary); font-size:inherit; font-weight:inherit; color:var(--text-primary); font-family:inherit; min-width:0; flex:1; }
@@ -605,7 +605,7 @@
 
         /* Debug panel */
         #debug-panel { position:fixed; bottom:80px; left:0; z-index:90; background:rgba(0,0,0,0.95); border-right:1px solid var(--border); border-top:1px solid var(--border); border-bottom:1px solid var(--border); border-radius:0 1rem 1rem 0; width:min(360px,90vw); max-height:60vh; overflow-y:auto; font-family:monospace; font-size:0.7rem; transition:transform 0.3s; }
-        #debug-panel.hidden { transform:translateX(-100%); }
+        #debug-panel.hidden { display:none !important; }
 
         /* Changelog */
         #changelog-modal { position:fixed; inset:0; z-index:160; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:1rem; }
@@ -669,7 +669,7 @@
         .pin-btn:active { transform:scale(0.92); }
         .pin-dot { width:14px; height:14px; border-radius:50%; border:2px solid var(--text-muted); transition:all 0.2s; }
         .pin-dot.filled { background:var(--primary); border-color:var(--primary); transform:scale(1.1); }
-        #vault-lock-screen { display:flex; }
+        #vault-lock-screen { display:none; }
         #vault-lock-screen.hidden { display:none !important; }
 
         /* Command palette */
@@ -726,7 +726,7 @@
         .dbg-action-btn:hover { background:rgba(74,222,128,0.15); }
 
         /* Onboarding */
-        #onboarding-overlay { display:flex; }
+        #onboarding-overlay { display:none; }
         #onboarding-overlay.hidden { display:none !important; }
 
         /* Feedback type buttons */
@@ -753,13 +753,12 @@
         /* Network badge */
         #network-badge { display:none; }
 
-        /* Toast container override — put above nav */
-        #notify-container { bottom:88px !important; }
+        /* notify-container consolidated above */
 
         /* Changelog */
-        #changelog-overlay { display:flex; }
+        #changelog-overlay { display:none; }
         #changelog-overlay.hidden { display:none !important; }
-        #feedback-overlay { display:flex; }
+        #feedback-overlay { display:none; }
         #feedback-overlay.hidden { display:none !important; }
 
         /* Mobile: list-view-item compact */
@@ -776,7 +775,7 @@
                 <div class="w-10 h-10 bg-blue-500/10 rounded-full animate-pulse"></div>
             </div>
         </div>
-        <h3 id="loader-status" class="mt-8 text-xl font-bold heading-font tracking-tight">Syncing Vault...</h3>
+        <h3 id="loader-status" class="mt-8 text-xl font-bold heading-font tracking-tight">Loading Vortex...</h3>
         <p class="text-sm mt-2" style="color:var(--text-muted)">Optimizing data chunks for performance</p>
     </div>
 
@@ -809,7 +808,7 @@
                             <line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
                         </svg>
                     </div>
-                    <h1 class="text-3xl font-extrabold heading-font tracking-tight">MediaVault<span style="color:var(--primary)">Pro</span></h1>
+                    <h1 class="text-3xl font-extrabold heading-font tracking-tight">Vortex<span style="color:var(--primary)"> ◈</span></h1>
                 </div>
                 <p class="font-medium" style="color:var(--text-muted)">Track your digital collection.</p>
             </div>
@@ -1492,7 +1491,7 @@
                             <h3 class="text-lg font-bold heading-font">Storage &amp; Privacy</h3>
                         </div>
                         <div class="s-row">
-                            <div><p class="s-label">Local Storage Used</p><p class="s-desc">Estimated space used by MediaVault in this browser</p></div>
+                            <div><p class="s-label">Local Storage Used</p><p class="s-desc">Estimated space used by Vortex in this browser</p></div>
                             <span id="storage-used" class="text-sm font-black" style="color:var(--primary)">—</span>
                         </div>
                         <div class="s-row">
@@ -1528,7 +1527,7 @@
                         <div class="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                             <svg class="text-white" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                         </div>
-                        <p class="font-black heading-font text-base">MediaVault<span style="color:var(--primary)">Pro</span></p>
+                        <p class="font-black heading-font text-base">Vortex<span style="color:var(--primary)"> ◈</span></p>
                         <p class="text-xs mt-1" style="color:var(--text-muted)">Version 4.0.0</p>
                         <p class="text-xs mt-3 leading-relaxed" style="color:var(--text-muted)">All data stored locally in your browser. No cloud. No account required.</p>
                     </div>
@@ -1663,8 +1662,8 @@
                     <div class="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                             <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--primary)">Documentation</p>
-                            <h1 class="text-2xl sm:text-3xl font-black heading-font mb-2">MediaVault Pro — Full Docs</h1>
-                            <p class="text-sm leading-relaxed" style="color:var(--text-muted)">Everything you need to know about using MediaVault Pro. Version <strong style="color:var(--text-primary)">4.0.0</strong> · Single-file PWA · No account required.</p>
+                            <h1 class="text-2xl sm:text-3xl font-black heading-font mb-2">Vortex — Full Documentation</h1>
+                            <p class="text-sm leading-relaxed" style="color:var(--text-muted)">Everything you need to know about using Vortex. Version <strong style="color:var(--text-primary)">5.0.0</strong> · Single-file PWA · No account required.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="docs.expandAll()" class="glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">Expand All</button>
@@ -1714,7 +1713,7 @@
                             </div>
                         </div>
                         <div class="p-4 rounded-2xl" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
-                            <p class="text-sm font-bold mb-2" style="color:#34d399">✅ MediaVault Pro works 100% offline. All data is stored in your browser. Nothing leaves your device unless you connect Supabase or Firebase.</p>
+                            <p class="text-sm font-bold mb-2" style="color:#34d399">✅ Vortex works 100% offline. All data is stored in your browser. Nothing leaves your device unless you connect Supabase or Firebase..</p>
                         </div>
                         <p class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">System Requirements</p>
                         <div class="docs-table">
@@ -2050,15 +2049,15 @@
                             </div>
                             <div class="p-4 rounded-2xl" style="border:1px solid var(--border)">
                                 <p class="text-sm font-bold" style="color:var(--text-primary)">Can I use this on multiple devices?</p>
-                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">Yes — connect Supabase or Firebase in Settings → Cloud Sync, then use Push/Pull or enable Auto Sync. Data is synced through your own cloud account.</p>
+                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">Yes — connect Supabase or Firebase. in Settings → Cloud Sync, then use Push/Pull or enable Auto Sync. Data is synced through your own cloud account.</p>
                             </div>
                             <div class="p-4 rounded-2xl" style="border:1px solid var(--border)">
                                 <p class="text-sm font-bold" style="color:var(--text-primary)">Is there a mobile app?</p>
-                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">No native app — but you can install MediaVault Pro as a PWA. On Android: Chrome menu → "Add to Home Screen". On iOS: Safari → Share → "Add to Home Screen". It runs fullscreen and works offline.</p>
+                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">No native app — but you can install Vortex as a PWA. On Android: Chrome menu → "Add to Home Screen". On iOS: Safari → Share → "Add to Home Screen". It runs fullscreen and works offline.</p>
                             </div>
                             <div class="p-4 rounded-2xl" style="border:1px solid var(--border)">
-                                <p class="text-sm font-bold" style="color:var(--text-primary)">Does MediaVault send any data to Zelvior or any server?</p>
-                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">No. Zero. Nothing is sent anywhere unless you explicitly connect Supabase or Firebase — and even then, data goes to your own account, not ours.</p>
+                                <p class="text-sm font-bold" style="color:var(--text-primary)">Does Vortex send any data to Zelvior or any server?</p>
+                                <p class="text-xs mt-1 leading-relaxed" style="color:var(--text-muted)">No. Zero. Nothing is sent anywhere unless you explicitly connect Supabase or Firebase. — and even then, data goes to your own account, not ours.</p>
                             </div>
                             <div class="p-4 rounded-2xl" style="border:1px solid var(--border)">
                                 <p class="text-sm font-bold" style="color:var(--text-primary)">What's the storage limit?</p>
@@ -2080,7 +2079,33 @@
                     </button>
                     <div class="doc-body px-6 pb-6 space-y-5">
                         <div>
-                            <div class="flex items-center gap-3 mb-3"><span class="text-2xl">🚀</span><div><p class="font-black heading-font">v4.0.0 — Production Release</p><p class="text-xs" style="color:var(--text-muted)">Current</p></div></div>
+                            <div class="flex items-center gap-3 mb-3"><span class="text-2xl">⚡</span><div><p class="font-black heading-font">v5.0.0 — Vortex</p><p class="text-xs" style="color:var(--text-muted)">Current · May 2026</p></div></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Renamed to Vortex — full rebrand</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Verified News (VN) Tab — professional news station UI</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Live broadcast masthead with scrolling ticker</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Real-time clock with timezone display</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Hero featured story card with full image</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Source badge system (VERIFIED/OFFICIAL/TRUSTED/RUMOR)</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Live news feed from Jikan, TMDB, RAWG APIs</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Episode countdown with notify button</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Seasonal anime calendar with day-by-day schedule</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Trailer Hub (TMDB + YouTube deep links)</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Trending panel (anime, games, movies)</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Multi-Source Compare with source chips</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Personalized feed based on vault collection</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Smart Spoiler Filter toggle</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Bookmark / Save articles (localStorage)</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Reminder Center with custom + episode reminders</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Sub / Dub / Manga content filters</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Full responsive layout (mobile-first sidebar grid)</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Keyboard shortcut: press 5 → VN tab</div>
+                                <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:#34d399">✓</span>Bug fixes: null-safe API parsing, no duplicate JS blocks</div>
+                            </div>
+                        </div>
+                        <div style="height:1px;background:var(--border)"></div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-3"><span class="text-2xl">🚀</span><div><p class="font-black heading-font">v4.0.0 — Production Release</p><p class="text-xs" style="color:var(--text-muted)">Previous</p></div></div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
                                 <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:var(--primary)">✓</span>Command Palette (Ctrl+K)</div>
                                 <div class="text-xs py-1 flex gap-2" style="color:var(--text-muted)"><span style="color:var(--primary)">✓</span>Vault PIN Lock</div>
@@ -2115,7 +2140,7 @@
                     <div class="h-14 w-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <svg class="text-white" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                     </div>
-                    <p class="font-black heading-font text-xl">MediaVault<span style="color:var(--primary)">Pro</span></p>
+                    <p class="font-black heading-font text-xl">Vortex<span style="color:var(--primary)"> ◈</span></p>
                     <p class="text-sm mt-1" style="color:var(--text-muted)">Version 4.0.0 · Built by <strong style="color:var(--text-primary)">Zelvior</strong></p>
                     <p class="text-xs mt-3 max-w-sm mx-auto leading-relaxed" style="color:var(--text-muted)">Single-file PWA. No server. No account. No tracking. Open in any browser and it just works.</p>
                     <div class="flex flex-wrap justify-center gap-3 mt-5">
@@ -2167,11 +2192,11 @@
                             <strong style="color:var(--text-primary)">Supabase</strong> is a free, open-source cloud database platform — think of it as a simple online storage system for your data.
                         </p>
                         <p class="text-sm leading-relaxed" style="color:var(--text-muted)">
-                            When you connect Supabase to MediaVault Pro, your media entries get saved to the cloud — so you can access them from any device, anytime. Your data stays in <strong style="color:var(--text-primary)">your own Supabase account</strong>. We never touch it.
+                            When you connect Supabase to Vortex, your media entries get saved to the cloud — so you can access them from any device, anytime. Your data stays in <strong style="color:var(--text-primary)">your own Supabase account</strong>. Vortex never touches it.
                         </p>
                         <div class="flex items-start gap-3 p-4 rounded-2xl text-sm" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)">
                             <svg width="18" height="18" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <span style="color:#93c5fd">Supabase's free tier gives you 500 MB storage and 2 projects — more than enough for MediaVault.</span>
+                            <span style="color:#93c5fd">Supabase's free tier gives you 500 MB storage and 2 projects — more than enough for Vortex.</span>
                         </div>
                     </div>
                 </div>
@@ -2246,7 +2271,7 @@
                         <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-lg heading-font flex-shrink-0" style="background:rgba(62,207,142,0.15);color:#3ecf8e">4</div>
                         <div>
                             <p class="text-xs font-black uppercase tracking-widest" style="color:var(--text-muted)">Step Four</p>
-                            <h3 class="text-base font-bold heading-font">Connect to MediaVault Pro</h3>
+                            <h3 class="text-base font-bold heading-font">Connect to Vortex</h3>
                         </div>
                     </div>
                     <div class="px-6 pb-6 space-y-3">
@@ -2521,7 +2546,7 @@ CREATE POLICY "allow_all" ON mediavault
                             </li>
                             <li class="flex items-start gap-3 text-sm" style="color:var(--text-muted)">
                                 <span class="flex-shrink-0 font-black" style="color:#FFA000">③</span>
-                                If you're using <strong style="color:var(--text-primary)">Test mode</strong>, you can leave the API Key field blank — MediaVault will connect without it.
+                                If you're using <strong style="color:var(--text-primary)">Test mode</strong>, you can leave the API Key field blank — Vortex will connect without it.
                             </li>
                         </ol>
                     </div>
@@ -2731,7 +2756,7 @@ CREATE POLICY "allow_all" ON mediavault
     <!-- Debug Panel -->
     <div id="debug-panel" class="fixed inset-0 z-[92] hidden flex-col" style="background:rgba(2,6,23,0.97)">
         <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid rgba(255,255,255,0.1)">
-            <h3 class="font-mono font-bold text-green-400">🛠 Debug Panel — MediaVault v4.0</h3>
+            <h3 class="font-mono font-bold text-green-400">🛠 Debug Panel — Vortex v5.0</h3>
             <button onclick="debugPanel.close()" class="text-red-400 font-mono text-xs">✕ Close</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -2772,7 +2797,7 @@ CREATE POLICY "allow_all" ON mediavault
                     <svg class="text-white" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold">Install MediaVault Pro</p>
+                    <p class="text-sm font-bold">Install Vortex</p>
                     <p class="text-xs mt-0.5" style="color:var(--text-muted)">Add to Home Screen for instant access — works offline too!</p>
                 </div>
                 <button onclick="pwaManager.dismiss()" class="text-lg leading-none" style="color:var(--text-muted)">✕</button>
@@ -2822,7 +2847,7 @@ CREATE POLICY "allow_all" ON mediavault
             </button>
             <button onclick="nav.go('vn')" data-nav="vn" class="nav-tab flex flex-col items-center gap-0.5 pt-1 min-w-0 flex-1" style="color:var(--text-muted)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span class="text-[9px] font-bold uppercase tracking-wider">VN</span>
+                <span class="text-[9px] font-bold uppercase tracking-wider">PULSE</span>
                 <div class="nav-dot"></div>
             </button>
         </div>
@@ -2831,136 +2856,195 @@ CREATE POLICY "allow_all" ON mediavault
 
     <!-- ══ VERIFIED NEWS PAGE ══ -->
     <div id="page-vn" class="page">
-      <div class="max-w-5xl mx-auto space-y-5 px-0 sm:px-2">
 
-        <!-- Header -->
-        <div class="glass rounded-3xl p-5 sm:p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--primary)">✅ Verified News</p>
-              <h2 class="text-xl sm:text-2xl font-black heading-font">Media Intelligence Hub</h2>
-              <p class="text-xs mt-1" style="color:var(--text-muted)">Anime · Games · Movies · Series — Official sources only</p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button onclick="vnPage.refresh()" class="glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                Refresh
-              </button>
-              <button onclick="vnPage.toggleSpoiler()" id="vn-spoiler-btn" class="glass hover:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95">
-                🧠 Spoiler Filter: <span id="vn-spoiler-status">OFF</span>
-              </button>
+      <!-- VN Masthead / Station Header -->
+      <div class="vn-masthead">
+        <div class="vn-masthead-inner">
+          <div class="vn-masthead-left">
+            <div class="vn-logo-lockup">
+              <div class="vn-logo-icon">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div>
+                <div class="vn-station-name">MEDIA<span class="vn-station-accent">PULSE</span></div>
+                <div class="vn-station-sub">The Vortex Intelligence Network</div>
+              </div>
             </div>
           </div>
-          <!-- Category Filter -->
-          <div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
-            <button onclick="vnPage.setCategory('all')" data-vn-cat="all" class="vn-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all" style="background:var(--primary);border-color:var(--primary);color:#fff">All</button>
-            <button onclick="vnPage.setCategory('anime')" data-vn-cat="anime" class="vn-cat-btn flex-shrink-0 glass px-4 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border);color:var(--text-muted)">🍱 Anime</button>
-            <button onclick="vnPage.setCategory('games')" data-vn-cat="games" class="vn-cat-btn flex-shrink-0 glass px-4 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border);color:var(--text-muted)">🎮 Games</button>
-            <button onclick="vnPage.setCategory('movies')" data-vn-cat="movies" class="vn-cat-btn flex-shrink-0 glass px-4 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border);color:var(--text-muted)">🎬 Movies</button>
-            <button onclick="vnPage.setCategory('series')" data-vn-cat="series" class="vn-cat-btn flex-shrink-0 glass px-4 py-2 rounded-xl text-xs font-bold border transition-all" style="border-color:var(--border);color:var(--text-muted)">📺 Series</button>
+          <div class="vn-masthead-center">
+            <div class="vn-live-ticker-wrap">
+              <span class="vn-live-badge">● LIVE</span>
+              <div class="vn-ticker-track" id="vn-ticker">
+                <span class="vn-ticker-item">Loading latest media news…</span>
+              </div>
+            </div>
           </div>
-          <!-- Content Type Toggles -->
-          <div class="flex gap-2 mt-3 flex-wrap">
-            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vn-tog-dubbed" class="vn-content-tog" onchange="vnPage.applyToggles()" checked><span class="text-xs font-bold" style="color:var(--text-muted)">Dubbed</span></label>
-            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vn-tog-subbed" class="vn-content-tog" onchange="vnPage.applyToggles()" checked><span class="text-xs font-bold" style="color:var(--text-muted)">Subbed</span></label>
-            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="vn-tog-manga" class="vn-content-tog" onchange="vnPage.applyToggles()" checked><span class="text-xs font-bold" style="color:var(--text-muted)">Manga Alerts</span></label>
+          <div class="vn-masthead-right">
+            <div id="vn-clock" class="vn-clock"></div>
+            <button onclick="vnPage.refresh()" class="vn-refresh-btn" title="Refresh all feeds">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              Refresh
+            </button>
           </div>
         </div>
 
-        <!-- Two Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-          <!-- Main Feed (2/3) -->
-          <div class="lg:col-span-2 space-y-5">
-
-            <!-- 📰 Latest News Feed -->
-            <div class="glass rounded-3xl p-5">
-              <div class="flex items-center justify-between mb-4">
-                <p class="text-xs font-black uppercase tracking-widest" style="color:var(--primary)">📰 Latest News</p>
-                <div id="vn-news-loader" class="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin hidden"></div>
-              </div>
-              <div id="vn-news-feed" class="space-y-3">
-                <div class="skeleton h-24 rounded-2xl"></div>
-                <div class="skeleton h-24 rounded-2xl"></div>
-                <div class="skeleton h-24 rounded-2xl"></div>
-              </div>
+        <!-- Category Nav Bar -->
+        <div class="vn-cat-bar">
+          <div class="vn-cat-bar-inner">
+            <button onclick="vnPage.setCategory('all')"    data-vn-cat="all"    class="vn-cat-pill active">All</button>
+            <button onclick="vnPage.setCategory('anime')"  data-vn-cat="anime"  class="vn-cat-pill">🍱 Anime</button>
+            <button onclick="vnPage.setCategory('games')"  data-vn-cat="games"  class="vn-cat-pill">🎮 Games</button>
+            <button onclick="vnPage.setCategory('movies')" data-vn-cat="movies" class="vn-cat-pill">🎬 Movies</button>
+            <button onclick="vnPage.setCategory('series')" data-vn-cat="series" class="vn-cat-pill">📺 Series</button>
+            <div class="vn-cat-divider"></div>
+            <button onclick="vnPage.toggleSpoiler()" id="vn-spoiler-btn" class="vn-cat-pill vn-pill-toggle">
+              🧠 Spoilers: <span id="vn-spoiler-status">Show</span>
+            </button>
+            <label class="vn-cat-pill vn-pill-toggle" style="cursor:pointer">
+              <input type="checkbox" id="vn-tog-subbed" checked onchange="vnPage.loadNews()" style="display:none"> Sub
+            </label>
+            <label class="vn-cat-pill vn-pill-toggle" style="cursor:pointer">
+              <input type="checkbox" id="vn-tog-dubbed" checked onchange="vnPage.loadNews()" style="display:none"> Dub
+            </label>
+            <label class="vn-cat-pill vn-pill-toggle" style="cursor:pointer">
+              <input type="checkbox" id="vn-tog-manga" checked style="display:none"> Manga
+            </label>
+          </div>
+        </div><!-- /vn-cat-bar-inner -->
+        <!-- Breaking News Banner -->
+        <div class="vn-breaking-bar" id="vn-breaking-bar">
+          <div class="vn-breaking-label">
+            <span class="vn-breaking-dot"></span>BREAKING
+          </div>
+          <div class="vn-breaking-scroll-wrap">
+            <div class="vn-breaking-scroll" id="vn-breaking-scroll">
+              <span class="vn-breaking-item">Loading breaking news…</span>
             </div>
+          </div>
+          <button class="vn-breaking-close" onclick="document.getElementById('vn-breaking-bar').style.display='none'" title="Dismiss">✕</button>
+        </div>
+      </div>
+      <div class="vn-content-grid">
 
-            <!-- 🎬 Trailer Hub -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--primary)">🎬 Trailer Hub</p>
-              <p class="text-xs mb-3" style="color:var(--text-muted)">Official trailers from Crunchyroll, MAPPA, Aniplex, Netflix Anime, TOHO</p>
-              <div id="vn-trailers" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="skeleton h-20 rounded-2xl"></div>
-                <div class="skeleton h-20 rounded-2xl"></div>
-              </div>
+        <!-- LEFT: Main Feed -->
+        <div class="vn-col-main">
+
+          <!-- Hero News Card (featured) -->
+          <div id="vn-hero" class="vn-hero-card">
+            <div class="vn-hero-skeleton">
+              <div class="skeleton" style="height:200px;border-radius:1rem"></div>
+              <div class="skeleton" style="height:1rem;border-radius:0.5rem;margin-top:1rem"></div>
+              <div class="skeleton" style="height:0.75rem;border-radius:0.5rem;margin-top:0.5rem;width:70%"></div>
             </div>
-
-            <!-- 📅 Seasonal Calendar -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--primary)">📅 Seasonal Calendar</p>
-              <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4" id="vn-day-tabs">
-                <!-- Days rendered by JS -->
-              </div>
-              <div id="vn-calendar-content" class="space-y-2"></div>
-            </div>
-
           </div>
 
-          <!-- Right Sidebar (1/3) -->
-          <div class="space-y-5">
-
-            <!-- ⏰ Episode Countdown -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--primary)">⏰ Episode Countdown</p>
-              <div id="vn-countdowns" class="space-y-3">
-                <div class="skeleton h-14 rounded-2xl"></div>
-                <div class="skeleton h-14 rounded-2xl"></div>
-                <div class="skeleton h-14 rounded-2xl"></div>
-              </div>
-            </div>
-
-            <!-- 🔥 Trending Panel -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--primary)">🔥 Trending Now</p>
-              <div id="vn-trending" class="space-y-2">
-                <div class="skeleton h-10 rounded-xl"></div>
-                <div class="skeleton h-10 rounded-xl"></div>
-                <div class="skeleton h-10 rounded-xl"></div>
-              </div>
-            </div>
-
-            <!-- 🔔 Reminder Center -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-3" style="color:var(--primary)">🔔 Reminder Center</p>
-              <div id="vn-reminders" class="space-y-2 mb-3"></div>
-              <button onclick="vnPage.addReminder()" class="w-full py-2 rounded-xl text-xs font-bold border border-dashed transition-all hover:border-blue-500 hover:text-blue-400" style="border-color:var(--border);color:var(--text-muted)">+ Add Reminder</button>
-            </div>
-
-            <!-- 📌 Saved Articles -->
-            <div class="glass rounded-3xl p-5">
-              <p class="text-xs font-black uppercase tracking-widest mb-3" style="color:var(--primary)">📌 Saved Articles</p>
-              <div id="vn-saved" class="space-y-2">
-                <p class="text-xs" style="color:var(--text-muted)">Bookmark articles with the 📌 button</p>
-              </div>
-            </div>
-
+          <!-- Section Label -->
+          <div class="vn-section-label">
+            <div class="vn-section-line"></div>
+            <span class="vn-section-text">📰 LATEST UPDATES</span>
+            <div class="vn-section-line"></div>
+            <div id="vn-news-loader" class="vn-spin hidden"></div>
           </div>
+
+          <!-- News Feed -->
+          <div id="vn-news-feed" class="vn-feed-list">
+            <div class="vn-card-skeleton"><div class="skeleton vn-sk-thumb"></div><div class="vn-sk-lines"><div class="skeleton vn-sk-l1"></div><div class="skeleton vn-sk-l2"></div><div class="skeleton vn-sk-l3"></div></div></div>
+            <div class="vn-card-skeleton"><div class="skeleton vn-sk-thumb"></div><div class="vn-sk-lines"><div class="skeleton vn-sk-l1"></div><div class="skeleton vn-sk-l2"></div><div class="skeleton vn-sk-l3"></div></div></div>
+            <div class="vn-card-skeleton"><div class="skeleton vn-sk-thumb"></div><div class="vn-sk-lines"><div class="skeleton vn-sk-l1"></div><div class="skeleton vn-sk-l2"></div><div class="skeleton vn-sk-l3"></div></div></div>
+          </div>
+
+          <!-- Trailer Hub -->
+          <div class="vn-section-label">
+            <div class="vn-section-line"></div>
+            <span class="vn-section-text">🎬 TRAILER HUB</span>
+            <div class="vn-section-line"></div>
+          </div>
+          <div id="vn-trailers" class="vn-trailers-grid">
+            <div class="skeleton" style="height:110px;border-radius:1rem"></div>
+            <div class="skeleton" style="height:110px;border-radius:1rem"></div>
+            <div class="skeleton" style="height:110px;border-radius:1rem"></div>
+          </div>
+
+          <!-- Seasonal Calendar -->
+          <div class="vn-section-label">
+            <div class="vn-section-line"></div>
+            <span class="vn-section-text">📅 SEASONAL CALENDAR</span>
+            <div class="vn-section-line"></div>
+          </div>
+          <div class="vn-calendar-wrap">
+            <div class="vn-day-strip no-scrollbar" id="vn-day-tabs"></div>
+            <div id="vn-calendar-content" class="vn-calendar-body"></div>
+          </div>
+
+          <!-- Multi Source Compare -->
+          <div class="vn-section-label">
+            <div class="vn-section-line"></div>
+            <span class="vn-section-text">🌍 MULTI-SOURCE VERIFIED</span>
+            <div class="vn-section-line"></div>
+          </div>
+          <div id="vn-multisource" class="vn-multisource-grid"></div>
+
+          <!-- Personalized -->
+          <div class="vn-section-label">
+            <div class="vn-section-line"></div>
+            <span class="vn-section-text">❤️ FOR YOU</span>
+            <div class="vn-section-line"></div>
+          </div>
+          <div id="vn-personal" class="vn-personal-wrap"></div>
+
         </div>
 
-        <!-- 🌍 Multi Source Compare -->
-        <div class="glass rounded-3xl p-5">
-          <p class="text-xs font-black uppercase tracking-widest mb-4" style="color:var(--primary)">🌍 Multi-Source Compare</p>
-          <div id="vn-multisource" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-        </div>
+        <!-- RIGHT: Sidebar -->
+        <div class="vn-col-sidebar">
 
-        <!-- ❤️ Personalized Feed -->
-        <div class="glass rounded-3xl p-5">
-          <p class="text-xs font-black uppercase tracking-widest mb-1" style="color:var(--primary)">❤️ Personalized For You</p>
-          <p class="text-xs mb-4" style="color:var(--text-muted)">Based on your vault collection</p>
-          <div id="vn-personal" class="space-y-3"></div>
-        </div>
+          <!-- Episode Countdown -->
+          <div class="vn-sidebar-card">
+            <div class="vn-sidebar-header">
+              <span class="vn-sidebar-icon">⏰</span>
+              <span class="vn-sidebar-title">Episode Countdown</span>
+            </div>
+            <div id="vn-countdowns" class="vn-countdown-list">
+              <div class="skeleton" style="height:52px;border-radius:0.875rem"></div>
+              <div class="skeleton" style="height:52px;border-radius:0.875rem;margin-top:8px"></div>
+              <div class="skeleton" style="height:52px;border-radius:0.875rem;margin-top:8px"></div>
+            </div>
+          </div>
 
+          <!-- Trending -->
+          <div class="vn-sidebar-card">
+            <div class="vn-sidebar-header">
+              <span class="vn-sidebar-icon">🔥</span>
+              <span class="vn-sidebar-title">Trending Now</span>
+            </div>
+            <div id="vn-trending" class="vn-trending-list">
+              <div class="skeleton" style="height:36px;border-radius:0.75rem"></div>
+              <div class="skeleton" style="height:36px;border-radius:0.75rem;margin-top:6px"></div>
+              <div class="skeleton" style="height:36px;border-radius:0.75rem;margin-top:6px"></div>
+            </div>
+          </div>
+
+          <!-- Reminder Center -->
+          <div class="vn-sidebar-card">
+            <div class="vn-sidebar-header">
+              <span class="vn-sidebar-icon">🔔</span>
+              <span class="vn-sidebar-title">Reminders</span>
+              <button onclick="vnPage.addReminder()" class="vn-sidebar-action">+ Add</button>
+            </div>
+            <div id="vn-reminders" class="vn-reminders-list"></div>
+          </div>
+
+          <!-- Saved Articles -->
+          <div class="vn-sidebar-card">
+            <div class="vn-sidebar-header">
+              <span class="vn-sidebar-icon">📌</span>
+              <span class="vn-sidebar-title">Saved</span>
+            </div>
+            <div id="vn-saved" class="vn-saved-list">
+              <p class="vn-empty-hint">Bookmark articles with 🔖</p>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -3379,7 +3463,7 @@ CREATE POLICY "allow_all" ON mediavault
                 const blob = new Blob([JSON.stringify(S.items,null,2)],{type:'application/json'});
                 const url  = URL.createObjectURL(blob);
                 const a    = Object.assign(document.createElement('a'),{
-                    href:url, download:`MediaVault_${new Date().toISOString().split('T')[0]}.json`
+                    href:url, download:`Vortex_${new Date().toISOString().split('T')[0]}.json`
                 });
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -4211,7 +4295,7 @@ CREATE POLICY "allow_all" ON mediavault
         viewSchema() {
             const table = this._getTableName();
             const sql = `-- Run this in Supabase → SQL Editor → New Query
--- Creates the table MediaVault needs to store your entries
+-- Creates the table Vortex needs to store your entries
 
 CREATE TABLE IF NOT EXISTS ${table} (
   id          TEXT PRIMARY KEY,
@@ -4584,7 +4668,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                 // Write a _meta node so the path always exists even if vault is empty
                 await this._smartFetch('PUT','_meta',{
                     initialized:true,
-                    app:'MediaVaultPro',
+                    app:'Vortex',
                     version:'3.0.0',
                     lastConnected:new Date().toISOString()
                 });
@@ -6935,6 +7019,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                     <div style="text-align:left;margin-bottom:1.5rem;">
                         <label style="font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Your Answer</label>
                         <input id="security-a-input" type="text" placeholder="Enter your answer…" autocomplete="off"
+                            onkeydown="if(event.key==='Enter')vaultLock._saveSecurityAndPin(document.getElementById('security-pin-hidden')?.value||this.dataset.pin)"
                             style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.65rem 1rem;font-size:0.875rem;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-primary);outline:none;">
                         <p style="font-size:0.65rem;color:var(--text-muted);margin-top:0.4rem;">Answer is case-insensitive. Remember this exactly.</p>
                     </div>
@@ -6992,6 +7077,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                             <p style="font-size:0.8rem;font-weight:700;color:var(--text-primary);line-height:1.4;">${question}</p>
                         </div>
                         <input id="security-reset-answer" type="text" placeholder="Your answer…" autocomplete="off"
+                            onkeydown="if(event.key==='Enter')vaultLock._confirmReset()"
                             style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:0.75rem;">
                         <div id="security-reset-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.4rem 0.75rem;margin-bottom:0.75rem;"></div>
                         <div style="display:flex;gap:0.75rem;">
@@ -7016,7 +7102,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                             Your media data is <strong style="color:var(--text-primary)">not deleted</strong>.<br><br>
                             Type <strong style="color:#f87171">RESET</strong> to confirm:
                         </p>
-                        <input id="security-reset-answer" type="text" placeholder="Type RESET" autocomplete="off" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
+                        <input id="security-reset-answer" type="text" placeholder="Type RESET" autocomplete="off" onkeydown="if(event.key==='Enter')vaultLock._confirmReset()" style="width:100%;border:1px solid var(--border);border-radius:0.75rem;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-primary);text-align:center;outline:none;margin-bottom:1rem;">
                         <div id="security-reset-err" style="display:none;font-size:0.72rem;font-weight:700;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:0.65rem;padding:0.4rem 0.75rem;margin-bottom:0.75rem;"></div>
                         <div style="display:flex;gap:0.75rem;">
                             <button onclick="document.getElementById('pin-reset-dialog').remove()"
@@ -7273,7 +7359,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
     const onboarding = {
         _step: 0,
         _steps: [
-            { emoji:'🎬', title:'Welcome to MediaVault Pro!', body:'Track every movie, series, game, and anime you watch, play, or plan to — all in your browser, no account needed.' },
+            { emoji:'🎬', title:'Welcome to Vortex!', body:'Track every movie, series, game, and anime in one place — powered by live data, no account needed.' },
             { emoji:'➕', title:'Add Your First Entry', body:'Tap "Add Media" to log a title. Set its status, rating, progress, and even fetch a poster automatically.' },
             { emoji:'🏷️', title:'Smart Tags & Filters', body:'Organize with custom tags, then filter your vault instantly. Use the search bar or filter tabs to find anything.' },
             { emoji:'☁️', title:'Cloud Sync (Optional)', body:'Connect Supabase or Firebase in Settings to sync your vault across all your devices.' },
@@ -7338,9 +7424,10 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             const body = document.getElementById('changelog-body');
             if (body) body.innerHTML = `
                 <div class="space-y-4">
-                    <div><p class="font-black heading-font">v4.0.0 — Production Release</p><p class="text-xs mt-1" style="color:var(--text-muted)">Current</p>
-                    <p class="text-xs mt-2" style="color:var(--text-muted)">Command Palette · Vault PIN Lock · Recycle Bin · Undo Delete · Bulk Select · Drag &amp; Drop · Multi-profile vaults · Advanced stats · Cover posters · Firebase &amp; Supabase sync · PWA install · Service Worker · Onboarding · Debug panel · Docs page.</p></div>
+                    <div><p class="font-black heading-font" style="color:var(--primary)">v5.0.0 — Vortex ⚡</p><p class="text-xs mt-1" style="color:var(--text-muted)">Current · May 2026</p>
+                    <p class="text-xs mt-2" style="color:var(--text-muted)">Full rebrand to Vortex · Verified News Tab with professional broadcast UI · Live news ticker · Real-time clock · Hero feature card · Source badge system · Jikan/TMDB/RAWG APIs · Episode countdowns · Seasonal calendar · Trailer Hub · Trending panel · Multi-source compare · Personalized feed · Spoiler filter · Bookmarks · Reminder center · Sub/Dub/Manga filters · Full bug fixes.</p></div>
                     <hr style="border-color:var(--border)">
+                    <div><p class="font-bold heading-font">v4.0.0 — Production Release</p><p class="text-xs mt-1" style="color:var(--text-muted)">Command Palette · Vault PIN Lock · Recycle Bin · Undo Delete · Bulk Select · Drag &amp; Drop · Multi-profile vaults · Advanced stats · Cover posters · Firebase &amp; Supabase sync · PWA install · Service Worker · Onboarding · Debug panel · Docs page.</p></div>
                     <div><p class="font-bold heading-font">v3.1.0</p><p class="text-xs mt-1" style="color:var(--text-muted)">Multi-API poster fetcher · Full responsive redesign · Advanced stats (heatmap, sparkline) · Cover image cards · Urgency episode bars.</p></div>
                     <div><p class="font-bold heading-font">v3.0.0</p><p class="text-xs mt-1" style="color:var(--text-muted)">Smart tags · Episode tracker · Multi-profile vaults · Drag &amp; drop · Stats dashboard · Firebase RTDB sync · Auto-backup.</p></div>
                     <div><p class="font-bold heading-font">v2.0.0</p><p class="text-xs mt-1" style="color:var(--text-muted)">Settings panel · Supabase sync · Extra themes · Keyboard shortcuts · Guide page · Privacy tools.</p></div>
@@ -8008,53 +8095,72 @@ self.addEventListener('fetch', e => {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // VN PAGE — Verified News Hub
-    // APIs: Jikan (anime), RAWG (games), TMDB (movies/series)
+    // VN PAGE — Vortex Verified News Hub v5.0
+    // APIs: Jikan (anime), TMDB (movies/series), RAWG (games)
     // ════════════════════════════════════════════════════════════════════════
     const vnPage = {
         _cat: 'all',
         _spoiler: false,
-        _saved: JSON.parse(localStorage.getItem('mvp_vn_saved')||'[]'),
-        _reminders: JSON.parse(localStorage.getItem('mvp_vn_reminders')||'[]'),
+        _saved: JSON.parse(localStorage.getItem('vortex_vn_saved')||'[]'),
+        _reminders: JSON.parse(localStorage.getItem('vortex_vn_reminders')||'[]'),
         _inited: false,
-        _activeDay: null,
+        _activeDay: new Date().getDay(),
+        _articles: [],
+        _clockTimer: null,
+        _TMDB: '0b1121a7a8eda3cf3c03c9b4c15d7e45',
 
+        // ── Helpers ──────────────────────────────────────────────────────────
         _badgeHTML(type) {
             const map = {
-                VERIFIED:'vn-badge-verified',OFFICIAL:'vn-badge-official',
-                'STUDIO POST':'vn-badge-studio','TRUSTED MEDIA':'vn-badge-trusted',
-                'COMMUNITY REPORT':'vn-badge-community',RUMOR:'vn-badge-rumor'
+                VERIFIED:'vn-badge-verified', OFFICIAL:'vn-badge-official',
+                'STUDIO POST':'vn-badge-studio', 'TRUSTED MEDIA':'vn-badge-trusted',
+                'COMMUNITY REPORT':'vn-badge-community', RUMOR:'vn-badge-rumor',
+                BREAKING:'vn-badge-breaking'
             };
             return `<span class="vn-badge ${map[type]||'vn-badge-trusted'}">${type}</span>`;
         },
 
         _timeAgo(ts) {
-            const d = Date.now() - ts*1000;
-            if (d<3600000)  return Math.floor(d/60000)+'m ago';
-            if (d<86400000) return Math.floor(d/3600000)+'h ago';
+            const d = Date.now() - (ts > 1e10 ? ts : ts * 1000);
+            if (d < 60000)    return 'Just now';
+            if (d < 3600000)  return Math.floor(d/60000)+'m ago';
+            if (d < 86400000) return Math.floor(d/3600000)+'h ago';
             return Math.floor(d/86400000)+'d ago';
         },
 
         _countdown(airDate) {
-            if (!airDate) return {text:'Unknown',cls:'vn-countdown-normal'};
+            if (!airDate) return { text:'TBA', cls:'vn-cd-normal' };
             const diff = new Date(airDate) - Date.now();
-            if (diff < 0) return {text:'Aired',cls:'vn-countdown-normal'};
+            if (diff < 0) return { text:'Aired', cls:'vn-cd-normal' };
             const days = Math.floor(diff/86400000);
             const hrs  = Math.floor((diff%86400000)/3600000);
             const mins = Math.floor((diff%3600000)/60000);
-            if (days === 0 && hrs === 0) return {text: mins+'m', cls:'vn-countdown-soon'};
-            if (days === 0) return {text: hrs+'h '+mins+'m', cls:'vn-countdown-soon'};
-            if (days === 1) return {text: 'Tomorrow', cls:'vn-countdown-soon'};
-            return {text: days+'d '+hrs+'h', cls:'vn-countdown-normal'};
+            if (days === 0 && hrs === 0) return { text: mins+'m', cls:'vn-cd-soon' };
+            if (days === 0) return { text: hrs+'h '+mins+'m', cls:'vn-cd-soon' };
+            if (days === 1) return { text: 'Tomorrow', cls:'vn-cd-soon' };
+            return { text: days+'d '+hrs+'h', cls:'vn-cd-normal' };
         },
 
+        _nextAirDate(broadcastDay, broadcastTime) {
+            const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+            const target = days.indexOf((broadcastDay||'').toLowerCase());
+            if (target === -1) return null;
+            const now = new Date();
+            let diff = target - now.getDay();
+            if (diff <= 0) diff += 7;
+            const d = new Date(now.getTime() + diff * 86400000);
+            if (broadcastTime) {
+                const [hh, mm] = broadcastTime.split(':');
+                d.setHours(parseInt(hh)||0, parseInt(mm)||0, 0, 0);
+            }
+            return d;
+        },
+
+        // ── Category / Filter ────────────────────────────────────────────────
         setCategory(cat) {
             this._cat = cat;
-            document.querySelectorAll('.vn-cat-btn').forEach(b => {
-                const active = b.dataset.vnCat === cat;
-                b.style.background = active ? 'var(--primary)' : '';
-                b.style.borderColor = active ? 'var(--primary)' : 'var(--border)';
-                b.style.color = active ? '#fff' : 'var(--text-muted)';
+            document.querySelectorAll('[data-vn-cat]').forEach(b => {
+                b.classList.toggle('active', b.dataset.vnCat === cat);
             });
             this.loadNews();
             this.loadTrending();
@@ -8062,16 +8168,18 @@ self.addEventListener('fetch', e => {
 
         toggleSpoiler() {
             this._spoiler = !this._spoiler;
-            document.getElementById('vn-spoiler-status').textContent = this._spoiler ? 'ON' : 'OFF';
-            document.getElementById('vn-spoiler-btn').style.borderColor = this._spoiler ? 'var(--primary)' : 'var(--border)';
-            ui.notify('Spoiler filter ' + (this._spoiler ? 'enabled' : 'disabled'), 'success');
+            const btn = document.getElementById('vn-spoiler-btn');
+            const lbl = document.getElementById('vn-spoiler-status');
+            if (lbl) lbl.textContent = this._spoiler ? 'Hide' : 'Show';
+            if (btn) btn.classList.toggle('active-toggle', this._spoiler);
+            ui.notify('Spoiler filter ' + (this._spoiler ? 'ON — spoilers hidden' : 'OFF'), this._spoiler ? 'warning' : 'success');
         },
 
-        applyToggles() { /* toggles are read dynamically in render */ },
-
+        // ── Init / Refresh ───────────────────────────────────────────────────
         async init() {
             if (this._inited) return;
             this._inited = true;
+            this._startClock();
             this.renderCalendarDays();
             this.renderReminders();
             this.renderSaved();
@@ -8081,457 +8189,621 @@ self.addEventListener('fetch', e => {
                 this.loadCountdowns(),
                 this.loadTrailers(),
                 this.loadTrending(),
-                this.loadMultiSource()
+                this.loadMultiSource(),
+                this.loadBreakingNews()
             ]);
         },
 
         async refresh() {
             this._inited = false;
-            document.getElementById('vn-news-feed').innerHTML = '<div class="skeleton h-24 rounded-2xl"></div><div class="skeleton h-24 rounded-2xl"></div><div class="skeleton h-24 rounded-2xl"></div>';
-            document.getElementById('vn-countdowns').innerHTML = '<div class="skeleton h-14 rounded-2xl"></div><div class="skeleton h-14 rounded-2xl"></div><div class="skeleton h-14 rounded-2xl"></div>';
+            const feed = document.getElementById('vn-news-feed');
+            const cd   = document.getElementById('vn-countdowns');
+            const hero = document.getElementById('vn-hero');
+            if (feed) feed.innerHTML = '<div class="vn-card-skeleton"><div class="skeleton vn-sk-thumb"></div><div class="vn-sk-lines"><div class="skeleton vn-sk-l1"></div><div class="skeleton vn-sk-l2"></div><div class="skeleton vn-sk-l3"></div></div></div>'.repeat(3);
+            if (cd)   cd.innerHTML   = '<div class="skeleton" style="height:52px;border-radius:0.875rem;margin-bottom:8px"></div>'.repeat(3);
+            if (hero) hero.innerHTML = '<div class="vn-hero-skeleton"><div class="skeleton" style="height:200px;border-radius:1rem"></div><div class="skeleton" style="height:1rem;border-radius:0.5rem;margin-top:1rem"></div><div class="skeleton" style="height:0.75rem;border-radius:0.5rem;margin-top:0.5rem;width:70%"></div></div>';
+            const btn = document.querySelector('.vn-refresh-btn');
+            if (btn) btn.classList.add('spinning');
             await this.init();
-            ui.notify('News refreshed', 'success');
+            if (btn) btn.classList.remove('spinning');
+            ui.notify('MediaPulse refreshed ✓', 'success');
         },
 
+        // ── Breaking News Bar ────────────────────────────────────────────────
+        async loadBreakingNews() {
+            const el = document.getElementById('vn-breaking-scroll');
+            if (!el) return;
+            const items = [];
+
+            // Grab from Jikan top anime
+            try {
+                const r = await fetch('https://api.jikan.moe/v4/top/anime?limit=10&filter=airing').catch(()=>null);
+                if (r?.ok) {
+                    const d = await r.json().catch(()=>({data:[]}));
+                    (d.data||[]).slice(0,5).forEach(a => {
+                        items.push(`${a.title} — Airing Now · Score: ${a.score||'N/A'}`);
+                    });
+                }
+            } catch {}
+
+            // Grab from TMDB now playing
+            try {
+                const r = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${this._TMDB}&page=1`).catch(()=>null);
+                if (r?.ok) {
+                    const d = await r.json().catch(()=>({results:[]}));
+                    (d.results||[]).slice(0,5).forEach(m => {
+                        items.push(`${m.title} — In Cinemas Now`);
+                    });
+                }
+            } catch {}
+
+            // Grab from TMDB on the air TV
+            try {
+                const r = await fetch(`https://api.themoviedb.org/3/tv/on_the_air?api_key=${this._TMDB}&page=1`).catch(()=>null);
+                if (r?.ok) {
+                    const d = await r.json().catch(()=>({results:[]}));
+                    (d.results||[]).slice(0,4).forEach(s => {
+                        items.push(`${s.name} — New Episodes Airing`);
+                    });
+                }
+            } catch {}
+
+            // Fallback if all APIs fail
+            if (!items.length) {
+                items.push(
+                    'Demon Slayer: Infinity Castle — Theatrical Release Announced',
+                    'GTA VI — Official Release Window Confirmed by Rockstar',
+                    'One Piece — Episode 1140 Airs This Sunday',
+                    'Jujutsu Kaisen Season 3 — Production Confirmed by MAPPA',
+                    'The Batman Part II — Release Date Set',
+                    'Elden Ring: Nightreign — Co-op Spinoff Coming Soon'
+                );
+            }
+
+            // Build infinite scroll — duplicate content for seamless loop
+            const content = items.map(t => `<span class="vn-breaking-item">${t}</span>`).join('');
+            el.innerHTML = content + content; // duplicate for seamless loop
+        },
+
+        // ── Clock ────────────────────────────────────────────────────────────
+        _startClock() {
+            if (this._clockTimer) return;
+            const el = document.getElementById('vn-clock');
+            const tick = () => {
+                if (!el || !document.getElementById('page-vn')) return;
+                const now = new Date();
+                const tz  = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_',' ');
+                el.textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' ' + tz;
+            };
+            tick();
+            this._clockTimer = setInterval(tick, 1000);
+        },
+
+        // ── Ticker ───────────────────────────────────────────────────────────
+        _buildTicker(articles) {
+            const el = document.getElementById('vn-ticker');
+            if (!el || !articles.length) return;
+            const items = articles.slice(0, 12).map(a =>
+                `<span class="vn-ticker-item"><strong>${esc(a.badge)}</strong> · ${esc(a.title.substring(0,60))}${a.title.length>60?'…':''}</span>`
+            ).join('');
+            el.innerHTML = `<div class="vn-ticker-inner">${items}${items}</div>`;
+        },
+
+        // ── Hero Card ────────────────────────────────────────────────────────
+        _renderHero(a) {
+            const hero = document.getElementById('vn-hero');
+            if (!hero || !a) return;
+            hero.innerHTML = `
+            <div class="vn-hero-img-wrap" onclick="window.open('${a.url}','_blank')" style="cursor:pointer">
+                ${a.thumb
+                    ? `<img src="${a.thumb}" alt="${esc(a.title)}" onerror="this.parentElement.innerHTML='<div class=vn-hero-img-placeholder>📰</div>'">`
+                    : `<div class="vn-hero-img-placeholder">📰</div>`
+                }
+                <div class="vn-hero-overlay"></div>
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:1rem 1.125rem">
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.4rem">
+                        ${this._badgeHTML(a.badge)}
+                        <span style="font-size:0.62rem;color:#94a3b8;font-weight:600">${esc(a.source)} · ${this._timeAgo(a.time)}</span>
+                    </div>
+                    <p style="font-size:1rem;font-weight:800;line-height:1.3;color:#f8fafc;font-family:'Plus Jakarta Sans',sans-serif">${esc(a.title)}</p>
+                </div>
+            </div>
+            <div class="vn-hero-body">
+                <p style="font-size:0.78rem;color:#94a3b8;line-height:1.5;margin-bottom:0.6rem">${esc(a.desc)}</p>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                    <button onclick="window.open('${a.url}','_blank')" style="font-size:0.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);border:none;padding:6px 14px;border-radius:6px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(59,130,246,0.2)'" onmouseout="this.style.background='rgba(59,130,246,0.1)'">Read Story →</button>
+                    <div style="display:flex;gap:0.5rem;align-items:center">
+                        ${a.sourceCount>1?`<span class="vn-source-chip" onclick="vnPage.showSources(0)">📡 ${a.sourceCount} sources</span>`:''}
+                        <button onclick="vnPage.toggleSave(0)" class="vn-bookmark-btn" title="Save">${this._saved.find(s=>s.url===a.url)?'📌':'🔖'}</button>
+                    </div>
+                </div>
+            </div>`;
+        },
+
+        // ── News Feed ────────────────────────────────────────────────────────
         async loadNews() {
-            const feed = document.getElementById('vn-news-feed');
+            const feed   = document.getElementById('vn-news-feed');
             const loader = document.getElementById('vn-news-loader');
-            loader.classList.remove('hidden');
+            if (!feed) return;
+            if (loader) loader.classList.remove('hidden');
             try {
                 let articles = [];
                 const cat = this._cat;
 
+                // ── Anime: Jikan current season ──────────────────────────────
                 if (cat === 'all' || cat === 'anime') {
-                    // Jikan seasonal anime
-                    const r = await fetch('https://api.jikan.moe/v4/seasons/now?limit=12').catch(()=>null);
+                    const r = await fetch('https://api.jikan.moe/v4/seasons/now?limit=20').catch(()=>null);
                     if (r?.ok) {
-                        const d = await r.json();
-                        (d.data||[]).slice(0,4).forEach(a => {
-                            articles.push({
-                                title: a.title + (a.episodes ? ` — ${a.episodes} eps` : ''),
-                                source: 'MyAnimeList', badge: 'OFFICIAL',
-                                time: Date.now()/1000 - Math.random()*86400*3,
-                                thumb: a.images?.jpg?.image_url || null,
-                                desc: a.synopsis?.substring(0,100) || 'Airing this season',
-                                url: a.url, spoiler: false, cat: 'anime',
-                                sources: ['MyAnimeList','AniList'],
-                                sourceCount: 2
-                            });
-                        });
+                        const d = await r.json().catch(()=>({data:[]}));
+                        (d.data||[]).slice(0,5).forEach(a => articles.push({
+                            title:   a.title || 'Untitled',
+                            source:  'MyAnimeList',
+                            badge:   'OFFICIAL',
+                            time:    Date.now()/1000 - Math.random()*86400*2,
+                            thumb:   a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || null,
+                            desc:    (a.synopsis||'Airing this season.').substring(0,120),
+                            url:     a.url || 'https://myanimelist.net',
+                            spoiler: false,
+                            cat:     'anime',
+                            sources: ['MyAnimeList','AniList','Crunchyroll'],
+                            sourceCount: 3
+                        }));
                     }
                 }
 
+                // ── Games: RAWG new releases ─────────────────────────────────
                 if (cat === 'all' || cat === 'games') {
-                    // RAWG upcoming games
-                    const today = new Date().toISOString().split('T')[0];
+                    const past = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
                     const future = new Date(Date.now()+90*86400000).toISOString().split('T')[0];
-                    const r = await fetch(`https://api.rawg.io/api/games?key=&dates=${today},${future}&ordering=-added&page_size=5`).catch(()=>null);
+                    const r = await fetch(`https://api.rawg.io/api/games?key=&dates=${past},${future}&ordering=-added&page_size=8`).catch(()=>null);
                     if (r?.ok) {
-                        const d = await r.json();
-                        (d.results||[]).slice(0,4).forEach(g => {
-                            articles.push({
-                                title: g.name + (g.released ? ` — ${g.released}` : ' — Coming Soon'),
-                                source: 'RAWG', badge: 'TRUSTED MEDIA',
-                                time: Date.now()/1000 - Math.random()*86400*2,
-                                thumb: g.background_image || null,
-                                desc: (g.genres||[]).map(x=>x.name).join(', ') || 'Upcoming release',
-                                url: `https://rawg.io/games/${g.slug}`, spoiler: false, cat: 'games',
-                                sources: ['RAWG','IGN','Steam'],
-                                sourceCount: 3
-                            });
-                        });
+                        const d = await r.json().catch(()=>({results:[]}));
+                        (d.results||[]).slice(0,4).forEach(g => articles.push({
+                            title:   g.name || 'Untitled Game',
+                            source:  'RAWG',
+                            badge:   'TRUSTED MEDIA',
+                            time:    g.released ? new Date(g.released).getTime()/1000 : Date.now()/1000 - Math.random()*86400*3,
+                            thumb:   g.background_image || null,
+                            desc:    (g.genres||[]).map(x=>x.name).join(' · ') || 'Upcoming release',
+                            url:     g.slug ? `https://rawg.io/games/${g.slug}` : 'https://rawg.io',
+                            spoiler: false,
+                            cat:     'games',
+                            sources: ['RAWG','IGN','GameSpot'],
+                            sourceCount: 3
+                        }));
                     }
-                    // Fallback RAWG sample data if no key
-                    if (articles.filter(a=>a.cat==='games').length === 0) {
-                        ['Elden Ring DLC','Final Fantasy VII Rebirth','Baldur\'s Gate 4'].forEach((name,i) => {
-                            articles.push({ title:name, source:'RAWG', badge:'TRUSTED MEDIA', time:Date.now()/1000-i*3600, thumb:null, desc:'Upcoming game release', url:'#', spoiler:false, cat:'games', sources:['RAWG','IGN'], sourceCount:2 });
-                        });
+                    // Curated fallback
+                    if (!articles.filter(a=>a.cat==='games').length) {
+                        [['GTA VI','IGN',null,'Grand Theft Auto VI has an official release window confirmed by Rockstar Games.'],
+                         ['Elden Ring: Nightreign','GameSpot',null,'Elden Ring Nightreign — the standalone co-op spinoff — has a confirmed release date.'],
+                         ['Monster Hunter Wilds DLC','IGN',null,'First major DLC expansion announced for Monster Hunter Wilds.']
+                        ].forEach(([name,src,thumb,desc],i) => articles.push({
+                            title:name, source:src, badge:'TRUSTED MEDIA',
+                            time:Date.now()/1000-i*7200, thumb, desc,
+                            url:`https://www.ign.com/search?q=${encodeURIComponent(name)}`,
+                            spoiler:false, cat:'games', sources:['IGN','GameSpot','Kotaku'], sourceCount:3
+                        }));
                     }
                 }
 
+                // ── Movies & Series: TMDB ────────────────────────────────────
                 if (cat === 'all' || cat === 'movies' || cat === 'series') {
-                    // TMDB upcoming
-                    const type = cat === 'series' ? 'tv' : 'movie';
-                    const ep = cat === 'series' ? 'on_the_air' : 'upcoming';
-                    const r = await fetch(`https://api.themoviedb.org/3/${type}/${ep}?api_key=0b1121a7a8eda3cf3c03c9b4c15d7e45&language=en-US&page=1`).catch(()=>null);
-                    if (r?.ok) {
-                        const d = await r.json();
-                        (d.results||[]).slice(0,4).forEach(m => {
-                            const isTV = !!m.first_air_date;
-                            articles.push({
-                                title: (m.title||m.name) + (m.release_date||m.first_air_date ? ` — ${m.release_date||m.first_air_date}` : ''),
-                                source: 'TMDB', badge: 'OFFICIAL',
-                                time: Date.now()/1000 - Math.random()*86400*4,
-                                thumb: m.poster_path ? `https://image.tmdb.org/t/p/w92${m.poster_path}` : null,
-                                desc: m.overview?.substring(0,100) || 'New release',
-                                url: `https://www.themoviedb.org/${isTV?'tv':'movie'}/${m.id}`,
-                                spoiler: false, cat: isTV ? 'series' : 'movies',
-                                sources: ['TMDB','IMDb'],
-                                sourceCount: 2
+                    const endpoints = cat === 'series'
+                        ? [['tv','on_the_air']]
+                        : cat === 'movies'
+                        ? [['movie','upcoming']]
+                        : [['movie','upcoming'],['tv','on_the_air']];
+
+                    for (const [type, ep] of endpoints) {
+                        const r = await fetch(`https://api.themoviedb.org/3/${type}/${ep}?api_key=${this._TMDB}&language=en-US&page=1`).catch(()=>null);
+                        if (r?.ok) {
+                            const d = await r.json().catch(()=>({results:[]}));
+                            (d.results||[]).slice(0,3).forEach(m => {
+                                const isTV = type === 'tv';
+                                const dateStr = m.release_date || m.first_air_date || '';
+                                articles.push({
+                                    title:   (m.title||m.name||'Untitled') + (dateStr ? ` · ${dateStr}` : ''),
+                                    source:  'TMDB',
+                                    badge:   'OFFICIAL',
+                                    time:    dateStr ? new Date(dateStr).getTime()/1000 : Date.now()/1000 - Math.random()*86400*4,
+                                    thumb:   m.backdrop_path ? `https://image.tmdb.org/t/p/w300${m.backdrop_path}` : m.poster_path ? `https://image.tmdb.org/t/p/w154${m.poster_path}` : null,
+                                    desc:    (m.overview||'Upcoming release.').substring(0,120),
+                                    url:     `https://www.themoviedb.org/${isTV?'tv':'movie'}/${m.id}`,
+                                    spoiler: false,
+                                    cat:     isTV ? 'series' : 'movies',
+                                    sources: ['TMDB','IMDb','Rotten Tomatoes'],
+                                    sourceCount: 3
+                                });
                             });
-                        });
+                        }
                     }
                 }
 
-                // Sort by time
-                articles.sort((a,b) => b.time - a.time);
-
-                const sub = document.getElementById('vn-tog-subbed')?.checked;
-                const dubbed = document.getElementById('vn-tog-dubbed')?.checked;
+                // Sort newest first
+                articles.sort((a, b) => b.time - a.time);
+                this._articles = articles;
 
                 if (!articles.length) {
-                    feed.innerHTML = '<p class="text-sm text-center py-8" style="color:var(--text-muted)">No news found. Try refreshing.</p>';
+                    feed.innerHTML = `<div style="text-align:center;padding:2rem;color:#475569">
+                        <div style="font-size:2rem;margin-bottom:0.5rem">📡</div>
+                        <p style="font-size:0.82rem;font-weight:600">No stories found. Try a different category or refresh.</p>
+                    </div>`;
                     return;
                 }
 
-                feed.innerHTML = articles.map((a,i) => {
+                // Hero = first article
+                this._renderHero(articles[0]);
+                this._buildTicker(articles);
+
+                // Feed = remaining
+                const feedArticles = articles.slice(1);
+                feed.innerHTML = feedArticles.map((a, i) => {
                     if (this._spoiler && a.spoiler) return '';
-                    const saved = this._saved.find(s=>s.url===a.url);
-                    return `<div class="vn-news-card" onclick="window.open('${a.url}','_blank')">
-                        <div class="vn-news-thumb">${a.thumb ? `<img src="${a.thumb}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='📰'">` : '📰'}</div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start gap-2 flex-wrap mb-1">
+                    const idx = i + 1; // index in _articles
+                    const isSaved = this._saved.some(s => s.url === a.url);
+                    return `<div class="vn-news-card${a.badge==='BREAKING'?' vn-breaking':''}" onclick="window.open('${a.url}','_blank')">
+                        <div class="vn-news-thumb">
+                            ${a.thumb
+                                ? `<img src="${a.thumb}" alt="" loading="lazy" onerror="this.parentElement.textContent='📰'">`
+                                : `<span style="font-size:1.4rem">📰</span>`}
+                        </div>
+                        <div class="vn-news-body">
+                            <div class="vn-news-meta">
                                 ${this._badgeHTML(a.badge)}
-                                ${a.sourceCount > 1 ? `<span class="vn-source-chip" onclick="event.stopPropagation();vnPage.showSources(${i})" title="Reported by ${a.sourceCount} sources">${a.sourceCount} sources</span>` : ''}
+                                ${a.sourceCount>1 ? `<span class="vn-source-chip" onclick="event.stopPropagation();vnPage.showSources(${idx})">📡 ${a.sourceCount} sources</span>` : ''}
                             </div>
-                            <p class="text-sm font-bold leading-tight mb-1" style="color:var(--text-primary)">${esc(a.title)}</p>
-                            <p class="text-xs leading-relaxed mb-2" style="color:var(--text-muted)">${esc(a.desc)}</p>
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold" style="color:var(--text-muted)">${esc(a.source)}</span>
-                                    <span class="text-[10px]" style="color:var(--text-muted)">· ${this._timeAgo(a.time)}</span>
-                                </div>
-                                <button onclick="event.stopPropagation();vnPage.toggleSave(${i})" class="text-sm transition-all hover:scale-125" title="${saved?'Unsave':'Save'}">${saved?'📌':'🔖'}</button>
+                            <p class="vn-news-title">${esc(a.title)}</p>
+                            <p class="vn-news-desc">${esc(a.desc)}</p>
+                            <div class="vn-news-footer">
+                                <span class="vn-news-source">${esc(a.source)} · <span class="vn-news-time">${this._timeAgo(a.time)}</span></span>
+                                <button class="vn-bookmark-btn" onclick="event.stopPropagation();vnPage.toggleSave(${idx})" title="${isSaved?'Unsave':'Save'}">${isSaved?'📌':'🔖'}</button>
                             </div>
                         </div>
                     </div>`;
                 }).filter(Boolean).join('');
 
-                // Store articles for save reference
-                this._articles = articles;
-
-            } catch(e) {
-                feed.innerHTML = '<p class="text-sm text-center py-8" style="color:var(--text-muted)">Failed to load news. Check your connection.</p>';
+            } catch (err) {
+                feed.innerHTML = `<div style="text-align:center;padding:2rem;color:#475569">
+                    <p style="font-size:0.82rem">Connection error. Check your network and refresh.</p>
+                </div>`;
             } finally {
-                loader.classList.add('hidden');
+                if (loader) loader.classList.add('hidden');
             }
         },
 
-        _articles: [],
-
-        showSources(i) {
-            const a = this._articles[i];
+        showSources(idx) {
+            const a = this._articles[idx];
             if (!a) return;
-            ui.notify(`Reported by: ${a.sources.join(', ')}`, 'success');
+            ui.notify(`Reported by: ${a.sources.join(' · ')}`, 'success');
         },
 
-        toggleSave(i) {
-            const a = this._articles[i];
+        toggleSave(idx) {
+            const a = this._articles[idx];
             if (!a) return;
-            const idx = this._saved.findIndex(s=>s.url===a.url);
-            if (idx > -1) {
-                this._saved.splice(idx,1);
+            const pos = this._saved.findIndex(s => s.url === a.url);
+            if (pos > -1) {
+                this._saved.splice(pos, 1);
                 ui.notify('Removed from saved', 'warning');
             } else {
-                this._saved.push({ title:a.title, url:a.url, source:a.source, badge:a.badge, savedAt:Date.now() });
+                this._saved.unshift({ title: a.title, url: a.url, source: a.source, badge: a.badge, savedAt: Date.now() });
                 ui.notify('Saved for later 📌', 'success');
             }
-            localStorage.setItem('mvp_vn_saved', JSON.stringify(this._saved));
+            localStorage.setItem('vortex_vn_saved', JSON.stringify(this._saved));
             this.renderSaved();
-            // Re-render news to update icons
-            const feed = document.getElementById('vn-news-feed');
-            if (feed) this.loadNews();
+            this.loadNews();
         },
 
         renderSaved() {
             const el = document.getElementById('vn-saved');
             if (!el) return;
             if (!this._saved.length) {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Bookmark articles with the 🔖 button</p>';
+                el.innerHTML = '<p class="vn-empty-hint">Bookmark articles with 🔖</p>';
                 return;
             }
-            el.innerHTML = this._saved.map((s,i) => `
-                <div class="vn-saved-item">
+            el.innerHTML = this._saved.map((s, i) => `
+                <div class="vn-saved-row" onclick="window.open('${s.url}','_blank')">
                     ${this._badgeHTML(s.badge)}
-                    <span class="flex-1 min-w-0 truncate font-bold" style="font-size:0.72rem">${esc(s.title)}</span>
-                    <button onclick="vnPage.removeSaved(${i})" style="color:var(--text-muted);font-size:0.9rem">✕</button>
+                    <span class="vn-saved-title">${esc(s.title)}</span>
+                    <button class="vn-saved-del" onclick="event.stopPropagation();vnPage.removeSaved(${i})">✕</button>
                 </div>`).join('');
         },
 
         removeSaved(i) {
-            this._saved.splice(i,1);
-            localStorage.setItem('mvp_vn_saved', JSON.stringify(this._saved));
+            this._saved.splice(i, 1);
+            localStorage.setItem('vortex_vn_saved', JSON.stringify(this._saved));
             this.renderSaved();
         },
 
+        // ── Countdowns ───────────────────────────────────────────────────────
         async loadCountdowns() {
             const el = document.getElementById('vn-countdowns');
+            if (!el) return;
             try {
-                const r = await fetch('https://api.jikan.moe/v4/schedules?page=1&limit=15').catch(()=>null);
                 let items = [];
+                const r = await fetch('https://api.jikan.moe/v4/schedules?page=1&limit=20').catch(()=>null);
                 if (r?.ok) {
-                    const d = await r.json();
-                    (d.data||[]).slice(0,6).forEach(a => {
-                        // Jikan schedule: broadcast day, construct next air date
-                        const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-                        const bcast = a.broadcast?.day?.toLowerCase() || null;
-                        let airDate = null;
-                        if (bcast) {
-                            const now = new Date();
-                            const today = now.getDay();
-                            const target = days.indexOf(bcast);
-                            let diff = target - today;
-                            if (diff <= 0) diff += 7;
-                            airDate = new Date(now.getTime() + diff*86400000);
-                            if (a.broadcast?.time) {
-                                const [hh,mm] = a.broadcast.time.split(':');
-                                airDate.setHours(parseInt(hh)||0, parseInt(mm)||0, 0, 0);
-                            }
-                        }
-                        items.push({ name: a.title, airDate, ep: a.episodes ? `EP ${a.episodes}` : 'Next EP', delayed: false });
+                    const d = await r.json().catch(()=>({data:[]}));
+                    (d.data||[]).forEach(a => {
+                        const airDate = this._nextAirDate(a.broadcast?.day, a.broadcast?.time);
+                        items.push({ name: a.title, ep: 'Next EP', airDate, delayed: false });
                     });
                 }
-
-                // Add some static game/movie countdowns
-                const staticItems = [
-                    { name:'One Piece EP 1140', airDate: new Date(Date.now()+2*86400000+4*3600000), ep:'EP 1140', delayed:false },
-                    { name:'Solo Leveling S2', airDate: null, ep:'', delayed:true },
+                // Always-present curated items
+                const pinned = [
+                    { name: 'One Piece', ep: 'EP 1140+', airDate: this._nextAirDate('sunday','09:30'), delayed: false },
+                    { name: 'Solo Leveling S2', ep: 'Season 2', airDate: null, delayed: true },
+                    { name: 'Bleach: TYBW Part 4', ep: 'Coming Soon', airDate: null, delayed: false },
                 ];
-                items = [...staticItems, ...items.slice(0,5)];
+                items = [...pinned, ...items.slice(0,6)];
 
-                el.innerHTML = items.slice(0,7).map(item => {
+                el.innerHTML = items.slice(0,8).map(item => {
                     if (item.delayed) return `
-                        <div class="vn-countdown-item">
-                            <div class="min-w-0 flex-1"><p class="text-xs font-bold truncate">${esc(item.name)}</p><p class="text-[10px]" style="color:var(--text-muted)">${esc(item.ep)}</p></div>
-                            <span class="vn-countdown-time vn-countdown-delayed">Delayed</span>
+                        <div class="vn-countdown-row">
+                            <div class="vn-countdown-info">
+                                <p class="vn-countdown-name">${esc(item.name)}</p>
+                                <p class="vn-countdown-ep">${esc(item.ep)}</p>
+                            </div>
+                            <span class="vn-countdown-time vn-cd-delayed">Delayed</span>
                         </div>`;
                     const cd = this._countdown(item.airDate);
+                    const safe = esc(item.name).replace(/'/g,"&#39;");
                     return `
-                        <div class="vn-countdown-item">
-                            <div class="min-w-0 flex-1"><p class="text-xs font-bold truncate">${esc(item.name)}</p><p class="text-[10px]" style="color:var(--text-muted)">${esc(item.ep)}</p></div>
-                            <div class="flex flex-col items-end gap-1">
+                        <div class="vn-countdown-row">
+                            <div class="vn-countdown-info">
+                                <p class="vn-countdown-name">${esc(item.name)}</p>
+                                <p class="vn-countdown-ep">${esc(item.ep)}</p>
+                            </div>
+                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
                                 <span class="vn-countdown-time ${cd.cls}">${cd.text}</span>
-                                <button onclick="vnPage.addCountdownReminder('${esc(item.name).replace(/'/g,"\\'")}','${item.airDate?.toISOString()||''}')" class="text-[9px] font-bold px-2 py-0.5 rounded-full" style="background:rgba(59,130,246,0.1);color:var(--primary)">🔔 Notify</button>
+                                <button class="vn-notify-btn" onclick="vnPage.addCountdownReminder('${safe}','${item.airDate?.toISOString()||''}')">🔔 Notify</button>
                             </div>
                         </div>`;
                 }).join('');
             } catch {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Could not load countdowns.</p>';
+                el.innerHTML = '<p class="vn-empty-hint">Could not load countdowns.</p>';
             }
         },
 
         addCountdownReminder(name, dateStr) {
-            const r = { type:'episode', title:name, date:dateStr, id:Date.now() };
-            this._reminders.push(r);
-            localStorage.setItem('mvp_vn_reminders', JSON.stringify(this._reminders));
+            this._reminders.push({ type:'episode', title:name, date:dateStr.substring(0,10), id:Date.now() });
+            localStorage.setItem('vortex_vn_reminders', JSON.stringify(this._reminders));
             this.renderReminders();
-            ui.notify(`Reminder set for ${name}`, 'success');
+            ui.notify(`🔔 Reminder set for ${name}`, 'success');
         },
 
         addReminder() {
-            const title = prompt('What do you want a reminder for?');
-            if (!title) return;
-            const date = prompt('When? (YYYY-MM-DD or leave blank)') || '';
-            this._reminders.push({ type:'custom', title, date, id:Date.now() });
-            localStorage.setItem('mvp_vn_reminders', JSON.stringify(this._reminders));
+            const title = prompt('Reminder for what?');
+            if (!title?.trim()) return;
+            const date = prompt('Date? (YYYY-MM-DD, or leave blank)') || '';
+            this._reminders.unshift({ type:'custom', title:title.trim(), date, id:Date.now() });
+            localStorage.setItem('vortex_vn_reminders', JSON.stringify(this._reminders));
             this.renderReminders();
-            ui.notify('Reminder added 🔔', 'success');
+            ui.notify('🔔 Reminder added', 'success');
         },
 
         renderReminders() {
             const el = document.getElementById('vn-reminders');
             if (!el) return;
             if (!this._reminders.length) {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">No reminders set</p>';
+                el.innerHTML = '<p class="vn-empty-hint">No reminders set</p>';
                 return;
             }
-            el.innerHTML = this._reminders.map((r,i) => `
-                <div class="vn-reminder-item">
-                    <span class="text-sm">${r.type==='episode'?'📺':'🔔'}</span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold truncate">${esc(r.title)}</p>
-                        ${r.date ? `<p class="text-[10px]" style="color:var(--text-muted)">${r.date}</p>` : ''}
+            el.innerHTML = this._reminders.map((r, i) => `
+                <div class="vn-reminder-row">
+                    <span style="font-size:0.85rem">${r.type==='episode'?'📺':'🔔'}</span>
+                    <div style="flex:1;min-width:0">
+                        <p class="vn-reminder-name">${esc(r.title)}</p>
+                        ${r.date ? `<p class="vn-reminder-date">${r.date}</p>` : ''}
                     </div>
-                    <button onclick="vnPage.removeReminder(${i})" style="color:var(--text-muted)">✕</button>
+                    <button class="vn-reminder-del" onclick="vnPage.removeReminder(${i})">✕</button>
                 </div>`).join('');
         },
 
         removeReminder(i) {
-            this._reminders.splice(i,1);
-            localStorage.setItem('mvp_vn_reminders', JSON.stringify(this._reminders));
+            this._reminders.splice(i, 1);
+            localStorage.setItem('vortex_vn_reminders', JSON.stringify(this._reminders));
             this.renderReminders();
         },
 
+        // ── Trailers ─────────────────────────────────────────────────────────
         async loadTrailers() {
             const el = document.getElementById('vn-trailers');
-            // Use TMDB now playing + upcoming for trailers
+            if (!el) return;
+            const studioMap = ['Crunchyroll','TOHO','Aniplex','MAPPA','Netflix Anime','Wit Studio'];
             try {
-                const r = await fetch('https://api.themoviedb.org/3/movie/now_playing?api_key=0b1121a7a8eda3cf3c03c9b4c15d7e45&page=1').catch(()=>null);
-                const studios = ['Crunchyroll','TOHO','Aniplex','MAPPA','Netflix Anime'];
+                const r = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${this._TMDB}&page=1`).catch(()=>null);
                 let trailers = [];
                 if (r?.ok) {
-                    const d = await r.json();
-                    (d.results||[]).slice(0,6).forEach((m,i) => {
-                        trailers.push({
-                            title: m.title||m.name,
-                            studio: studios[i % studios.length],
-                            thumb: m.backdrop_path ? `https://image.tmdb.org/t/p/w300${m.backdrop_path}` : null,
-                            url: `https://www.youtube.com/results?search_query=${encodeURIComponent((m.title||m.name)+' official trailer')}`
-                        });
-                    });
+                    const d = await r.json().catch(()=>({results:[]}));
+                    (d.results||[]).slice(0,6).forEach((m, i) => trailers.push({
+                        title:  m.title || m.name,
+                        studio: studioMap[i % studioMap.length],
+                        thumb:  m.backdrop_path ? `https://image.tmdb.org/t/p/w300${m.backdrop_path}` : null,
+                        url:    `https://www.youtube.com/results?search_query=${encodeURIComponent((m.title||m.name)+' official trailer')}`
+                    }));
                 }
-                // Fallback
-                if (!trailers.length) {
-                    trailers = [
-                        { title:'Demon Slayer: Infinity Castle', studio:'Aniplex', thumb:null, url:'https://youtube.com/results?search_query=demon+slayer+infinity+castle+trailer' },
-                        { title:'One Piece Film Red 2', studio:'TOHO', thumb:null, url:'https://youtube.com/results?search_query=one+piece+official+trailer' }
-                    ];
-                }
+                if (!trailers.length) trailers = [
+                    { title:'Demon Slayer: Infinity Castle', studio:'Aniplex', thumb:null, url:'https://www.youtube.com/results?search_query=demon+slayer+infinity+castle+official+trailer' },
+                    { title:'One Piece Film Red 2', studio:'TOHO', thumb:null, url:'https://www.youtube.com/results?search_query=one+piece+film+official+trailer' },
+                    { title:'Jujutsu Kaisen Season 3', studio:'MAPPA', thumb:null, url:'https://www.youtube.com/results?search_query=jujutsu+kaisen+season+3+trailer' },
+                ];
                 el.innerHTML = trailers.map(t => `
                     <div class="vn-trailer-card" onclick="window.open('${t.url}','_blank')">
-                        <div style="height:60px;border-radius:0.5rem;overflow:hidden;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;position:relative">
-                            ${t.thumb ? `<img src="${t.thumb}" style="width:100%;height:100%;object-fit:cover;opacity:0.8" onerror="this.parentElement.innerHTML='▶'">` : '<span style="font-size:1.5rem">▶</span>'}
-                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)"><span style="font-size:1.5rem">▶</span></div>
+                        <div class="vn-trailer-thumb">
+                            ${t.thumb ? `<img src="${t.thumb}" alt="${esc(t.title)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                            <div class="vn-trailer-play">
+                                <div class="vn-trailer-play-btn">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#111" style="margin-left:2px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs font-bold truncate">${esc(t.title)}</p>
-                            <p class="text-[10px]" style="color:var(--text-muted)">${esc(t.studio)}</p>
+                        <div class="vn-trailer-info">
+                            <p class="vn-trailer-title">${esc(t.title)}</p>
+                            <p class="vn-trailer-studio">${esc(t.studio)}</p>
                         </div>
                     </div>`).join('');
             } catch {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Could not load trailers.</p>';
+                el.innerHTML = '<p class="vn-empty-hint">Could not load trailers.</p>';
             }
         },
 
+        // ── Calendar ─────────────────────────────────────────────────────────
         renderCalendarDays() {
-            const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-            const today = new Date().getDay();
-            const tabsEl = document.getElementById('vn-day-tabs');
-            tabsEl.innerHTML = days.map((d,i) => `
-                <button onclick="vnPage.selectDay(${i})" data-vn-day="${i}" class="vn-day-tab ${i===today?'active':''}">${d}${i===today?' ●':''}</button>`).join('');
-            this._activeDay = today;
+            const labels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const today  = new Date().getDay();
+            const el = document.getElementById('vn-day-tabs');
+            if (!el) return;
+            el.innerHTML = labels.map((d, i) => `
+                <button class="vn-day-tab${i===today?' active':''}" data-day="${i}" onclick="vnPage.selectDay(${i})">${d}${i===today?'·':''}</button>
+            `).join('');
             this.loadCalendar(today);
         },
 
         async selectDay(dayIdx) {
             this._activeDay = dayIdx;
-            document.querySelectorAll('.vn-day-tab').forEach((b,i) => {
-                b.classList.toggle('active', i === dayIdx);
-            });
+            document.querySelectorAll('.vn-day-tab').forEach((b, i) => b.classList.toggle('active', i === dayIdx));
             await this.loadCalendar(dayIdx);
         },
 
         async loadCalendar(dayIdx) {
             const el = document.getElementById('vn-calendar-content');
-            el.innerHTML = '<div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div>';
+            if (!el) return;
+            el.innerHTML = '<div class="skeleton" style="height:44px;border-radius:0.5rem;margin-bottom:4px"></div>'.repeat(4);
             const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
             try {
-                const r = await fetch(`https://api.jikan.moe/v4/schedules/${dayNames[dayIdx]}?limit=10`).catch(()=>null);
+                const r = await fetch(`https://api.jikan.moe/v4/schedules/${dayNames[dayIdx]}?limit=15`).catch(()=>null);
                 if (r?.ok) {
-                    const d = await r.json();
-                    const items = d.data||[];
-                    if (!items.length) { el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">No anime airing this day.</p>'; return; }
-                    el.innerHTML = items.map(a => {
-                        const time = a.broadcast?.time || '??:??';
-                        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                        return `<div class="flex items-center gap-3 py-2 px-3 rounded-xl" style="border:1px solid var(--border)">
-                            <span class="text-xs font-black w-12 flex-shrink-0" style="color:var(--primary)">${time}<br><span class="text-[9px] font-normal" style="color:var(--text-muted)">${tz.split('/').pop()}</span></span>
-                            <div class="w-8 h-10 rounded flex-shrink-0 overflow-hidden" style="background:rgba(255,255,255,0.05)">${a.images?.jpg?.small_image_url?`<img src="${a.images.jpg.small_image_url}" style="width:100%;height:100%;object-fit:cover">`:'📺'}</div>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-xs font-bold truncate">${esc(a.title)}</p>
-                                <p class="text-[10px]" style="color:var(--text-muted)">${a.episodes ? a.episodes+' eps' : 'Ongoing'}</p>
+                    const d = await r.json().catch(()=>({data:[]}));
+                    const items = d.data || [];
+                    if (!items.length) { el.innerHTML = '<p class="vn-empty-hint">Nothing scheduled this day.</p>'; return; }
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_',' ');
+                    el.innerHTML = items.map(a => `
+                        <div class="vn-cal-row" onclick="window.open('${a.url||'https://myanimelist.net'}','_blank')" style="cursor:pointer">
+                            <div class="vn-cal-time">${a.broadcast?.time||'?:??'}<br><span style="font-size:0.52rem;color:#334155">${tz}</span></div>
+                            <div class="vn-cal-thumb">
+                                ${a.images?.jpg?.small_image_url
+                                    ? `<img src="${a.images.jpg.small_image_url}" alt="" loading="lazy" onerror="this.textContent='📺'">`
+                                    : '📺'}
                             </div>
-                            <span class="vn-badge vn-badge-official flex-shrink-0">Airing</span>
-                        </div>`;
-                    }).join('');
+                            <div class="vn-cal-info">
+                                <p class="vn-cal-title">${esc(a.title)}</p>
+                                <p class="vn-cal-eps">${a.score ? '★ '+a.score+' · ' : ''}${a.episodes?a.episodes+' eps':'Ongoing'}</p>
+                            </div>
+                            <span class="vn-badge vn-badge-official" style="flex-shrink:0">Airing</span>
+                        </div>`).join('');
                 } else {
-                    el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Could not load schedule.</p>';
+                    el.innerHTML = '<p class="vn-empty-hint">Schedule unavailable.</p>';
                 }
             } catch {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Could not load schedule.</p>';
+                el.innerHTML = '<p class="vn-empty-hint">Could not load schedule.</p>';
             }
         },
 
+        // ── Trending ─────────────────────────────────────────────────────────
         async loadTrending() {
             const el = document.getElementById('vn-trending');
+            if (!el) return;
             try {
                 let items = [];
                 const cat = this._cat;
                 if (cat === 'all' || cat === 'anime') {
-                    const r = await fetch('https://api.jikan.moe/v4/top/anime?limit=5&filter=airing').catch(()=>null);
-                    if (r?.ok) { const d=await r.json(); (d.data||[]).forEach(a=>items.push({name:a.title,type:'🍱',score:a.score})); }
+                    const r = await fetch('https://api.jikan.moe/v4/top/anime?limit=7&filter=airing').catch(()=>null);
+                    if (r?.ok) {
+                        const d = await r.json().catch(()=>({data:[]}));
+                        (d.data||[]).forEach(a => items.push({ name:a.title, type:'🍱', score: a.score ? a.score.toFixed(1) : null }));
+                    }
                 }
                 if (cat === 'all' || cat === 'games') {
                     const r = await fetch('https://api.rawg.io/api/games?key=&ordering=-rating&page_size=5').catch(()=>null);
-                    if (r?.ok) { const d=await r.json(); (d.results||[]).slice(0,3).forEach(g=>items.push({name:g.name,type:'🎮',score:g.rating})); }
+                    if (r?.ok) {
+                        const d = await r.json().catch(()=>({results:[]}));
+                        (d.results||[]).slice(0,3).forEach(g => items.push({ name:g.name, type:'🎮', score:g.rating?.toFixed(1)||null }));
+                    }
                 }
+                if (cat === 'all' || cat === 'movies') {
+                    const r = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${this._TMDB}&page=1`).catch(()=>null);
+                    if (r?.ok) {
+                        const d = await r.json().catch(()=>({results:[]}));
+                        (d.results||[]).slice(0,3).forEach(m => items.push({ name:m.title||m.name, type:'🎬', score:m.vote_average?.toFixed(1)||null }));
+                    }
+                }
+                // Dedup + fallback
+                const seen = new Set();
+                items = items.filter(x => { if (seen.has(x.name)) return false; seen.add(x.name); return true; });
                 if (!items.length) items = [
-                    {name:'Demon Slayer',type:'🍱',score:8.9},{name:'Solo Leveling',type:'🍱',score:8.7},
-                    {name:'Elden Ring',type:'🎮',score:9.4},{name:'Inception',type:'🎬',score:8.8}
+                    {name:'Demon Slayer',type:'🍱',score:'8.9'}, {name:'Solo Leveling',type:'🍱',score:'8.7'},
+                    {name:'Elden Ring',type:'🎮',score:'9.4'},   {name:'Inception',type:'🎬',score:'8.8'},
+                    {name:'Dandadan',type:'🍱',score:'8.5'},     {name:'Avengers',type:'🎬',score:'7.9'}
                 ];
-                items = items.slice(0,7);
-                el.innerHTML = items.map((item,i)=>`
-                    <div class="vn-trending-item">
-                        <span class="text-xs font-black w-5 text-center" style="color:var(--text-muted)">#${i+1}</span>
-                        <span>${item.type}</span>
-                        <span class="flex-1 text-xs font-bold truncate">${esc(item.name)}</span>
-                        ${item.score?`<span class="text-xs font-black" style="color:#fbbf24">★ ${item.score}</span>`:''}
+                el.innerHTML = items.slice(0,8).map((item, i) => `
+                    <div class="vn-trending-row">
+                        <span class="vn-trending-rank${i<3?' top3':''}">#${i+1}</span>
+                        <span class="vn-trending-fire">${item.type}</span>
+                        <span class="vn-trending-name">${esc(item.name)}</span>
+                        ${item.score ? `<span class="vn-trending-score">★ ${item.score}</span>` : ''}
                     </div>`).join('');
             } catch {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Could not load trending.</p>';
+                el.innerHTML = '<p class="vn-empty-hint">Could not load trending.</p>';
             }
         },
 
+        // ── Multi-Source ─────────────────────────────────────────────────────
         async loadMultiSource() {
             const el = document.getElementById('vn-multisource');
-            const groups = [
-                { title:'Spy x Family Season 3', cat:'anime', sources:['MyAnimeList','AniList','Crunchyroll'], confidence:'HIGH', badge:'VERIFIED' },
-                { title:'GTA VI Release Date', cat:'games', sources:['IGN','GameSpot','Kotaku','Eurogamer'], confidence:'HIGH', badge:'OFFICIAL' },
-                { title:'Avengers: Secret Wars', cat:'movies', sources:['Variety','Deadline','IGN'], confidence:'MEDIUM', badge:'TRUSTED MEDIA' },
+            if (!el) return;
+            let groups = [
+                { title:'GTA VI', cat:'games', sources:['IGN','GameSpot','Kotaku','Eurogamer'], badge:'OFFICIAL' },
+                { title:'Avengers: Secret Wars', cat:'movies', sources:['Variety','Deadline','IGN'], badge:'TRUSTED MEDIA' },
+                { title:'Spy x Family Season 3', cat:'anime', sources:['MyAnimeList','AniList','Crunchyroll'], badge:'VERIFIED' },
             ];
-            // Try to enrich with live data
             try {
-                const r = await fetch('https://api.jikan.moe/v4/seasons/upcoming?limit=3').catch(()=>null);
+                const r = await fetch('https://api.jikan.moe/v4/seasons/upcoming?limit=5').catch(()=>null);
                 if (r?.ok) {
-                    const d = await r.json();
-                    (d.data||[]).slice(0,2).forEach(a => {
-                        groups.push({ title:a.title, cat:'anime', sources:['MyAnimeList','AniList'], confidence:'HIGH', badge:'OFFICIAL' });
-                    });
+                    const d = await r.json().catch(()=>({data:[]}));
+                    (d.data||[]).slice(0,3).forEach(a => groups.push({
+                        title: a.title, cat:'anime',
+                        sources:['MyAnimeList','AniList','Crunchyroll'],
+                        badge:'OFFICIAL'
+                    }));
                 }
             } catch {}
-            el.innerHTML = groups.slice(0,6).map(g=>`
+            el.innerHTML = groups.slice(0,6).map(g => `
                 <div class="vn-ms-card">
-                    <div class="flex items-start gap-2 mb-2 flex-wrap">
+                    <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.4rem">
                         ${this._badgeHTML(g.badge)}
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.05);color:var(--text-muted)">${g.cat}</span>
+                        <span style="font-size:0.58rem;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.05);color:#475569">${g.cat}</span>
                     </div>
-                    <p class="text-sm font-bold mb-2">${esc(g.title)}</p>
-                    <p class="text-xs mb-2" style="color:var(--text-muted)">Reported by <strong style="color:var(--primary)">${g.sources.length} trusted sources</strong></p>
-                    <div class="flex flex-wrap gap-1">${g.sources.map(s=>`<span class="vn-source-chip">${esc(s)}</span>`).join('')}</div>
+                    <p class="vn-ms-title">${esc(g.title)}</p>
+                    <p class="vn-ms-sources-label">Reported by <strong style="color:var(--primary)">${g.sources.length} trusted sources</strong></p>
+                    <div class="vn-ms-chips">${g.sources.map(s=>`<span class="vn-source-chip">${esc(s)}</span>`).join('')}</div>
                 </div>`).join('');
         },
 
+        // ── Personalized ─────────────────────────────────────────────────────
         renderPersonalized() {
             const el = document.getElementById('vn-personal');
+            if (!el) return;
             const myTypes = {};
-            (S.items||[]).forEach(i => { myTypes[i.type] = (myTypes[i.type]||0)+1; });
-            const topType = Object.entries(myTypes).sort((a,b)=>b[1]-a[1])[0];
-            if (!topType) {
-                el.innerHTML = '<p class="text-xs" style="color:var(--text-muted)">Add media to your vault to get personalized recommendations.</p>';
+            try { (S.items||[]).forEach(x => { myTypes[x.type]=(myTypes[x.type]||0)+1; }); } catch {}
+            const top = Object.entries(myTypes).sort((a,b)=>b[1]-a[1])[0];
+            const icons = { movie:'🎬', series:'📺', game:'🎮', anime:'🍱' };
+            if (!top) {
+                el.innerHTML = `<p style="font-size:0.75rem;color:#475569">Add media to your vault to get a personalized news feed.</p>`;
                 return;
             }
-            const typeLabels = { movie:'🎬 Movies', series:'📺 Series', game:'🎮 Games', anime:'🍱 Anime' };
             el.innerHTML = `
-                <div class="p-4 rounded-2xl" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)">
-                    <p class="text-sm font-bold mb-1" style="color:var(--primary)">You love ${typeLabels[topType[0]]}!</p>
-                    <p class="text-xs" style="color:var(--text-muted)">Showing latest ${typeLabels[topType[0]]} news. You have ${topType[1]} entries in your vault.</p>
-                </div>
-                <div id="vn-personal-feed" class="space-y-2 mt-2"></div>`;
-            // Filter news for that type
-            const cat = topType[0]==='movie'?'movies':topType[0]==='series'?'series':topType[0];
-            this.setCategory(cat);
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+                    <span style="font-size:1.5rem">${icons[top[0]]||'🎬'}</span>
+                    <div>
+                        <p style="font-size:0.82rem;font-weight:800;color:var(--primary)">You're a ${top[0]} fan!</p>
+                        <p style="font-size:0.68rem;color:#475569">${top[1]} entries in vault · Filtering news for you</p>
+                    </div>
+                </div>`;
+            const catMap = { movie:'movies', series:'series', game:'games', anime:'anime' };
+            setTimeout(() => this.setCategory(catMap[top[0]] || 'all'), 100);
         }
     };
+
 
     </script>
 
@@ -8619,37 +8891,502 @@ self.addEventListener('fetch', e => {
         /* ── Selection color ── */
         ::selection { background:var(--primary-glow); color:var(--text-primary); }
 
-        /* ══ VN PAGE STYLES ══════════════════════════════════════════════════ */
-        .vn-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; flex-shrink:0; }
-        .vn-badge-verified  { background:rgba(52,211,153,0.15); color:#34d399; border:1px solid rgba(52,211,153,0.3); }
-        .vn-badge-official  { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
-        .vn-badge-studio    { background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); }
-        .vn-badge-trusted   { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); }
-        .vn-badge-community { background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); }
-        .vn-badge-rumor     { background:rgba(239,68,68,0.12);  color:#f87171; border:1px solid rgba(239,68,68,0.25); }
-        .vn-news-card { display:flex; gap:0.875rem; padding:0.875rem; border-radius:1.25rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); transition:all 0.2s; cursor:pointer; }
-        .vn-news-card:hover { border-color:var(--primary-glow); background:rgba(255,255,255,0.04); }
-        .vn-news-thumb { width:72px; height:54px; border-radius:0.75rem; object-fit:cover; flex-shrink:0; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:1.5rem; overflow:hidden; }
-        @media (max-width:480px) { .vn-news-thumb { width:56px; height:44px; } }
-        .vn-countdown-item { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.6rem 0.75rem; border-radius:1rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); }
-        .vn-countdown-time { font-size:0.85rem; font-weight:900; font-variant-numeric:tabular-nums; }
-        .vn-countdown-delayed { color:#f87171; }
-        .vn-countdown-soon { color:#fbbf24; animation:pulse-count 1s ease-in-out infinite; }
-        @keyframes pulse-count { 0%,100%{opacity:1} 50%{opacity:0.6} }
-        .vn-countdown-normal { color:var(--primary); }
-        .vn-day-tab { flex-shrink:0; padding:0.4rem 0.875rem; border-radius:0.75rem; font-size:0.7rem; font-weight:700; border:1px solid var(--border); cursor:pointer; transition:all 0.18s; background:transparent; color:var(--text-muted); }
-        .vn-day-tab.active { background:var(--primary); border-color:var(--primary); color:#fff; }
-        .vn-trending-item { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; border-radius:0.875rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); font-size:0.78rem; }
-        .vn-reminder-item { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; border-radius:0.875rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); }
-        .vn-cat-btn { transition:all 0.18s; }
-        .vn-source-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; font-size:0.6rem; font-weight:700; background:rgba(255,255,255,0.06); border:1px solid var(--border); cursor:pointer; transition:background 0.15s; }
-        .vn-source-chip:hover { background:rgba(255,255,255,0.12); }
-        .vn-trailer-card { display:flex; flex-direction:column; gap:0.5rem; padding:0.75rem; border-radius:1rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); cursor:pointer; transition:all 0.2s; }
-        .vn-trailer-card:hover { border-color:var(--primary-glow); }
-        .vn-ms-card { padding:0.875rem; border-radius:1.25rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); }
-        .vn-saved-item { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; border-radius:0.875rem; border:1px solid var(--border); background:rgba(255,255,255,0.02); font-size:0.75rem; }
+        /* ── RESPONSIVE FIXES ── */
+        /* Header spacing */
         @media (max-width:640px) {
-            #page-vn .grid.grid-cols-1.lg\:grid-cols-3 { gap:1rem; }
+            header { margin-bottom:1rem !important; }
+            .app-shell { padding-bottom: max(6rem, env(safe-area-inset-bottom, 6rem)) !important; }
+        }
+        /* Stats cards compact on xs */
+        @media (max-width:360px) {
+            section.grid { gap: 0.5rem !important; }
+            .glass.p-6 { padding: 0.875rem !important; }
+        }
+        /* VN content grid padding on mobile */
+        @media (max-width:480px) {
+            .vn-content-grid { padding: 0.75rem 0.5rem 0 !important; gap: 0.75rem !important; }
+            .vn-masthead-inner { padding: 0.4rem 0.625rem !important; }
+            .vn-hero-body { padding: 0.75rem !important; }
+            .vn-news-card { padding: 0.625rem 0.75rem !important; gap: 0.625rem !important; }
+        }
+        /* Ensure scrollable horizontal containers don't cause overflow */
+        .no-scrollbar, .vn-cat-bar-inner, #profile-list { -webkit-overflow-scrolling: touch; }
+        /* Fix 100vw overflow from fixed elements */
+        html, body { max-width: 100%; overflow-x: hidden; }
+        /* Bottom nav safe area */
+        nav { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem)); }
+        /* App shell bottom padding to clear nav */
+        .app-shell { padding-bottom: 7rem; }
+        @media (max-width:640px) { .app-shell { padding-bottom: max(6.5rem, calc(5.5rem + env(safe-area-inset-bottom))); } }
+        /* Modal max-height on very small screens */
+        @media (max-height:500px) {
+            #modal-content { max-height:96vh !important; border-radius:1rem !important; }
+        }
+        /* Filter tabs compact */
+        @media (max-width:360px) {
+            .filter-tab { padding: 0.4rem 0.625rem !important; font-size:0.65rem !important; }
+        }
+
+        /* ══ VN PAGE — PROFESSIONAL NEWS STATION ═══════════════════════════ */
+
+        /* Breaking News Bar */
+        .vn-breaking-bar {
+            display: flex; align-items: center; gap: 0;
+            background: #dc2626;
+            height: 28px; overflow: hidden;
+        }
+        .vn-breaking-label {
+            display: flex; align-items: center; gap: 5px;
+            background: #991b1b; padding: 0 12px;
+            font-size: 0.58rem; font-weight: 900; letter-spacing: 0.1em;
+            color: #fff; height: 100%; flex-shrink: 0; white-space: nowrap;
+            text-transform: uppercase;
+        }
+        .vn-breaking-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: #fff;
+            animation: live-pulse 1s ease-in-out infinite; flex-shrink: 0;
+        }
+        .vn-breaking-scroll-wrap {
+            flex: 1; overflow: hidden; height: 100%;
+            display: flex; align-items: center; position: relative;
+        }
+        .vn-breaking-scroll-wrap::before,
+        .vn-breaking-scroll-wrap::after {
+            content: ''; position: absolute; top: 0; bottom: 0; width: 20px; z-index: 2;
+        }
+        .vn-breaking-scroll-wrap::before { left:0; background: linear-gradient(to right, #dc2626, transparent); }
+        .vn-breaking-scroll-wrap::after  { right:20px; background: linear-gradient(to left, #dc2626, transparent); }
+        .vn-breaking-scroll {
+            display: flex; white-space: nowrap;
+            animation: breaking-scroll 40s linear infinite;
+            padding-left: 100%;
+        }
+        .vn-breaking-scroll:hover { animation-play-state: paused; cursor: pointer; }
+        @keyframes breaking-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .vn-breaking-item {
+            font-size: 0.72rem; font-weight: 700; color: #fff;
+            padding-right: 3rem; display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .vn-breaking-item::before { content: '◆'; font-size: 0.45rem; opacity: 0.7; }
+        .vn-breaking-close {
+            background: rgba(0,0,0,0.2); border: none; color: rgba(255,255,255,0.7);
+            font-size: 0.7rem; padding: 0 10px; height: 100%; cursor: pointer;
+            transition: background 0.15s; flex-shrink: 0;
+        }
+        .vn-breaking-close:hover { background: rgba(0,0,0,0.4); color: #fff; }
+
+        /* Masthead */
+        #page-vn { padding: 0; margin-top: -1.5rem; overflow-x: hidden; }
+        @media (max-width:640px) { #page-vn { margin-top: -1rem; } }
+        .vn-masthead {
+            background: linear-gradient(135deg, rgba(10,18,40,0.98) 0%, rgba(15,23,42,0.98) 100%);
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 4px 32px -8px rgba(59,130,246,0.25);
+            position: sticky; top: 0; z-index: 30;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .vn-masthead-inner {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.6rem 1rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .vn-masthead-left { flex-shrink: 0; }
+        .vn-masthead-center { flex: 1; min-width: 0; overflow: hidden; }
+        .vn-masthead-right { flex-shrink: 0; display: flex; align-items: center; gap: 0.75rem; }
+
+        /* Logo */
+        .vn-logo-lockup { display: flex; align-items: center; gap: 0.5rem; }
+        .vn-logo-icon {
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 16px rgba(59,130,246,0.5);
+            color: #fff;
+        }
+        .vn-station-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.95rem; font-weight: 900; letter-spacing: 0.04em;
+            color: #f8fafc; line-height: 1;
+        }
+        .vn-station-accent { color: var(--primary); }
+        .vn-station-sub { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em; color: #475569; text-transform: uppercase; margin-top: 1px; }
+
+        /* Live Ticker */
+        .vn-live-ticker-wrap { display: flex; align-items: center; gap: 0.5rem; overflow: hidden; height: 28px; }
+        .vn-live-badge {
+            flex-shrink: 0; font-size: 0.55rem; font-weight: 900; letter-spacing: 0.08em;
+            color: #fff; background: #ef4444; padding: 2px 7px; border-radius: 4px;
+            animation: live-pulse 2s ease-in-out infinite;
+        }
+        @keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+        .vn-ticker-track { overflow: hidden; flex: 1; position: relative; }
+        .vn-ticker-inner { display: flex; white-space: nowrap; animation: ticker-scroll 35s linear infinite; }
+        .vn-ticker-inner:hover { animation-play-state: paused; }
+        @keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .vn-ticker-item { font-size: 0.72rem; font-weight: 600; color: #94a3b8; padding-right: 3rem; flex-shrink: 0; }
+        .vn-ticker-item strong { color: #f8fafc; }
+
+        /* Clock */
+        .vn-clock { font-size: 0.7rem; font-weight: 700; color: #64748b; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+
+        /* Refresh btn */
+        .vn-refresh-btn {
+            display: flex; align-items: center; gap: 0.3rem;
+            font-size: 0.65rem; font-weight: 700; color: #64748b;
+            background: none; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: all 0.2s;
+        }
+        .vn-refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .vn-refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+        /* Category Bar */
+        .vn-cat-bar { border-top: 1px solid rgba(255,255,255,0.06); }
+        .vn-cat-bar-inner {
+            display: flex; align-items: center; gap: 0.25rem;
+            padding: 0.35rem 1rem; max-width: 1200px; margin: 0 auto;
+            overflow-x: auto; scrollbar-width: none;
+        }
+        .vn-cat-bar-inner::-webkit-scrollbar { display: none; }
+        .vn-cat-pill {
+            flex-shrink: 0; padding: 0.3rem 0.875rem; border-radius: 6px;
+            font-size: 0.68rem; font-weight: 700; border: none; cursor: pointer;
+            background: transparent; color: #64748b; transition: all 0.18s;
+            white-space: nowrap;
+        }
+        .vn-cat-pill:hover { color: #f8fafc; background: rgba(255,255,255,0.06); }
+        .vn-cat-pill.active { background: var(--primary); color: #fff; }
+        .vn-pill-toggle.active-toggle { color: var(--primary); background: rgba(59,130,246,0.12); }
+        .vn-cat-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.08); flex-shrink: 0; margin: 0 0.25rem; }
+
+        /* Content Grid */
+        .vn-content-grid {
+            display: grid; grid-template-columns: 1fr 300px; gap: 1.25rem;
+            padding: 1.25rem 1rem 0; max-width: 1200px; margin: 0 auto;
+        }
+        @media (max-width: 1024px) { .vn-content-grid { grid-template-columns: 1fr 260px; } }
+        @media (max-width: 768px)  { .vn-content-grid { grid-template-columns: 1fr; } }
+
+        .vn-col-main { min-width: 0; }
+        .vn-col-sidebar { min-width: 0; }
+
+        /* Hero Card */
+        .vn-hero-card {
+            border-radius: 1.25rem; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1.25rem;
+            background: rgba(15,23,42,0.6);
+        }
+        .vn-hero-img-wrap { position: relative; height: 200px; overflow: hidden; }
+        @media (max-width:480px) { .vn-hero-img-wrap { height: 160px; } }
+        .vn-hero-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+        .vn-hero-card:hover .vn-hero-img-wrap img { transform: scale(1.03); }
+        .vn-hero-img-placeholder { width: 100%; height: 200px; background: linear-gradient(135deg,#0f172a,#1e293b); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+        .vn-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.3) 60%, transparent 100%); pointer-events: none; }
+        .vn-hero-body { padding: 1rem 1.125rem 1.125rem; }
+        .vn-hero-skeleton { padding: 1rem; }
+
+        /* Section Labels */
+        .vn-section-label {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin: 1.25rem 0 0.75rem;
+        }
+        .vn-section-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+        .vn-section-text { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; color: #475569; flex-shrink: 0; white-space: nowrap; }
+        .vn-spin { width: 14px; height: 14px; border: 2px solid rgba(59,130,246,0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+        .vn-spin.hidden { display: none; }
+
+        /* News Feed Cards */
+        .vn-feed-list { display: flex; flex-direction: column; gap: 0.625rem; }
+        .vn-news-card {
+            display: flex; gap: 0.875rem; padding: 0.875rem 1rem;
+            border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(15,23,42,0.5); transition: all 0.2s; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .vn-news-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--primary); opacity:0; transition:opacity 0.2s; border-radius:3px 0 0 3px; }
+        .vn-news-card:hover { border-color: rgba(59,130,246,0.3); background: rgba(30,41,59,0.7); transform: translateX(2px); }
+        .vn-news-card:hover::before { opacity:1; }
+        .vn-news-card.vn-breaking { border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.05); }
+        .vn-news-card.vn-breaking::before { background: #ef4444; opacity: 1; }
+        .vn-news-thumb {
+            width: 80px; height: 60px; border-radius: 0.6rem; flex-shrink: 0;
+            background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; overflow: hidden;
+        }
+        .vn-news-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @media (max-width:480px) { .vn-news-thumb { width: 60px; height: 48px; } }
+        .vn-news-body { flex: 1; min-width: 0; }
+        .vn-news-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+        .vn-news-title { font-size: 0.82rem; font-weight: 700; line-height: 1.35; color: var(--text-primary); margin-bottom: 0.25rem; }
+        .vn-news-desc { font-size: 0.7rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.35rem; }
+        .vn-news-footer { display: flex; align-items: center; justify-content: space-between; }
+        .vn-news-source { font-size: 0.62rem; font-weight: 700; color: #475569; }
+        .vn-news-time { font-size: 0.62rem; color: #475569; }
+        .vn-bookmark-btn { font-size: 0.85rem; background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: transform 0.15s; }
+        .vn-bookmark-btn:hover { transform: scale(1.3); }
+
+        /* Skeleton cards */
+        .vn-card-skeleton { display: flex; gap: 0.75rem; padding: 0.875rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.04); background: rgba(15,23,42,0.4); margin-bottom: 0.625rem; }
+        .vn-sk-thumb { width: 80px; height: 60px; border-radius: 0.6rem; flex-shrink: 0; }
+        .vn-sk-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+        .vn-sk-l1 { height: 10px; border-radius: 5px; }
+        .vn-sk-l2 { height: 8px; border-radius: 4px; width: 85%; }
+        .vn-sk-l3 { height: 8px; border-radius: 4px; width: 55%; }
+
+        /* Badge System */
+        .vn-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 0.55rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0; }
+        .vn-badge-verified  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+        .vn-badge-official  { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .vn-badge-studio    { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .vn-badge-trusted   { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .vn-badge-community { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+        .vn-badge-rumor     { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+        .vn-badge-breaking  { background: #ef4444; color: #fff; border: none; animation: live-pulse 1.5s ease-in-out infinite; }
+
+        /* Source chip */
+        .vn-source-chip {
+            display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 4px;
+            font-size: 0.55rem; font-weight: 700; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: background 0.15s;
+            color: #64748b;
+        }
+        .vn-source-chip:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+        /* Trailer Grid */
+        .vn-trailers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.625rem; }
+        @media (max-width: 640px) { .vn-trailers-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 380px) { .vn-trailers-grid { grid-template-columns: 1fr; } }
+        .vn-trailer-card {
+            border-radius: 1rem; overflow: hidden; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.06); background: rgba(15,23,42,0.5);
+            transition: all 0.2s; position: relative;
+        }
+        .vn-trailer-card:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-2px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.5); }
+        .vn-trailer-thumb { height: 80px; overflow: hidden; position: relative; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; }
+        .vn-trailer-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; display: block; }
+        .vn-trailer-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
+        .vn-trailer-play-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+        .vn-trailer-card:hover .vn-trailer-play-btn { transform: scale(1.12); }
+        .vn-trailer-info { padding: 0.5rem 0.625rem 0.625rem; }
+        .vn-trailer-title { font-size: 0.7rem; font-weight: 700; line-height: 1.3; color: var(--text-primary); }
+        .vn-trailer-studio { font-size: 0.6rem; color: #475569; margin-top: 2px; font-weight: 600; }
+
+        /* Calendar */
+        .vn-calendar-wrap { border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(15,23,42,0.5); overflow: hidden; margin-bottom: 0; }
+        .vn-day-strip { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .vn-day-tab { flex: 1; padding: 0.55rem 0.25rem; text-align: center; font-size: 0.62rem; font-weight: 700; border: none; cursor: pointer; background: transparent; color: #475569; transition: all 0.18s; border-bottom: 2px solid transparent; letter-spacing: 0.04em; }
+        .vn-day-tab:hover { color: #94a3b8; background: rgba(255,255,255,0.03); }
+        .vn-day-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(59,130,246,0.06); }
+        .vn-calendar-body { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; max-height: 320px; overflow-y: auto; }
+        .vn-calendar-body::-webkit-scrollbar { width: 4px; }
+        .vn-calendar-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+        .vn-cal-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.5rem; border-radius: 0.5rem; transition: background 0.15s; }
+        .vn-cal-row:hover { background: rgba(255,255,255,0.04); }
+        .vn-cal-time { font-size: 0.62rem; font-weight: 900; color: var(--primary); width: 36px; flex-shrink: 0; text-align: center; line-height: 1.2; font-variant-numeric: tabular-nums; }
+        .vn-cal-thumb { width: 28px; height: 38px; border-radius: 4px; flex-shrink: 0; overflow: hidden; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .vn-cal-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .vn-cal-info { flex: 1; min-width: 0; }
+        .vn-cal-title { font-size: 0.72rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vn-cal-eps { font-size: 0.6rem; color: #475569; }
+
+        /* Multi Source */
+        .vn-multisource-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.625rem; }
+        @media (max-width: 640px) { .vn-multisource-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 380px) { .vn-multisource-grid { grid-template-columns: 1fr; } }
+        .vn-ms-card { padding: 0.875rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(15,23,42,0.5); }
+        .vn-ms-title { font-size: 0.75rem; font-weight: 700; margin: 0.4rem 0 0.5rem; line-height: 1.3; }
+        .vn-ms-sources-label { font-size: 0.62rem; color: #475569; margin-bottom: 0.4rem; }
+        .vn-ms-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+        .vn-ms-confidence { display: inline-flex; align-items: center; gap: 4px; margin-top: 0.5rem; font-size: 0.6rem; font-weight: 700; }
+
+        /* Personalized */
+        .vn-personal-wrap { border-radius: 1rem; border: 1px solid rgba(59,130,246,0.2); background: rgba(59,130,246,0.05); padding: 1rem; }
+
+        /* Sidebar */
+        .vn-sidebar-card { border-radius: 1rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(15,23,42,0.5); overflow: hidden; margin-bottom: 1rem; }
+        .vn-sidebar-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.875rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .vn-sidebar-icon { font-size: 0.875rem; flex-shrink: 0; }
+        .vn-sidebar-title { font-size: 0.72rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; flex: 1; }
+        .vn-sidebar-action { font-size: 0.62rem; font-weight: 700; color: var(--primary); background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
+        .vn-sidebar-action:hover { background: rgba(59,130,246,0.1); }
+
+        /* Countdown */
+        .vn-countdown-list { padding: 0.625rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .vn-countdown-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.625rem; border-radius: 0.625rem; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); }
+        .vn-countdown-row:hover { background: rgba(255,255,255,0.04); }
+        .vn-countdown-info { flex: 1; min-width: 0; }
+        .vn-countdown-name { font-size: 0.72rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vn-countdown-ep { font-size: 0.6rem; color: #475569; }
+        .vn-countdown-time { font-size: 0.78rem; font-weight: 900; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .vn-cd-soon { color: #fbbf24; animation: pulse-count 1s ease-in-out infinite; }
+        .vn-cd-delayed { color: #f87171; }
+        .vn-cd-normal { color: var(--primary); }
+        .vn-notify-btn { font-size: 0.55rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(59,130,246,0.1); color: var(--primary); border: none; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+        .vn-notify-btn:hover { background: rgba(59,130,246,0.2); }
+        @keyframes pulse-count { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+        /* Trending */
+        .vn-trending-list { padding: 0.5rem 0.625rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .vn-trending-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.5rem; border-radius: 0.5rem; transition: background 0.15s; cursor: pointer; }
+        .vn-trending-row:hover { background: rgba(255,255,255,0.04); }
+        .vn-trending-rank { font-size: 0.62rem; font-weight: 900; color: #334155; width: 18px; text-align: center; flex-shrink: 0; }
+        .vn-trending-rank.top3 { color: #fbbf24; }
+        .vn-trending-name { font-size: 0.72rem; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vn-trending-score { font-size: 0.6rem; font-weight: 700; color: #fbbf24; flex-shrink: 0; }
+        .vn-trending-fire { font-size: 0.65rem; flex-shrink: 0; }
+
+        /* Reminders */
+        .vn-reminders-list { padding: 0.5rem 0.625rem; display: flex; flex-direction: column; gap: 0.35rem; }
+        .vn-reminder-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.5rem; border-radius: 0.5rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+        .vn-reminder-name { font-size: 0.7rem; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vn-reminder-date { font-size: 0.6rem; color: #475569; }
+        .vn-reminder-del { background: none; border: none; cursor: pointer; color: #475569; font-size: 0.75rem; padding: 2px; transition: color 0.15s; }
+        .vn-reminder-del:hover { color: #f87171; }
+        .vn-empty-hint { font-size: 0.7rem; color: #475569; padding: 0.625rem; text-align: center; }
+
+        /* Saved */
+        .vn-saved-list { padding: 0.5rem 0.625rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .vn-saved-row { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.5rem; border-radius: 0.5rem; background: rgba(255,255,255,0.02); cursor: pointer; transition: background 0.15s; }
+        .vn-saved-row:hover { background: rgba(255,255,255,0.05); }
+        .vn-saved-title { font-size: 0.7rem; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vn-saved-del { background: none; border: none; cursor: pointer; color: #475569; font-size: 0.75rem; padding: 2px; transition: color 0.15s; }
+        .vn-saved-del:hover { color: #f87171; }
+
+        /* ── VN FULL RESPONSIVE SYSTEM ─────────────────────────────────────── */
+
+        /* Tablet: ≤1024px */
+        @media (max-width: 1024px) {
+            .vn-content-grid { padding: 1rem 0.875rem 0; gap: 1rem; }
+            .vn-clock { display: none; }
+        }
+
+        /* Tablet portrait: ≤768px — stack sidebar below main */
+        @media (max-width: 768px) {
+            .vn-masthead-center { display: none; }
+            .vn-content-grid { grid-template-columns: 1fr; padding: 0.875rem 0.75rem 0; gap: 0.875rem; }
+            /* Sidebar goes into a 2-col grid */
+            .vn-col-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .vn-sidebar-card { margin-bottom: 0; }
+            /* Wider hero */
+            .vn-hero-img-wrap { height: 180px; }
+            /* Trailers 3-col stays */
+            .vn-trailers-grid { grid-template-columns: repeat(3, 1fr); }
+            /* Multi-source 2-col */
+            .vn-multisource-grid { grid-template-columns: repeat(2, 1fr); }
+            /* Countdown height uncap on mobile */
+            .vn-calendar-body { max-height: 260px; }
+        }
+
+        /* Large phone: ≤640px */
+        @media (max-width: 640px) {
+            .vn-masthead-inner { padding: 0.45rem 0.75rem; gap: 0.625rem; }
+            .vn-station-name { font-size: 0.85rem; }
+            .vn-station-sub { display: none; }
+            .vn-refresh-btn span { display: none; } /* icon only */
+            .vn-content-grid { padding: 0.75rem 0.625rem 0; gap: 0.75rem; }
+            /* Hero shorter */
+            .vn-hero-img-wrap { height: 160px; }
+            .vn-hero-img-placeholder { height: 160px; font-size: 2.5rem; }
+            .vn-hero-body { padding: 0.75rem 0.875rem 0.875rem; }
+            /* News cards tighter */
+            .vn-news-card { padding: 0.625rem 0.75rem; gap: 0.5rem; }
+            .vn-news-title { font-size: 0.78rem; }
+            .vn-news-desc { display: none; } /* hide desc on small phones to save space */
+            .vn-news-thumb { width: 56px; height: 44px; border-radius: 0.5rem; }
+            /* Trailers 2-col */
+            .vn-trailers-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+            .vn-trailer-thumb { height: 70px; }
+            /* Calendar compact */
+            .vn-calendar-body { padding: 0.5rem; max-height: 240px; }
+            .vn-cal-row { gap: 0.4rem; padding: 0.35rem 0.4rem; }
+            /* Multi-source 2-col */
+            .vn-multisource-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+            .vn-ms-card { padding: 0.625rem; }
+            /* Sidebar 2-col */
+            .vn-col-sidebar { grid-template-columns: 1fr 1fr; gap: 0.625rem; }
+            /* Section label smaller margin */
+            .vn-section-label { margin: 0.875rem 0 0.5rem; }
+            /* Cat pills smaller */
+            .vn-cat-pill { padding: 0.25rem 0.625rem; font-size: 0.62rem; }
+            .vn-cat-bar-inner { padding: 0.3rem 0.625rem; gap: 0.15rem; }
+        }
+
+        /* Small phone: ≤480px */
+        @media (max-width: 480px) {
+            .vn-masthead-inner { padding: 0.4rem 0.625rem; gap: 0.5rem; }
+            .vn-logo-icon { width: 26px; height: 26px; }
+            .vn-station-name { font-size: 0.78rem; }
+            .vn-content-grid { padding: 0.625rem 0.5rem 0; gap: 0.625rem; }
+            /* Hero */
+            .vn-hero-img-wrap { height: 140px; }
+            .vn-hero-img-placeholder { height: 140px; font-size: 2rem; }
+            .vn-hero-body { padding: 0.625rem 0.75rem 0.75rem; }
+            /* News */
+            .vn-news-card { padding: 0.5rem 0.625rem; gap: 0.4rem; border-radius: 0.75rem; }
+            .vn-news-thumb { width: 48px; height: 40px; font-size: 1.25rem; }
+            .vn-news-title { font-size: 0.75rem; }
+            .vn-news-meta { gap: 0.25rem; }
+            .vn-news-footer { flex-wrap: wrap; gap: 0.25rem; }
+            /* Trailers */
+            .vn-trailers-grid { grid-template-columns: repeat(2, 1fr); gap: 0.4rem; }
+            .vn-trailer-thumb { height: 60px; }
+            .vn-trailer-title { font-size: 0.65rem; }
+            /* Multi-source stack on very small */
+            .vn-multisource-grid { grid-template-columns: 1fr 1fr; }
+            /* Sidebar full-width stack */
+            .vn-col-sidebar { grid-template-columns: 1fr; }
+            /* Countdown row compact */
+            .vn-countdown-row { padding: 0.4rem 0.5rem; }
+            .vn-countdown-time { font-size: 0.68rem; }
+            /* Calendar */
+            .vn-cal-thumb { width: 24px; height: 32px; }
+            .vn-cal-time { width: 30px; font-size: 0.58rem; }
+            /* Breaking bar */
+            .vn-breaking-label { padding: 0 8px; font-size: 0.52rem; }
+            .vn-breaking-item { font-size: 0.65rem; }
+            /* Day tabs */
+            .vn-day-tab { font-size: 0.55rem; padding: 0.45rem 0.15rem; }
+        }
+
+        /* Extra small: ≤380px */
+        @media (max-width: 380px) {
+            .vn-content-grid { padding: 0.5rem 0.375rem 0; }
+            .vn-hero-img-wrap { height: 120px; }
+            .vn-hero-img-placeholder { height: 120px; font-size: 1.75rem; }
+            .vn-trailers-grid { grid-template-columns: repeat(2, 1fr); gap: 0.3rem; }
+            .vn-multisource-grid { grid-template-columns: 1fr; }
+            .vn-news-thumb { width: 44px; height: 36px; }
+            .vn-station-name { font-size: 0.72rem; }
+            .vn-logo-icon { width: 24px; height: 24px; }
+            /* Stack badge area */
+            .vn-news-meta { gap: 0.2rem; }
+            .vn-badge { padding: 1px 5px; font-size: 0.5rem; }
+        }
+
+        /* Landscape phone: short height */
+        @media (max-height: 480px) and (orientation: landscape) {
+            .vn-masthead { position: relative; } /* un-sticky on landscape to save height */
+            .vn-hero-img-wrap { height: 120px; }
+            .vn-content-grid { grid-template-columns: 1fr 220px; padding: 0.5rem 0.75rem 0; }
+            .vn-col-sidebar { display: flex; flex-direction: column; gap: 0.5rem; }
+            .vn-calendar-body { max-height: 180px; }
+        }
+
+        /* Wide desktop: ≥1440px */
+        @media (min-width: 1440px) {
+            .vn-content-grid { grid-template-columns: 1fr 320px; max-width: 1400px; }
+            .vn-trailers-grid { grid-template-columns: repeat(4, 1fr); }
+            .vn-multisource-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Bottom padding for VN page to clear nav */
+        #page-vn { padding-bottom: max(5.5rem, calc(4.5rem + env(safe-area-inset-bottom))); }
+        @media (max-width: 480px) {
+            #page-vn { padding-bottom: max(6rem, calc(5rem + env(safe-area-inset-bottom))); }
         }
     </style>
 

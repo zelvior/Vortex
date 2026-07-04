@@ -797,7 +797,7 @@
     <div class="app-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
         <!-- Shared Header -->
-        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
+        <header id="app-header" class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
             <div>
                 <div class="flex items-center gap-3 mb-2">
                     <div class="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -3466,6 +3466,7 @@ CREATE POLICY "allow_all" ON mediavault
                     document.querySelectorAll('.doc-chevron').forEach(c => { c.style.transform = ''; });
                 }, 50);
             }
+            document.getElementById('app-header').classList.toggle('hidden', page === 'vn');
             if (page === 'vn') { vnPage.init(); }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -3473,11 +3474,15 @@ CREATE POLICY "allow_all" ON mediavault
 
     // ─── Data Manager ─────────────────────────────────────────────────────────
     const dataManager = {
-        save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S.items)); } catch { ui.notify('Storage full. Export your data.','error'); } },
-        load() {
+        async save() { try { await indexedStorage.set(STORAGE_KEY, S.items); } catch { ui.notify('Storage full. Export your data.','error'); } },
+        async load() {
             try {
-                const r = localStorage.getItem(STORAGE_KEY);
-                if (r) { const d = JSON.parse(r); S.items = Array.isArray(d) ? d.map(sanitize) : []; }
+                let d = await indexedStorage.get(STORAGE_KEY);
+                if (d == null) {
+                    const r = localStorage.getItem(STORAGE_KEY);
+                    if (r) { d = JSON.parse(r); await indexedStorage.set(STORAGE_KEY, d); localStorage.removeItem(STORAGE_KEY); }
+                }
+                S.items = Array.isArray(d) ? d.map(sanitize) : [];
             } catch { ui.notify('Data corrupted. Starting fresh.','warning'); S.items = []; }
         },
         async export() {
@@ -3677,9 +3682,9 @@ CREATE POLICY "allow_all" ON mediavault
 
     // ─── App Logic ────────────────────────────────────────────────────────────
     const app = {
-        init() {
+        async init() {
             cfg.load();
-            dataManager.load();
+            await dataManager.load();
             supaConn.load();
             S.filter = S.prefs.defaultFilter;
             document.getElementById('global-sort').value = S.prefs.defaultSort;
@@ -4605,7 +4610,7 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             const btn = document.getElementById('fb-google-btn');
             if (btn) { btn.disabled = true; btn.textContent = 'Waiting for Google…'; }
             try {
-                const token = await googleOAuth.requestToken('https://www.googleapis.com/auth/firebase.readonly');
+                const token = await googleOAuth.requestToken('https://www.googleapis.com/auth/firebase');
                 await this._autoDiscoverProject(token, btn);
             } catch (e) {
                 this._showError(e.message || 'Google connect failed — use manual setup below.');
@@ -5093,10 +5098,10 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
                 </button>`).join('');
         },
 
-        switchTo(id) {
+        async switchTo(id) {
             S.activeProfile = id;
             S.activeTagFilter = null;
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
+            const all = (await indexedStorage.get(STORAGE_KEY + '_all')) || [];
             S.items = all.filter(i => (i.profileId||'default') === id).map(sanitize);
             dataManager.save();
             ui.render();
@@ -5114,24 +5119,24 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             this.switchTo(id);
         },
 
-        remove(id) {
+        async remove(id) {
             if (id === 'default') return;
             if (!confirm('Delete this vault and all its entries? Cannot be undone.')) return;
             this._list = this._list.filter(p => p.id !== id);
             this.save();
             // Remove items from master store
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
-            localStorage.setItem(STORAGE_KEY + '_all', JSON.stringify(all.filter(i => (i.profileId||'default') !== id)));
+            const all = (await indexedStorage.get(STORAGE_KEY + '_all')) || [];
+            await indexedStorage.set(STORAGE_KEY + '_all', all.filter(i => (i.profileId||'default') !== id));
             if (S.activeProfile === id) this.switchTo('default');
             else this._render();
         },
 
         // Save current profile items back into the master all-profiles store
-        flushCurrent() {
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY + '_all') || '[]');
+        async flushCurrent() {
+            const all = (await indexedStorage.get(STORAGE_KEY + '_all')) || [];
             const others = all.filter(i => (i.profileId||'default') !== S.activeProfile);
             const mine   = S.items.map(i => ({...i, profileId: S.activeProfile}));
-            localStorage.setItem(STORAGE_KEY + '_all', JSON.stringify([...others, ...mine]));
+            await indexedStorage.set(STORAGE_KEY + '_all', [...others, ...mine]);
         }
     };
 
@@ -5819,10 +5824,10 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             this._timer = setInterval(() => this.save(), this._intervalMs);
         },
 
-        save() {
+        async save() {
             try {
                 const payload = { items: S.items, ts: Date.now(), profile: S.activeProfile };
-                localStorage.setItem(BACKUP_KEY, JSON.stringify(payload));
+                await indexedStorage.set(BACKUP_KEY, payload);
                 const badge = document.getElementById('backup-badge');
                 if (badge) {
                     badge.textContent = `Saved ${new Date().toLocaleTimeString()}`;
@@ -5831,11 +5836,11 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
             } catch {}
         },
 
-        restore() {
+        async restore() {
             try {
-                const r = localStorage.getItem(BACKUP_KEY);
+                const r = await indexedStorage.get(BACKUP_KEY);
                 if (!r) return false;
-                const { items, ts } = JSON.parse(r);
+                const { items, ts } = r;
                 const age = Date.now() - ts;
                 if (age > 7 * 24 * 60 * 60 * 1000) return false; // older than 7 days
                 if (!Array.isArray(items) || !items.length) return false;
@@ -6697,10 +6702,6 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
         _origDmSave();
         profiles.flushCurrent();
         autoBackup.save();
-        // IndexedDB write (async, non-blocking)
-        if (typeof indexedStorage !== 'undefined' && indexedStorage._db) {
-            indexedStorage.save(S.items).catch(()=>{});
-        }
     };
 
     // 4. Patch app.save to include all v3+v4 fields
@@ -7964,10 +7965,45 @@ CREATE INDEX IF NOT EXISTS idx_${table}_updated
 
     // ── INDEXED STORAGE (stub — localStorage is primary store) ───────────────
     const indexedStorage = {
-        _db: null,
-        async init() { /* localStorage is primary; IndexedDB is a bonus */ },
-        async save(items) { /* no-op stub */ },
-        async load() { return null; }
+        _dbPromise: null,
+        _open() {
+            if (this._dbPromise) return this._dbPromise;
+            this._dbPromise = new Promise((resolve, reject) => {
+                if (typeof indexedDB === 'undefined') { reject(new Error('IndexedDB unavailable')); return; }
+                const req = indexedDB.open('VortexVaultDB', 1);
+                req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('kv')) req.result.createObjectStore('kv'); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror   = () => reject(req.error);
+            });
+            return this._dbPromise;
+        },
+        async init() { try { await this._open(); } catch {} },
+        async get(key) {
+            const db = await this._open();
+            return new Promise((resolve, reject) => {
+                const req = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+                req.onsuccess = () => resolve(req.result === undefined ? null : req.result);
+                req.onerror   = () => reject(req.error);
+            });
+        },
+        async set(key, value) {
+            const db = await this._open();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('kv', 'readwrite');
+                tx.objectStore('kv').put(value, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror    = () => reject(tx.error);
+            });
+        },
+        async del(key) {
+            const db = await this._open();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('kv', 'readwrite');
+                tx.objectStore('kv').delete(key);
+                tx.oncomplete = () => resolve();
+                tx.onerror    = () => reject(tx.error);
+            });
+        }
     };
 
     // ── APP REMOVE PATCH — adds undo + recycle bin + activity log ─────────────
@@ -8513,25 +8549,23 @@ self.addEventListener('fetch', e => {
                     }
                 }
 
-                // ── Games: RAWG new releases ─────────────────────────────────
+                // ── Games: CheapShark new deals (keyless, CORS-enabled) ──────
                 if (cat === 'all' || cat === 'games') {
-                    const past = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
-                    const future = new Date(Date.now()+90*86400000).toISOString().split('T')[0];
-                    const r = await fetch(`https://api.rawg.io/api/games?key=&dates=${past},${future}&ordering=-added&page_size=8`).catch(()=>null);
+                    const r = await fetch('https://www.cheapshark.com/api/1.0/deals?sortBy=Recent&pageSize=8').catch(()=>null);
                     if (r?.ok) {
-                        const d = await r.json().catch(()=>({results:[]}));
-                        (d.results||[]).slice(0,4).forEach(g => articles.push({
-                            title:   g.name || 'Untitled Game',
-                            source:  'RAWG',
+                        const d = await r.json().catch(()=>[]);
+                        (Array.isArray(d)?d:[]).slice(0,4).forEach(g => articles.push({
+                            title:   g.title || 'Untitled Game',
+                            source:  'Steam',
                             badge:   'TRUSTED MEDIA',
-                            time:    g.released ? new Date(g.released).getTime()/1000 : Date.now()/1000 - Math.random()*86400*3,
-                            thumb:   g.background_image || null,
-                            desc:    (g.genres||[]).map(x=>x.name).join(' · ') || 'Upcoming release',
-                            url:     g.slug ? `https://rawg.io/games/${g.slug}` : 'https://rawg.io',
+                            time:    g.releaseDate>0 ? g.releaseDate*1000/1000 : Date.now()/1000 - Math.random()*86400*3,
+                            thumb:   g.thumb || null,
+                            desc:    `On sale for $${g.salePrice} · ${Math.round(g.savings)}% off (was $${g.normalPrice})`,
+                            url:     `https://www.cheapshark.com/redirect?dealID=${g.dealID}`,
                             spoiler: false,
                             cat:     'games',
-                            sources: ['RAWG','IGN','GameSpot'],
-                            sourceCount: 3
+                            sources: ['Steam','CheapShark'],
+                            sourceCount: 2
                         }));
                     }
                     // Curated fallback
@@ -8584,45 +8618,7 @@ self.addEventListener('fetch', e => {
                 // Sort newest first
                 articles.sort((a, b) => b.time - a.time);
                 this._articles = articles;
-
-                if (!articles.length) {
-                    feed.innerHTML = `<div style="text-align:center;padding:2rem;color:#475569">
-                        <div style="font-size:2rem;margin-bottom:0.5rem">📡</div>
-                        <p style="font-size:0.82rem;font-weight:600">No stories found. Try a different category or refresh.</p>
-                    </div>`;
-                    return;
-                }
-
-                // Hero = first article
-                this._renderHero(articles[0]);
-                this._buildTicker(articles);
-
-                // Feed = remaining
-                const feedArticles = articles.slice(1);
-                feed.innerHTML = feedArticles.map((a, i) => {
-                    if (this._spoiler && a.spoiler) return '';
-                    const idx = i + 1; // index in _articles
-                    const isSaved = this._saved.some(s => s.url === a.url);
-                    return `<div class="vn-news-card${a.badge==='BREAKING'?' vn-breaking':''}" onclick="window.open('${a.url}','_blank')">
-                        <div class="vn-news-thumb">
-                            ${a.thumb
-                                ? `<img src="${a.thumb}" alt="" loading="lazy" onerror="this.parentElement.textContent='📰'">`
-                                : `<span style="font-size:1.4rem">📰</span>`}
-                        </div>
-                        <div class="vn-news-body">
-                            <div class="vn-news-meta">
-                                ${this._badgeHTML(a.badge)}
-                                ${a.sourceCount>1 ? `<span class="vn-source-chip" onclick="event.stopPropagation();vnPage.showSources(${idx})">📡 ${a.sourceCount} sources</span>` : ''}
-                            </div>
-                            <p class="vn-news-title">${esc(a.title)}</p>
-                            <p class="vn-news-desc">${esc(a.desc)}</p>
-                            <div class="vn-news-footer">
-                                <span class="vn-news-source">${esc(a.source)} · <span class="vn-news-time">${this._timeAgo(a.time)}</span></span>
-                                <button class="vn-bookmark-btn" onclick="event.stopPropagation();vnPage.toggleSave(${idx})" title="${isSaved?'Unsave':'Save'}">${isSaved?'📌':'🔖'}</button>
-                            </div>
-                        </div>
-                    </div>`;
-                }).filter(Boolean).join('');
+                this._renderFeed();
 
             } catch (err) {
                 feed.innerHTML = `<div style="text-align:center;padding:2rem;color:#475569">
@@ -8631,6 +8627,51 @@ self.addEventListener('fetch', e => {
             } finally {
                 if (loader) loader.classList.add('hidden');
             }
+        },
+
+        _renderFeed() {
+            const feed = document.getElementById('vn-news-feed');
+            if (!feed) return;
+            const articles = this._articles;
+
+            if (!articles.length) {
+                feed.innerHTML = `<div style="text-align:center;padding:2rem;color:#475569">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">📡</div>
+                    <p style="font-size:0.82rem;font-weight:600">No stories found. Try a different category or refresh.</p>
+                </div>`;
+                return;
+            }
+
+            // Hero = first article
+            this._renderHero(articles[0]);
+            this._buildTicker(articles);
+
+            // Feed = remaining
+            const feedArticles = articles.slice(1);
+            feed.innerHTML = feedArticles.map((a, i) => {
+                if (this._spoiler && a.spoiler) return '';
+                const idx = i + 1; // index in _articles
+                const isSaved = this._saved.some(s => s.url === a.url);
+                return `<div class="vn-news-card${a.badge==='BREAKING'?' vn-breaking':''}" onclick="window.open('${a.url}','_blank')">
+                    <div class="vn-news-thumb">
+                        ${a.thumb
+                            ? `<img src="${a.thumb}" alt="" loading="lazy" onerror="this.parentElement.textContent='📰'">`
+                            : `<span style="font-size:1.4rem">📰</span>`}
+                    </div>
+                    <div class="vn-news-body">
+                        <div class="vn-news-meta">
+                            ${this._badgeHTML(a.badge)}
+                            ${a.sourceCount>1 ? `<span class="vn-source-chip" onclick="event.stopPropagation();vnPage.showSources(${idx})">📡 ${a.sourceCount} sources</span>` : ''}
+                        </div>
+                        <p class="vn-news-title">${esc(a.title)}</p>
+                        <p class="vn-news-desc">${esc(a.desc)}</p>
+                        <div class="vn-news-footer">
+                            <span class="vn-news-source">${esc(a.source)} · <span class="vn-news-time">${this._timeAgo(a.time)}</span></span>
+                            <button class="vn-bookmark-btn" onclick="event.stopPropagation();vnPage.toggleSave(${idx})" title="${isSaved?'Unsave':'Save'}">${isSaved?'📌':'🔖'}</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).filter(Boolean).join('');
         },
 
         showSources(idx) {
@@ -8652,8 +8693,9 @@ self.addEventListener('fetch', e => {
             }
             localStorage.setItem('vortex_vn_saved', JSON.stringify(this._saved));
             this.renderSaved();
-            this.loadNews();
+            this._renderFeed();
         },
+
 
         renderSaved() {
             const el = document.getElementById('vn-saved');
@@ -8876,10 +8918,10 @@ self.addEventListener('fetch', e => {
                     }
                 }
                 if (cat === 'all' || cat === 'games') {
-                    const r = await fetch('https://api.rawg.io/api/games?key=&ordering=-rating&page_size=5').catch(()=>null);
+                    const r = await fetch('https://www.cheapshark.com/api/1.0/deals?sortBy=Metacritic&pageSize=5').catch(()=>null);
                     if (r?.ok) {
-                        const d = await r.json().catch(()=>({results:[]}));
-                        (d.results||[]).slice(0,3).forEach(g => items.push({ name:g.name, type:'🎮', score:g.rating?.toFixed(1)||null }));
+                        const d = await r.json().catch(()=>[]);
+                        (Array.isArray(d)?d:[]).slice(0,3).forEach(g => items.push({ name:g.title, type:'🎮', score: g.metacriticScore>0 ? (g.metacriticScore/10).toFixed(1) : null }));
                     }
                 }
                 if (cat === 'all' || cat === 'movies') {
@@ -9121,12 +9163,11 @@ self.addEventListener('fetch', e => {
         .vn-breaking-scroll {
             display: flex; white-space: nowrap;
             animation: breaking-scroll 40s linear infinite;
-            padding-left: 100%;
         }
         .vn-breaking-scroll:hover { animation-play-state: paused; cursor: pointer; }
         @keyframes breaking-scroll {
             0%   { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
+            100% { transform: translateX(-50%); }
         }
         .vn-breaking-item {
             font-size: 0.72rem; font-weight: 700; color: #fff;
